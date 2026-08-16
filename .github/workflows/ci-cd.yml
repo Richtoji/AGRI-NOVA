@@ -23,6 +23,9 @@ jobs:
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
+      - name: Generate Prisma Client
+        run: npm run prisma:generate
+
       - name: Run Next.js Production Build
         run: npm run build
 
