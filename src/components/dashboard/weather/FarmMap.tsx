@@ -15,8 +15,8 @@ L.Icon.Default.mergeOptions({
 });
 
 // FIX FOR NEXT.JS FAST REFRESH: Forcefully clear Leaflet's container cache
-const originalInit = L.Map.prototype.initialize;
-L.Map.prototype.initialize = function(id: any, options: any) {
+const originalInit = (L.Map.prototype as any).initialize;
+(L.Map.prototype as any).initialize = function(id: any, options: any) {
   const el = typeof id === 'string' ? document.getElementById(id) : id;
   if (el && el._leaflet_id) {
     el._leaflet_id = null;

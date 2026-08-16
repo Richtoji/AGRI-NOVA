@@ -6,10 +6,6 @@ echo  AGRI-NOVA Auto-Save ^& Push
 echo =========================================
 echo.
 
-:: Clear any stuck processes just in case
-git rebase --abort 2>nul
-rmdir /s /q ".git\rebase-merge" 2>nul
-
 set /p msg="Enter a commit message (or just press Enter to use 'Auto-save'): "
 if "%msg%"=="" set msg=Auto-save
 
@@ -23,7 +19,7 @@ git commit -m "%msg%"
 
 echo.
 echo 3. Downloading any missing GitHub changes...
-git pull origin main --no-rebase --allow-unrelated-histories -m "Merge remote changes"
+git pull origin main --rebase
 
 echo.
 echo 4. Pushing to GitHub...

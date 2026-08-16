@@ -1,9 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  devIndicators: {
-    appIsrStatus: false,
-    buildActivity: false,
-  },
+  devIndicators: {},
   reactStrictMode: true,
   images: {
     domains: ['images.unsplash.com', 'res.cloudinary.com'],
