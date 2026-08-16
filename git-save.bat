@@ -6,10 +6,11 @@ echo  AGRI-NOVA Auto-Save ^& Push
 echo =========================================
 echo.
 
-:: Ask the user for a custom commit message
-set /p msg="Enter a commit message (or just press Enter to use 'Auto-save'): "
+:: Clear any stuck processes just in case
+git rebase --abort 2>nul
+rmdir /s /q ".git\rebase-merge" 2>nul
 
-:: If the user just pressed enter, use a default message
+set /p msg="Enter a commit message (or just press Enter to use 'Auto-save'): "
 if "%msg%"=="" set msg=Auto-save
 
 echo.
@@ -17,11 +18,15 @@ echo 1. Staging files...
 git add .
 
 echo.
-echo 2. Committing files with message: "%msg%"
+echo 2. Committing files...
 git commit -m "%msg%"
 
 echo.
-echo 3. Pushing to GitHub...
+echo 3. Downloading any missing GitHub changes...
+git pull origin main --no-rebase --allow-unrelated-histories -m "Merge remote changes"
+
+echo.
+echo 4. Pushing to GitHub...
 git push -u origin main
 
 echo.
