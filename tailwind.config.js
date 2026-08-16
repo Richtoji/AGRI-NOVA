@@ -1,0 +1,71 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  darkMode: 'class',
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        emerald: {
+          50: '#F0FDF4',
+          100: '#DCFCE7',
+          200: '#BBF7D0',
+          300: '#86EFAC',
+          400: '#4ADE80',
+          500: '#22C55E',
+          600: '#16A34A',
+          700: '#15803D',
+          800: '#166534',
+          900: '#14532D',
+          950: '#052E16',
+        },
+        forest: {
+          50: '#F6F9F7',
+          100: '#ECF2ED',
+          200: '#D1E0D4',
+          300: '#A9C6B0',
+          400: '#7BA686',
+          500: '#568663',
+          600: '#416A4C',
+          700: '#35553E',
+          800: '#2C4433',
+          900: '#25382B',
+          950: '#121F17',
+        },
+        earth: {
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          200: '#FDE68A',
+          300: '#FCD34D',
+          400: '#F59E0B',
+          500: '#D97706',
+          600: '#B45309',
+          700: '#92400E',
+          800: '#78350F',
+          900: '#451A03',
+        },
+        light: {
+          bg: '#F9FAFB',
+          card: '#FFFFFF',
+          elevated: '#FFFFFF',
+          border: '#E5E7EB',
+          hover: '#F3F4F6',
+        },
+        dark: {
+          bg: '#0F172A',
+          card: '#1E293B',
+          elevated: '#334155',
+          border: '#475569',
+          hover: '#1E293B',
+        },
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+      },
+    },
+  },
+  plugins: [],
+}

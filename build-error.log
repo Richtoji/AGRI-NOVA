@@ -1,0 +1,59 @@
+
+> agri-nova@1.0.0 build
+> next build
+
+   ▲ Next.js 15.5.22
+   - Environments: .env
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully in 9.0s
+   Skipping linting
+   Checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/26) ...
+   Generating static pages (6/26) 
+Mock seed data defined successfully!
+Mock seed data defined successfully!
+   Generating static pages (12/26) 
+   Generating static pages (19/26) 
+ ✓ Generating static pages (26/26)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    8.95 kB         128 kB
+├ ○ /_not-found                            998 B         104 kB
+├ ƒ /api/auth/login                        153 B         103 kB
+├ ƒ /api/auth/logout                       153 B         103 kB
+├ ƒ /api/auth/me                           153 B         103 kB
+├ ƒ /api/auth/register                     153 B         103 kB
+├ ƒ /api/cart                              153 B         103 kB
+├ ƒ /api/cart/item/[id]                    153 B         103 kB
+├ ƒ /api/checkout                          153 B         103 kB
+├ ƒ /api/log                               153 B         103 kB
+├ ƒ /api/weather                           153 B         103 kB
+├ ○ /auth/login                          3.17 kB         110 kB
+├ ○ /auth/register                       4.11 kB         111 kB
+├ ○ /contact                             3.54 kB         123 kB
+├ ○ /dashboard/admin                     3.56 kB         124 kB
+├ ○ /dashboard/buyer                     2.39 kB         117 kB
+├ ○ /dashboard/delivery                  3.06 kB         117 kB
+├ ○ /dashboard/equipment                 2.23 kB         117 kB
+├ ○ /dashboard/farmer                    8.68 kB         123 kB
+├ ○ /dashboard/profile                   5.53 kB         117 kB
+├ ○ /dashboard/veterinary                4.54 kB         119 kB
+├ ○ /equipment                           5.29 kB         123 kB
+├ ○ /marketplace                         8.08 kB         135 kB
+├ ○ /schemes                             3.64 kB         122 kB
+└ ○ /veterinary                          4.57 kB         117 kB
++ First Load JS shared by all             103 kB
+  ├ chunks/1255-31f47ebe9b12c7e5.js      46.3 kB
+  ├ chunks/4bd1b696-f785427dddbba9fb.js  54.2 kB
+  └ other shared chunks (total)          2.52 kB
+
+
+ƒ Middleware                             39.4 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

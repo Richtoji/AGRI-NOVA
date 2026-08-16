@@ -1,0 +1,311 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum RoleType {
+  FARMER
+  BUYER
+  EQUIPMENT_OWNER
+  VETERINARY_EXPERT
+  DELIVERY_PARTNER
+  ADMIN
+}
+
+enum KYCStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum CropStatus {
+  PLANTED
+  GROWING
+  HARVESTED
+}
+
+enum HealthStatus {
+  HEALTHY
+  MONITORING
+  ATTENTION_REQUIRED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  ACTIVE
+  COMPLETED
+  REJECTED
+}
+
+enum ConsultationStatus {
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum DeliveryStatus {
+  ASSIGNED
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERED
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  passwordHash  String
+  name          String
+  role          RoleType     @default(FARMER)
+  phone         String?      @unique
+  avatarUrl     String?
+  kycStatus     KYCStatus    @default(VERIFIED)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  deletedAt     DateTime?
+
+  farms                  FarmProfile[]
+  cropRecommendations    CropRecommendationLog[]
+  cropDiagnoses          CropDiagnosis[]
+  livestock              Livestock[]
+  products               Product[]              @relation("SellerProducts")
+  orders                 Order[]                @relation("BuyerOrders")
+  equipment              Equipment[]            @relation("OwnerEquipment")
+  rentals                RentalBooking[]        @relation("RenterBookings")
+  vetConsultationsAsFarmer VetConsultation[]    @relation("FarmerConsultations")
+  vetConsultationsAsVet   VetConsultation[]     @relation("VetConsultations")
+  deliveries             DeliveryTask[]         @relation("DriverDeliveries")
+  auditLogs              AuditLog[]
+  cart                   Cart?
+
+  @@index([email])
+  @@index([role])
+}
+
+model FarmProfile {
+  id           String   @id @default(uuid())
+  farmerId     String
+  farmName     String
+  locationName String
+  latitude     Float
+  longitude    Float
+  areaHectares Float
+  soilType     String
+  irrigationType String
+  createdAt    DateTime @default(now())
+
+  farmer User @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+}
+
+model CropRecommendationLog {
+  id                String   @id @default(uuid())
+  farmerId          String
+  latitude          Float
+  longitude         Float
+  soilN             Float
+  soilP             Float
+  soilK             Float
+  soilPh            Float
+  rainfall          Float
+  recommendedCrop   String
+  confidenceScore   Float
+  yieldEstimateTons Float
+  createdAt         DateTime @default(now())
+
+  farmer User @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+}
+
+model CropDiagnosis {
+  id               String   @id @default(uuid())
+  farmerId         String
+  imageUrl         String
+  diseaseDetected  String
+  confidenceScore  Float
+  organicSolution  String
+  chemicalSolution String
+  isResolved       Boolean  @default(false)
+  createdAt        DateTime @default(now())
+
+  farmer User @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+}
+
+model Livestock {
+  id                 String       @id @default(uuid())
+  farmerId           String
+  tagId              String       @unique
+  animalType         String
+  breed              String
+  ageMonths          Int
+  weightKg           Float
+  healthStatus       HealthStatus @default(HEALTHY)
+  lastVaccinationDate DateTime?
+  createdAt          DateTime     @default(now())
+
+  farmer           User              @relation(fields: [farmerId], references: [id], onDelete: Cascade)
+  vetConsultations VetConsultation[]
+}
+
+model Product {
+  id            String   @id @default(uuid())
+  sellerId      String
+  title         String
+  description   String
+  category      String
+  price         Float
+  unit          String
+  stockQuantity Int
+  imageUrl      String
+  rating        Float    @default(5.0)
+  createdAt     DateTime @default(now())
+
+  seller     User        @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  buyerId         String
+  totalAmount     Float
+  status          OrderStatus @default(PENDING)
+  paymentMethod   String      @default("UPI")
+  deliveryAddress String
+  createdAt       DateTime    @default(now())
+
+  buyer      User           @relation("BuyerOrders", fields: [buyerId], references: [id], onDelete: Cascade)
+  orderItems OrderItem[]
+  deliveries DeliveryTask[]
+}
+
+model OrderItem {
+  id        String  @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  unitPrice Float
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model Equipment {
+  id           String   @id @default(uuid())
+  ownerId      String
+  name         String
+  category     String
+  dailyRate    Float
+  hourlyRate   Float
+  imageUrl     String
+  locationName String
+  available    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  owner   User            @relation("OwnerEquipment", fields: [ownerId], references: [id], onDelete: Cascade)
+  rentals RentalBooking[]
+}
+
+model RentalBooking {
+  id          String        @id @default(uuid())
+  equipmentId String
+  renterId    String
+  startDate   DateTime
+  endDate     DateTime
+  totalCost   Float
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+
+  equipment Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  renter    User      @relation("RenterBookings", fields: [renterId], references: [id], onDelete: Cascade)
+}
+
+model VetConsultation {
+  id               String             @id @default(uuid())
+  vetId            String
+  farmerId         String
+  animalId         String?
+  scheduledAt      DateTime
+  status           ConsultationStatus @default(SCHEDULED)
+  videoRoomUrl     String?
+  notes            String?
+  prescriptionText String?
+  createdAt        DateTime           @default(now())
+
+  vet    User       @relation("VetConsultations", fields: [vetId], references: [id], onDelete: Cascade)
+  farmer User       @relation("FarmerConsultations", fields: [farmerId], references: [id], onDelete: Cascade)
+  animal Livestock? @relation(fields: [animalId], references: [id], onDelete: SetNull)
+}
+
+model DeliveryTask {
+  id               String         @id @default(uuid())
+  orderId          String
+  driverId         String
+  status           DeliveryStatus @default(ASSIGNED)
+  pickupLocation   String
+  deliveryLocation String
+  earnings         Float
+  createdAt        DateTime       @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  driver User  @relation("DriverDeliveries", fields: [driverId], references: [id], onDelete: Cascade)
+}
+
+model GovernmentScheme {
+  id            String   @id @default(uuid())
+  title         String
+  department    String
+  category      String
+  description   String
+  subsidyAmount String
+  linkUrl       String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  userId     String?
+  action     String
+  entityName String
+  entityId   String?
+  payload    String?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Cart {
+  id        String   @id @default(uuid())
+  buyerId   String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  buyer     User       @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  cartItems CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(uuid())
+  cartId    String
+  productId String
+  quantity  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}

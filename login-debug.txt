@@ -1,0 +1,31 @@
+PrismaClientInitializationError: 
+Invalid `prisma.user.findUnique()` invocation:
+
+
+Can't reach database server at `localhost:5432`
+
+Please make sure your database server is running at `localhost:5432`.
+    at ei.handleRequestError (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\@prisma\client\runtime\library.js:121:7568)
+    at ei.handleAndLogRequestError (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async POST (webpack-internal:///(rsc)/./src/app/api/auth/login/route.ts:35:22)
+    at async AppRouteRouteModule.do (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38833)
+    at async AppRouteRouteModule.handle (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46115)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=C%3A%5CUsers%5CLENOVO%5CDesktop%5CAGRI-NOVA%20PROJECT%5Csrc%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=C%3A%5CUsers%5CLENOVO%5CDesktop%5CAGRI-NOVA%20PROJECT&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195894)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=C%3A%5CUsers%5CLENOVO%5CDesktop%5CAGRI-NOVA%20PROJECT%5Csrc%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=C%3A%5CUsers%5CLENOVO%5CDesktop%5CAGRI-NOVA%20PROJECT&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Fauth%2Flogin%2Froute&page=%2Fapi%2Fauth%2Flogin%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Fauth%2Flogin%2Froute.ts&appDir=C%3A%5CUsers%5CLENOVO%5CDesktop%5CAGRI-NOVA%20PROJECT%5Csrc%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=C%3A%5CUsers%5CLENOVO%5CDesktop%5CAGRI-NOVA%20PROJECT&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\base-server.js:917:17)
+    at async C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (C:\Users\LENOVO\Desktop\AGRI-NOVA PROJECT\node_modules\next\dist\server\lib\start-server.js:226:13)

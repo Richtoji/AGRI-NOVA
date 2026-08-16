@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_AI_URL=http://localhost:8000
+      - DATABASE_URL=postgresql://postgres:postgres_agri_nova_password@postgres:5432/agrinova_db?schema=public
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai_server:
+        condition: service_started
+
+  ai_server:
+    build:
+      context: ./ai_server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: agri_nova_db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_agri_nova_password
+      - POSTGRES_DB=agrinova_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d agrinova_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: agri_nova_redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  postgres_data:

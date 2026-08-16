@@ -1,0 +1,38 @@
+name: AGRI-NOVA Enterprise CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Run Next.js Production Build
+        run: npm run build
+
+      - name: Set up Python 3.11 for AI Service
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Test AI Server Requirements
+        run: |
+          cd ai_server
+          pip install -r requirements.txt
+          python -c "import main; print('AI Server loaded cleanly')"

@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-main: #F9FAFB;
+    --bg-surface: #FFFFFF;
+    --bg-elevated: #FFFFFF;
+    --text-main: #111827;
+    --text-muted: #6B7280;
+    --border-subtle: #F3F4F6;
+    --border-medium: #E5E7EB;
+    --brand-green: #111827;
+    --brand-lime: #374151;
+    --earth-amber: #F59E0B;
+  }
+
+  .dark {
+    /* We retain dark mode variables in case of a dark theme toggle, but default is light */
+    --bg-main: #0F172A;
+    --bg-surface: #1E293B;
+    --bg-elevated: #334155;
+    --text-main: #F8FAFC;
+    --text-muted: #94A3B8;
+    --border-subtle: #334155;
+    --border-medium: #475569;
+    --brand-green: #111827;
+    --brand-lime: #374151;
+    --earth-amber: #F59E0B;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: inherit;
+    letter-spacing: -0.015em;
+  }
+}
+
+/* Production Surface Containers */
+.agri-card {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: 1.25rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.agri-card:hover {
+  border-color: #D1D5DB;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+.agri-card-elevated {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: 1.25rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+/* Deprecated glass-panel, mapped to standard elevated card for compatibility */
+.glass-panel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
