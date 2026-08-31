@@ -40,9 +40,9 @@ export default function VeterinaryDashboard() {
       return;
     }
     setRxSent(true);
+    setPrescriptionText("");
     setTimeout(() => {
       setRxSent(false);
-      setPrescriptionText("");
     }, 2000);
   };
 

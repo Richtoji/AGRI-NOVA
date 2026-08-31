@@ -4,8 +4,12 @@ import React from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Stethoscope, Droplets, Calendar, ChevronRight, Activity, Beaker } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { AppointmentModal } from "@/components/veterinary/AppointmentModal";
+import { useState } from "react";
 
 export default function VeterinaryPage() {
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -20,7 +24,10 @@ export default function VeterinaryPage() {
               Manage your livestock health, view breed recommendations, and book veterinary appointments.
             </p>
           </div>
-          <button className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center">
+          <button 
+            onClick={() => setIsBookingModalOpen(true)}
+            className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center"
+          >
             <Calendar className="w-4 h-4 mr-2" />
             Book Vet Appointment
           </button>
@@ -39,7 +46,7 @@ export default function VeterinaryPage() {
               <div className="bg-white border border-gray-100 rounded-2xl bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col shadow-sm">
                 <div className="h-48 relative">
                   <SafeImage 
-                    src="https://images.unsplash.com/photo-1546446306-444458514120?w=600" 
+                    src="/images/jersey-cow.png" 
                     alt="Jersey Cow" 
                     className="w-full h-full object-cover"
                   />
@@ -73,7 +80,7 @@ export default function VeterinaryPage() {
               <div className="bg-white border border-gray-100 rounded-2xl bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col shadow-sm">
                 <div className="h-48 relative">
                   <SafeImage 
-                    src="https://images.unsplash.com/photo-1528646199653-333e25ba138e?w=600" 
+                    src="/images/murrah-buffalo.jpg" 
                     alt="Murrah Buffalo" 
                     className="w-full h-full object-cover"
                   />
@@ -142,7 +149,10 @@ export default function VeterinaryPage() {
               <p className="text-sm text-gray-800 mb-4 leading-relaxed">
                 Schedule an on-farm visit or teleconsultation with certified veterinary doctors.
               </p>
-              <button className="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-lg shadow-sm transition-colors text-sm flex items-center justify-center">
+              <button 
+                onClick={() => setIsBookingModalOpen(true)}
+                className="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-lg shadow-sm transition-colors text-sm flex items-center justify-center"
+              >
                 <Calendar className="w-4 h-4 mr-2" /> Book Appointment
               </button>
             </div>
@@ -172,6 +182,11 @@ export default function VeterinaryPage() {
 
         </div>
       </div>
+
+      <AppointmentModal 
+        isOpen={isBookingModalOpen} 
+        onClose={() => setIsBookingModalOpen(false)} 
+      />
     </AppLayout>
   );
 }

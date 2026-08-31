@@ -28,22 +28,17 @@ export const AIChatbot: React.FC = () => {
     const userMsg: ChatMessage = { sender: "user", text: input, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
-    setIsTyping(true);
+    let reply = "Based on current agricultural telemetry, tomato market prices in your zone are trending upward at ₹45/kg. Ensure soil drip irrigation is set to 4,200 L/ha today.";
+    if (language === "Malayalam") {
+      reply = "ആഗ്രി-നോവ AI സഹായി: നിശ്ചിത തക്കാളി മാർക്കറ്റ് വില കിലോയ്ക്ക് ₹45 ആയി ഉയർന്നു. ഇന്ന് ജലസേചനം ആവശ്യാനുസരണം ക്രമീകരിക്കുക.";
+    } else if (language === "Hindi") {
+      reply = "एग्री-नोवा एआई सहायक: आपकी मंडी में टमाटर का भाव ₹45/किलो चल रहा है। आज शाम सिंचाई की सलाह दी जाती है।";
+    }
 
-    setTimeout(() => {
-      let reply = "Based on current agricultural telemetry, tomato market prices in your zone are trending upward at ₹45/kg. Ensure soil drip irrigation is set to 4,200 L/ha today.";
-      if (language === "Malayalam") {
-        reply = "ആഗ്രി-നോവ AI സഹായി: നിശ്ചിത തക്കാളി മാർക്കറ്റ് വില കിലോയ്ക്ക് ₹45 ആയി ഉയർന്നു. ഇന്ന് ജലസേചനം ആവശ്യാനുസരണം ക്രമീകരിക്കുക.";
-      } else if (language === "Hindi") {
-        reply = "एग्री-नोवा एआई सहायक: आपकी मंडी में टमाटर का भाव ₹45/किलो चल रहा है। आज शाम सिंचाई की सलाह दी जाती है।";
-      }
-
-      setMessages((prev) => [
-        ...prev,
-        { sender: "ai", text: reply, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
-      ]);
-      setIsTyping(false);
-    }, 600);
+    setMessages((prev) => [
+      ...prev,
+      { sender: "ai", text: reply, timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) }
+    ]);
   };
 
   const handleQuickPrompt = (promptText: string) => {

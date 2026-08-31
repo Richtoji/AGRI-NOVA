@@ -25,8 +25,10 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    let cart = await prisma.cart.findUnique({
+    const cart = await prisma.cart.upsert({
       where: { buyerId: userId },
+      update: {},
+      create: { buyerId: userId },
       include: {
         cartItems: {
           include: { product: true },
@@ -34,15 +36,6 @@ export async function GET() {
         }
       }
     });
-
-    if (!cart) {
-      cart = await prisma.cart.create({
-        data: { buyerId: userId },
-        include: {
-          cartItems: { include: { product: true } }
-        }
-      });
-    }
 
     const formattedItems = cart.cartItems.map(item => ({
       id: item.id,
@@ -79,10 +72,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'This product is currently unavailable.' }, { status: 404 });
     }
 
-    let cart = await prisma.cart.findUnique({ where: { buyerId: userId } });
-    if (!cart) {
-      cart = await prisma.cart.create({ data: { buyerId: userId } });
-    }
+    const cart = await prisma.cart.upsert({
+      where: { buyerId: userId },
+      update: {},
+      create: { buyerId: userId }
+    });
 
     const existingItem = await prisma.cartItem.findFirst({
       where: { cartId: cart.id, productId }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { X, Minus, Plus, ShoppingBag, Loader2 } from 'lucide-react';
 import { SafeImage } from '../ui/SafeImage';
+import { useAuthRole } from '@/lib/context/AuthRoleContext';
 
 export interface CartItem {
   id: string;
@@ -20,6 +21,7 @@ interface CartPanelProps {
 }
 
 export function CartPanel({ isOpen, onClose, items, onUpdateQuantity, onRemove }: CartPanelProps) {
+  const { fetchCart } = useAuthRole();
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
@@ -38,12 +40,9 @@ export function CartPanel({ isOpen, onClose, items, onUpdateQuantity, onRemove }
         setCheckoutError(data.error || "Checkout failed.");
       } else {
         setCheckoutSuccess(true);
-        setTimeout(() => {
-          setCheckoutSuccess(false);
-          onClose();
-          // Rely on AuthRoleContext to fetch cart again after close
-          window.location.reload(); 
-        }, 2000);
+        onClose();
+        // Rely on fetchCart to update the cart in the background immediately
+        await fetchCart();
       }
     } catch (e) {
       setCheckoutError("Network error. Try again.");

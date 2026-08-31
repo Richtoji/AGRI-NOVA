@@ -105,9 +105,9 @@ export function useLocationWeather() {
         fallbackToIPLocation();
       },
       {
-        enableHighAccuracy: false,
-        timeout: 4000,
-        maximumAge: 300000 // Cache for 5 minutes
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0 
       }
     );
   }, []);

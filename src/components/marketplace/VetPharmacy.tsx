@@ -91,18 +91,15 @@ export const VetPharmacy: React.FC = () => {
       setAiRecommendation("Warning: Symptoms description is too long (max 200 characters).");
       return;
     }
-    setAiRecommendation("Loading AI Analysis...");
-    setTimeout(() => {
-      if (query.toLowerCase().includes("fever") || query.toLowerCase().includes("mastitis")) {
-        setAiRecommendation(
-          "AI Diagnostics recommends: Broad Spectrum Antibiotic Paste. Warning: This formulation requires uploading a valid Vet Prescription before checkout."
-        );
-      } else {
-        setAiRecommendation(
-          "AI Diagnostics recommends: Liquid Calcium & D3 Feed Supplement to support nutritional recovery. No prescription required."
-        );
-      }
-    }, 800);
+    if (query.toLowerCase().includes("fever") || query.toLowerCase().includes("mastitis")) {
+      setAiRecommendation(
+        "AI Diagnostics recommends: Broad Spectrum Antibiotic Paste. Warning: This formulation requires uploading a valid Vet Prescription before checkout."
+      );
+    } else {
+      setAiRecommendation(
+        "AI Diagnostics recommends: Liquid Calcium & D3 Feed Supplement to support nutritional recovery. No prescription required."
+      );
+    }
   };
 
   const filteredMeds = medicines.filter((med) =>

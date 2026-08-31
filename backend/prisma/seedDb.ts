@@ -63,6 +63,33 @@ async function main() {
     }
   }
   console.log("Database seeded with products successfully!");
+
+  console.log("Seeding database with mock equipment...");
+  for (const eq of mockSeedData.equipment) {
+    const existingEq = await prisma.equipment.findUnique({
+      where: { id: eq.id }
+    });
+
+    if (!existingEq) {
+      await prisma.equipment.create({
+        data: {
+          id: eq.id,
+          ownerId: eq.ownerId || mockSeedData.users.find(u => u.role === 'EQUIPMENT_OWNER')?.id || mockSeedData.users[0].id,
+          name: eq.name,
+          category: eq.category,
+          dailyRate: eq.dailyRate,
+          hourlyRate: eq.hourlyRate,
+          imageUrl: eq.imageUrl,
+          locationName: eq.locationName,
+          available: eq.available
+        }
+      });
+      console.log(`Created equipment: ${eq.name}`);
+    } else {
+      console.log(`Equipment already exists: ${eq.name}`);
+    }
+  }
+  console.log("Database seeded with equipment successfully!");
 }
 
 main()

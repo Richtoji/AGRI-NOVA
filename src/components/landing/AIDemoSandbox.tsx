@@ -92,17 +92,13 @@ export const AIDemoSandbox: React.FC = () => {
 
   const handleDiseaseUpload = (imagePath: string) => {
     setUploadedImage(imagePath);
-    setIsScanning(true);
-    setTimeout(() => {
-      setDiseaseResult({
-        disease: "Tomato Early Blight (Alternaria solani)",
-        confidence: 97.4,
-        organic: "Neem Oil 5ml/L spray every 7 days",
-        chemical: "Mancozeb 75% WP (2.5g/L)",
-        nearbyStore: "Krishi Vikas Agri Kendra (1.8 km)"
-      });
-      setIsScanning(false);
-    }, 700);
+    setDiseaseResult({
+      disease: "Tomato Early Blight (Alternaria solani)",
+      confidence: 97.4,
+      organic: "Neem Oil 5ml/L spray every 7 days",
+      chemical: "Mancozeb 75% WP (2.5g/L)",
+      nearbyStore: "Krishi Vikas Agri Kendra (1.8 km)"
+    });
   };
 
   return (

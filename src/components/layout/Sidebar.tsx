@@ -50,11 +50,11 @@ export const Sidebar: React.FC = () => {
       case "FARMER":
         return [
           { label: "Dashboard", href: "/dashboard/farmer", icon: <Home className="w-4 h-4" /> },
-          { label: "Weather", href: "/dashboard/farmer", icon: <CloudSun className="w-4 h-4" /> },
-          { label: "Crop Recommendation", href: "/dashboard/farmer", icon: <Sprout className="w-4 h-4" /> },
+          { label: "Weather", href: "/dashboard/farmer#weather", icon: <CloudSun className="w-4 h-4" /> },
+          { label: "Crop Recommendation", href: "/dashboard/farmer#crop-recommendations", icon: <Sprout className="w-4 h-4" /> },
           { label: "Equipment Rental", href: "/equipment", icon: <Tractor className="w-4 h-4" /> },
           { label: "Marketplace", href: "/marketplace", icon: <ShoppingBag className="w-4 h-4" /> },
-          { label: "My Products", href: "/dashboard/farmer", icon: <Store className="w-4 h-4" /> },
+          { label: "My Products", href: "/dashboard/farmer#my-products", icon: <Store className="w-4 h-4" /> },
           { label: "Veterinary", href: "/veterinary", icon: <PawPrint className="w-4 h-4" /> },
           { label: "Government Schemes", href: "/schemes", icon: <FileText className="w-4 h-4" /> },
           { label: "Profile", href: "/dashboard/profile", icon: <User className="w-4 h-4" /> },

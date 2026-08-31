@@ -135,22 +135,19 @@ export const LivestockManager: React.FC = () => {
   };
 
   const triggerAiInference = () => {
-    setAiPrediction("Analyzing telemetry metrics...");
-    setTimeout(() => {
-      if (activeFarm === "dairy") {
-        setAiPrediction(
-          `AI Yield Inference: Estimated total herd yield for tomorrow is ${(cows.reduce((acc, c) => acc + c.milkYield, 0) * 1.05).toFixed(1)} Liters. Breed Sahiwal displays high temperature tolerance index.`
-        );
-      } else if (activeFarm === "aquaculture") {
-        if (doLevel < 5.0) {
-          setAiPrediction("AI Water Safety Warning: Low Dissolved Oxygen detected. Turn on aeration pumps immediately.");
-        } else {
-          setAiPrediction("AI Water Safety Status: Water telemetry is healthy. Next predicted Tilapia harvest is September 12, 2026.");
-        }
+    if (activeFarm === "dairy") {
+      setAiPrediction(
+        `AI Yield Inference: Estimated total herd yield for tomorrow is ${(cows.reduce((acc, c) => acc + c.milkYield, 0) * 1.05).toFixed(1)} Liters. Breed Sahiwal displays high temperature tolerance index.`
+      );
+    } else if (activeFarm === "aquaculture") {
+      if (doLevel < 5.0) {
+        setAiPrediction("AI Water Safety Warning: Low Dissolved Oxygen detected. Turn on aeration pumps immediately.");
       } else {
-        setAiPrediction("AI Growth Predictor: Active calves display an expected weight gain of +1.2kg per week based on current feed intakes.");
+        setAiPrediction("AI Water Safety Status: Water telemetry is healthy. Next predicted Tilapia harvest is September 12, 2026.");
       }
-    }, 600);
+    } else {
+      setAiPrediction("AI Growth Predictor: Active calves display an expected weight gain of +1.2kg per week based on current feed intakes.");
+    }
   };
 
   return (

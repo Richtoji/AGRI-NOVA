@@ -24,7 +24,7 @@ export default function AdminDashboard() {
 
   const handleRefreshTelemetry = () => {
     setRefreshing(true);
-    setTimeout(() => setRefreshing(false), 800);
+    setRefreshing(false);
   };
 
   return (

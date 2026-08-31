@@ -12,20 +12,44 @@ export default function EquipmentPage() {
   const [days, setDays] = useState<number | string>(2);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [isBooking, setIsBooking] = useState(false);
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     setValidationError(null);
     const validation = validateRentalDays(days);
     if (!validation.isValid) {
       setValidationError(validation.error || "Invalid duration.");
       return;
     }
-    setBookingSuccess(true);
-    setTimeout(() => {
-      setBookingSuccess(false);
-      setSelectedEq(null);
-      setDays(2);
-    }, 2000);
+    setIsBooking(true);
+    try {
+      const totalCost = (selectedEq.dailyRate * (Number(days) || 0)) + 850;
+      const res = await fetch("/api/equipment/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          equipmentId: selectedEq.id,
+          days: Number(days),
+          totalCost
+        })
+      });
+      
+      const data = await res.json();
+      if (!res.ok) {
+        setValidationError(data.error || "Failed to book equipment.");
+      } else {
+        setBookingSuccess(true);
+        setSelectedEq(null);
+        setDays(2);
+        setTimeout(() => {
+          setBookingSuccess(false);
+        }, 2000);
+      }
+    } catch (err) {
+      setValidationError("An unexpected error occurred.");
+    } finally {
+      setIsBooking(false);
+    }
   };
 
   return (
@@ -148,9 +172,10 @@ export default function EquipmentPage() {
               <div className="p-4 border-t border-gray-100 bg-gray-50">
                 <button 
                   onClick={handleConfirmBooking}
-                  className="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3 rounded-xl shadow-sm transition-all"
+                  disabled={isBooking}
+                  className="w-full bg-gray-900 hover:bg-gray-800 disabled:bg-gray-600 text-white font-bold py-3 rounded-xl shadow-sm transition-all"
                 >
-                  Confirm Booking Request
+                  {isBooking ? "Booking..." : "Confirm Booking Request"}
                 </button>
               </div>
             </div>

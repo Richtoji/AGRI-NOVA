@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 import { useLocationWeather } from "@/lib/hooks/useLocationWeather";
+import { mockSeedData } from "../../../../backend/prisma/seed";
 import { 
   MapPin, 
   Droplets, 
@@ -178,7 +179,7 @@ export default function FarmerDashboard() {
             </div>
 
             {/* TODAY'S WEATHER CARD */}
-            <div className="col-span-12 lg:col-span-4 bg-white border border-gray-100 rounded-2xl p-5 flex flex-col" style={{minHeight: '230px'}}>
+            <div id="weather" className="col-span-12 lg:col-span-4 bg-white border border-gray-100 rounded-2xl p-5 flex flex-col" style={{minHeight: '230px'}}>
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-sm text-gray-900">Today's Weather</h3>
                 <span className="text-[10px] font-semibold text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">Live API</span>
@@ -224,7 +225,7 @@ export default function FarmerDashboard() {
           <div className="grid grid-cols-12 gap-4">
 
             {/* CROP RECOMMENDATIONS (spans 8 cols) */}
-            <div className="col-span-12 lg:col-span-8 bg-white border border-gray-100 rounded-2xl p-5 flex flex-col">
+            <div id="crop-recommendations" className="col-span-12 lg:col-span-8 bg-white border border-gray-100 rounded-2xl p-5 flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-bold text-sm text-gray-900">Crop Recommendations</h3>
                 <button className="text-[11px] font-semibold text-gray-500 hover:text-gray-900">View All</button>
@@ -375,7 +376,44 @@ export default function FarmerDashboard() {
             </div>
           </div>
 
-          {/* ===== ROW 3: Advisory | Insights | Quick Actions | Govt Schemes ===== */}
+          {/* ===== ROW 3: My Products ===== */}
+          <div id="my-products" className="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col mb-4">
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="font-bold text-sm text-gray-900">My Active Products</h3>
+              <button className="text-[10px] font-semibold text-gray-500 hover:text-gray-900">View All</button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {mockSeedData.products.filter(p => p.sellerId === "u-farmer-01").slice(0, 3).map(product => (
+                <div key={product.id} className="border border-gray-100 rounded-xl overflow-hidden flex flex-col group relative hover:border-gray-200 transition-all">
+                  <div className="aspect-[4/3] w-full relative overflow-hidden bg-gray-50">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </div>
+                  <div className="p-4 flex flex-col flex-1">
+                    <div className="flex justify-between items-start mb-1.5">
+                      <h3 className="font-bold text-gray-900 text-sm leading-tight">{product.title}</h3>
+                    </div>
+                    <p className="text-[10px] text-gray-500 mb-2 truncate">{product.description}</p>
+                    <div className="mt-auto flex items-end justify-between pt-3 border-t border-gray-50">
+                      <div>
+                        <div className="flex items-baseline space-x-0.5">
+                          <span className="text-lg font-black text-gray-900">₹{product.price}</span>
+                          <span className="text-xs text-gray-500 font-medium">/{product.unit}</span>
+                        </div>
+                      </div>
+                      <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">In Stock</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ===== ROW 4: Advisory | Insights | Quick Actions | Govt Schemes ===== */}
           <div className="grid grid-cols-12 gap-4">
 
             {/* 1. FARMING ADVISORY */}
@@ -514,7 +552,7 @@ export default function FarmerDashboard() {
 
                 <div className="flex space-x-3">
                   <img 
-                    src="https://images.unsplash.com/photo-1592417817098-8f3d6ef23a2f?w=200&q=80" 
+                    src="https://images.unsplash.com/photo-1495107334309-fcf20504a5ab?w=200&q=80" 
                     alt="Scheme" 
                     className="w-20 h-14 rounded-xl object-cover shrink-0"
                   />

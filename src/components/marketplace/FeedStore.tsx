@@ -99,11 +99,11 @@ export const FeedStore: React.FC = () => {
   };
 
   const handleCheckout = () => {
+    setCart([]);
     setCheckoutSuccess(true);
     setTimeout(() => {
       setCheckoutSuccess(false);
-      setCart([]);
-    }, 2000);
+    }, 1500);
   };
 
   const filteredFeeds = feeds.filter((feed) => {

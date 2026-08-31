@@ -95,9 +95,7 @@ export default function RegisterPage() {
         setApiError(data.error || "Registration failed. Please try again.");
       } else {
         setSuccess(true);
-        setTimeout(() => {
-          router.push("/auth/login");
-        }, 1500);
+        router.push("/auth/login");
       }
     } catch (err) {
       setApiError("A network error occurred. Please try again later.");
