@@ -7,7 +7,6 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 import { useLocationWeather } from "@/lib/hooks/useLocationWeather";
-import { mockSeedData } from "../../../../backend/prisma/seed";
 import { 
   MapPin, 
   Droplets, 
@@ -38,9 +37,27 @@ const FarmMap = dynamic(() => import('@/components/dashboard/weather/FarmMap'), 
 
 export default function FarmerDashboard() {
   const { currentUser } = useAuthRole();
-  const userName = currentUser?.name || "Rich Toji";
+  const userName = currentUser?.name || "Farmer";
   
   const { coordinates, weatherData, loading, error, permissionState, refresh } = useLocationWeather();
+
+  const [products, setProducts] = React.useState<any[]>([]);
+  
+  React.useEffect(() => {
+    if (!currentUser?.id) return;
+    const fetchMyProducts = async () => {
+      try {
+        const res = await fetch(`/api/products?sellerId=${currentUser.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data.products || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch farmer products", err);
+      }
+    };
+    fetchMyProducts();
+  }, [currentUser?.id]);
 
   const renderWeatherIcon = (type: string, className: string = "w-14 h-14") => {
     switch(type) {
@@ -384,7 +401,7 @@ export default function FarmerDashboard() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {mockSeedData.products.filter(p => p.sellerId === "u-farmer-01").slice(0, 3).map(product => (
+              {products.slice(0, 3).map(product => (
                 <div key={product.id} className="border border-gray-100 rounded-xl overflow-hidden flex flex-col group relative hover:border-gray-200 transition-all">
                   <div className="aspect-[4/3] w-full relative overflow-hidden bg-gray-50">
                     <img

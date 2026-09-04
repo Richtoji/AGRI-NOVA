@@ -1,18 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { mockSeedData } from "../../../backend/prisma/seed";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { Tractor, MapPin, Calendar, CheckCircle2, Zap, X, AlertCircle } from "lucide-react";
 import { validateRentalDays } from "@/lib/validation";
 
 export default function EquipmentPage() {
+  const [equipmentList, setEquipmentList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedEq, setSelectedEq] = useState<any | null>(null);
   const [days, setDays] = useState<number | string>(2);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+
+  useEffect(() => {
+    const fetchEquipment = async () => {
+      try {
+        const res = await fetch("/api/equipment");
+        if (res.ok) {
+          const data = await res.json();
+          setEquipmentList(data.equipment || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch equipment:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEquipment();
+  }, []);
 
   const handleConfirmBooking = async () => {
     setValidationError(null);
@@ -70,7 +88,7 @@ export default function EquipmentPage() {
 
         {/* Machinery Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {mockSeedData.equipment.map((eq) => (
+          {equipmentList.map((eq: any) => (
             <div key={eq.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col group relative bg-white border border-gray-200 shadow-sm p-4 rounded-xl">
               <div className="space-y-3 flex-1 flex flex-col">
                 

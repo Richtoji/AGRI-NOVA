@@ -1,15 +1,30 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { mockSeedData } from "../../../backend/prisma/seed";
 import { FileText, ExternalLink, CheckCircle2, Search } from "lucide-react";
 
 export default function SchemesPage() {
   const [search, setSearch] = useState("");
   const [eligibleScheme, setEligibleScheme] = useState<string | null>(null);
+  const [schemes, setSchemes] = useState<any[]>([]);
 
-  const filtered = mockSeedData.schemes.filter(
+  useEffect(() => {
+    const fetchSchemes = async () => {
+      try {
+        const res = await fetch("/api/schemes");
+        if (res.ok) {
+          const data = await res.json();
+          setSchemes(data.schemes || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch schemes", err);
+      }
+    };
+    fetchSchemes();
+  }, []);
+
+  const filtered = schemes.filter(
     (s) =>
       s.title.toLowerCase().includes(search.toLowerCase()) ||
       s.description.toLowerCase().includes(search.toLowerCase())

@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
-import { mockSeedData } from "../../../backend/prisma/seed";
-import { Search, ShoppingBag, Star, ShieldCheck, Check, MapPin, SlidersHorizontal } from "lucide-react";
+import { Search, ShoppingBag, Star, ShieldCheck, Check, MapPin, SlidersHorizontal, Loader2 } from "lucide-react";
 import { FeedStore } from "@/components/marketplace/FeedStore";
 import { VetPharmacy } from "@/components/marketplace/VetPharmacy";
 import { SafeImage } from "@/components/ui/SafeImage";
@@ -12,6 +11,8 @@ import { RouteGuard } from "@/components/layout/RouteGuard";
 
 export default function MarketplacePage() {
   const { addToCart } = useAuthRole();
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [addedItem, setAddedItem] = useState<string | null>(null);
@@ -19,6 +20,23 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState("price-asc");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [minRating, setMinRating] = useState(0);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        if (res.ok) {
+          const data = await res.json();
+          setProducts(data.products || []);
+        }
+      } catch (err) {
+        console.error('Failed to fetch products', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const categories = [
     "All", "Fresh Vegetables", "Fruits", "Rice & Grains", "Pulses", "Tubers",
@@ -32,7 +50,7 @@ export default function MarketplacePage() {
     "Thrissur", "Kottayam", "Alappuzha", "Kollam", "Kannur", "Malappuram"
   ];
 
-  const filteredProducts = mockSeedData.products
+  const filteredProducts = products
     .filter((p) => {
       const matchesCategory = selectedCategory === "All" || p.category.toLowerCase() === selectedCategory.toLowerCase();
       const matchesLocation = selectedLocation === "All Locations" || (p.location && p.location.toLowerCase() === selectedLocation.toLowerCase());
