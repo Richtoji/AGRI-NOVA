@@ -67,12 +67,24 @@ export function useLocationWeather() {
 
     const fallbackToIPLocation = async () => {
       try {
-        const res = await fetch('https://get.geojs.io/v1/ip/geo.json');
+        const res = await fetch('https://ipapi.co/json/');
         if (res.ok) {
           const data = await res.json();
           if (data.latitude && data.longitude) {
             const lat = Number(data.latitude);
             const lng = Number(data.longitude);
+            setCoordinates({ lat, lng });
+            fetchWeather(lat, lng);
+            return;
+          }
+        }
+        // Second fallback
+        const res2 = await fetch('https://get.geojs.io/v1/ip/geo.json');
+        if (res2.ok) {
+          const data2 = await res2.json();
+          if (data2.latitude && data2.longitude) {
+            const lat = Number(data2.latitude);
+            const lng = Number(data2.longitude);
             setCoordinates({ lat, lng });
             fetchWeather(lat, lng);
             return;
@@ -106,7 +118,7 @@ export function useLocationWeather() {
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 20000,
         maximumAge: 0 
       }
     );

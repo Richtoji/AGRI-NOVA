@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -26,7 +26,8 @@ import {
   CloudRain,
   Cloud,
   RefreshCw,
-  AlertTriangle
+  AlertTriangle,
+  Search
 } from "lucide-react";
 
 // Dynamically import the map to avoid SSR issues with Leaflet
@@ -40,6 +41,51 @@ export default function FarmerDashboard() {
   const userName = currentUser?.name || "Farmer";
   
   const { coordinates, weatherData, loading, error, permissionState, refresh, setLocationManually } = useLocationWeather();
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+    
+    setIsSearching(true);
+    setSearchError("");
+    
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`);
+      const data = await res.json();
+      
+      if (data && data.length > 0) {
+        setLocationManually(Number(data[0].lat), Number(data[0].lon));
+        setSearchQuery(""); // Clear on success
+      } else {
+        setSearchError("Location not found.");
+      }
+    } catch (err) {
+      setSearchError("Search failed.");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const [cropRecommendations, setCropRecommendations] = useState<any[]>([]);
+  const [cropZone, setCropZone] = useState<string>("");
+
+  useEffect(() => {
+    if (coordinates) {
+      fetch(`/api/crops/recommendations?latitude=${coordinates.lat}&longitude=${coordinates.lng}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.recommendations) {
+            setCropRecommendations(data.recommendations);
+            setCropZone(data.zone);
+          }
+        })
+        .catch(err => console.error("Failed to load crop recommendations", err));
+    }
+  }, [coordinates]);
 
   const renderWeatherIcon = (type: string, className: string = "w-14 h-14") => {
     switch(type) {
@@ -130,6 +176,30 @@ export default function FarmerDashboard() {
                   <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} /> Detect Location
                 </button>
               </div>
+
+              {/* SEARCH BAR */}
+              <form onSubmit={handleSearch} className="mb-3 relative z-[1001]">
+                <div className="relative flex items-center">
+                  <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                    <Search className="h-3.5 w-3.5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search location manually..."
+                    className="block w-full pl-8 pr-16 py-1.5 text-xs text-gray-900 bg-gray-50 border border-gray-200 rounded-lg focus:ring-green-500 focus:border-green-500 transition-colors"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSearching || !searchQuery.trim()}
+                    className="absolute inset-y-0 right-0 px-3 flex items-center bg-green-500 hover:bg-green-600 text-white text-[10px] font-bold rounded-r-lg transition-colors disabled:opacity-50"
+                  >
+                    {isSearching ? '...' : 'Search'}
+                  </button>
+                </div>
+                {searchError && <p className="text-[9px] text-red-500 mt-1 pl-1 font-medium">{searchError}</p>}
+              </form>
               
               {/* Map Area */}
               <div className="flex-1 bg-[#eef0f3] rounded-xl relative overflow-hidden flex items-center justify-center mb-3" style={{minHeight: '130px'}}>
@@ -248,102 +318,62 @@ export default function FarmerDashboard() {
               )}
 
               <div className="grid grid-cols-2 gap-4 flex-1">
-                {/* Crop Card 1 - Banana */}
-                <div className="bg-gray-50 rounded-xl p-4 relative overflow-hidden flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center mb-3">
-                      <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
-                        <div className="w-4 h-4 flex items-center justify-center">
-                          <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 text-gray-700" stroke="currentColor" strokeWidth="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-800">Maximum Yield</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-xl font-black text-gray-900 mb-1">Banana</h4>
-                        <p className="text-[10px] text-gray-400 font-semibold mb-0.5">Expected Yield</p>
-                        <p className="text-xs font-bold text-gray-800 mb-3">45 - 50 Ton/ha</p>
-                        <div className="flex space-x-5">
-                          <div>
-                            <p className="text-[9px] text-gray-400 font-semibold">Growing Period</p>
-                            <p className="text-[11px] font-bold text-gray-800">9 - 12 Months</p>
+                {cropRecommendations.length > 0 ? cropRecommendations.map((crop, idx) => (
+                  <div key={idx} className="bg-gray-50 rounded-xl p-4 relative overflow-hidden flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center mb-3 justify-between">
+                        <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
+                          <div className="w-4 h-4 flex items-center justify-center">
+                            {crop.badgeLabel === "Maximum Profit" ? (
+                              <Coins className="w-3.5 h-3.5 text-gray-700" />
+                            ) : (
+                              <svg viewBox="0 0 24 24" fill="none" className="w-3.5 h-3.5 text-gray-700" stroke="currentColor" strokeWidth="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+                            )}
                           </div>
-                          <div>
-                            <p className="text-[9px] text-gray-400 font-semibold mb-0.5">Water Requirement</p>
-                            <div className="flex space-x-0.5">
-                              <Droplets className="w-3 h-3 text-gray-700 fill-gray-700" />
-                              <Droplets className="w-3 h-3 text-gray-700 fill-gray-700" />
-                              <Droplets className="w-3 h-3 text-gray-300" />
+                          <span className="text-[10px] font-bold text-gray-800">{crop.badgeLabel}</span>
+                        </div>
+                        <span className="text-[9px] font-bold text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">{crop.zoneName}</span>
+                      </div>
+                      
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h4 className="text-xl font-black text-gray-900 mb-1">{crop.name}</h4>
+                          <p className="text-[10px] text-gray-400 font-semibold mb-0.5">{crop.metricLabel}</p>
+                          <p className="text-xs font-bold text-gray-800 mb-3">{crop.metricValue}</p>
+                          <div className="flex space-x-5">
+                            <div>
+                              <p className="text-[9px] text-gray-400 font-semibold">Growing Period</p>
+                              <p className="text-[11px] font-bold text-gray-800">{crop.growingPeriod}</p>
+                            </div>
+                            <div>
+                              <p className="text-[9px] text-gray-400 font-semibold mb-0.5">Water Requirement</p>
+                              <div className="flex space-x-0.5">
+                                {[...Array(5)].map((_, i) => (
+                                  <Droplets key={i} className={`w-3 h-3 ${i < crop.waterRequirement ? 'text-gray-700 fill-gray-700' : 'text-gray-300'}`} />
+                                ))}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-[9px] text-gray-500"><strong className="text-gray-700">Fertilizer:</strong> NPK 8-10-5 (Organic)</p>
-                          <p className="text-[9px] text-gray-500"><strong className="text-gray-700">Pesticide:</strong> Neem Oil (Low Risk)</p>
-                        </div>
-                      </div>
-                      <img 
-                        src="https://images.unsplash.com/photo-1528825871115-3581a5387919?w=200&q=80" 
-                        alt="Banana"
-                        className="w-20 h-20 object-cover rounded-lg ml-2"
-                      />
-                    </div>
-                  </div>
-                  <button className="w-full mt-4 py-2 bg-white border border-gray-200 rounded-lg text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-colors">
-                    View Details
-                  </button>
-                </div>
-
-                {/* Crop Card 2 - Black Pepper */}
-                <div className="bg-gray-50 rounded-xl p-4 relative overflow-hidden flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center mb-3">
-                      <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-white rounded-full border border-gray-200 shadow-sm">
-                        <div className="w-4 h-4 flex items-center justify-center">
-                          <Coins className="w-3.5 h-3.5 text-gray-700" />
-                        </div>
-                        <span className="text-[10px] font-bold text-gray-800">Maximum Profit</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-xl font-black text-gray-900 mb-1">Black Pepper</h4>
-                        <p className="text-[10px] text-gray-400 font-semibold mb-0.5">Expected Profit</p>
-                        <p className="text-xs font-bold text-gray-800 mb-3">₹2.4 - 3.1 Lakh/ha</p>
-                        <div className="flex space-x-5">
-                          <div>
-                            <p className="text-[9px] text-gray-400 font-semibold">Growing Period</p>
-                            <p className="text-[11px] font-bold text-gray-800">24 - 30 Months</p>
-                          </div>
-                          <div>
-                            <p className="text-[9px] text-gray-400 font-semibold mb-0.5">Water Requirement</p>
-                            <div className="flex space-x-0.5">
-                              <Droplets className="w-3 h-3 text-gray-700 fill-gray-700" />
-                              <Droplets className="w-3 h-3 text-gray-700 fill-gray-700" />
-                              <Droplets className="w-3 h-3 text-gray-700 fill-gray-700" />
-                              <Droplets className="w-3 h-3 text-gray-300" />
-                            </div>
+                          <div className="mt-2 space-y-1">
+                            <p className="text-[9px] text-gray-500"><strong className="text-gray-700">Fertilizer:</strong> {crop.fertilizer}</p>
+                            <p className="text-[9px] text-gray-500"><strong className="text-gray-700">Pesticide:</strong> {crop.pesticide}</p>
                           </div>
                         </div>
-                        <div className="mt-2 space-y-1">
-                          <p className="text-[9px] text-gray-500"><strong className="text-gray-700">Fertilizer:</strong> Potassium Rich (Slow-release)</p>
-                          <p className="text-[9px] text-gray-500"><strong className="text-gray-700">Pesticide:</strong> Bordeaux Mixture (Fungal Risk)</p>
+                        <div className="w-20 h-20 bg-gray-200 rounded-lg ml-2 flex items-center justify-center">
+                           <Sprout className="w-8 h-8 text-gray-400" />
                         </div>
                       </div>
-                      <img 
-                        src="/images/black-pepper.png" 
-                        alt="Black Pepper"
-                        className="w-20 h-20 object-cover rounded-lg ml-2"
-                      />
                     </div>
+                    <button className="w-full mt-4 py-2 bg-white border border-gray-200 rounded-lg text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-colors">
+                      View Details
+                    </button>
                   </div>
-                  <button className="w-full mt-4 py-2 bg-white border border-gray-200 rounded-lg text-[11px] font-bold text-gray-700 hover:bg-gray-50 transition-colors">
-                    View Details
-                  </button>
-                </div>
+                )) : (
+                  <div className="col-span-2 flex flex-col items-center justify-center text-gray-400 py-10">
+                    <Sprout className="w-10 h-10 mb-2 opacity-50" />
+                    <p className="text-xs font-semibold">Loading recommendations...</p>
+                  </div>
+                )}
               </div>
             </div>
 
