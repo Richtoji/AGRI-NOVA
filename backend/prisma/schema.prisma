@@ -65,6 +65,12 @@ enum DeliveryStatus {
   DELIVERED
 }
 
+enum ProductStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model User {
   id            String       @id @default(uuid())
   email         String       @unique
@@ -169,7 +175,10 @@ model Product {
   unit          String
   stockQuantity Int
   imageUrl      String
+  location      String?
+  quality       String?
   rating        Float    @default(5.0)
+  status        ProductStatus @default(APPROVED)
   createdAt     DateTime @default(now())
 
   seller     User        @relation("SellerProducts", fields: [sellerId], references: [id], onDelete: Cascade)

@@ -39,25 +39,7 @@ export default function FarmerDashboard() {
   const { currentUser } = useAuthRole();
   const userName = currentUser?.name || "Farmer";
   
-  const { coordinates, weatherData, loading, error, permissionState, refresh } = useLocationWeather();
-
-  const [products, setProducts] = React.useState<any[]>([]);
-  
-  React.useEffect(() => {
-    if (!currentUser?.id) return;
-    const fetchMyProducts = async () => {
-      try {
-        const res = await fetch(`/api/products?sellerId=${currentUser.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          setProducts(data.products || []);
-        }
-      } catch (err) {
-        console.error("Failed to fetch farmer products", err);
-      }
-    };
-    fetchMyProducts();
-  }, [currentUser?.id]);
+  const { coordinates, weatherData, loading, error, permissionState, refresh, setLocationManually } = useLocationWeather();
 
   const renderWeatherIcon = (type: string, className: string = "w-14 h-14") => {
     switch(type) {
@@ -161,11 +143,19 @@ export default function FarmerDashboard() {
                      {error}
                    </div>
                 ) : coordinates && weatherData ? (
-                   <FarmMap 
-                     latitude={coordinates.lat} 
-                     longitude={coordinates.lng} 
-                     locationName={weatherData.location.name}
-                   />
+                   <div className="w-full h-full relative">
+                     <FarmMap 
+                       latitude={coordinates.lat} 
+                       longitude={coordinates.lng} 
+                       locationName={weatherData.location.name}
+                       onLocationSelect={setLocationManually}
+                     />
+                     <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none z-[1000]">
+                       <div className="bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm text-[10px] font-bold text-gray-600 border border-gray-200">
+                         Click map to change location
+                       </div>
+                     </div>
+                   </div>
                 ) : (
                   <div className="text-xs text-gray-500 font-medium text-center px-4">
                      Location unavailable
@@ -393,42 +383,7 @@ export default function FarmerDashboard() {
             </div>
           </div>
 
-          {/* ===== ROW 3: My Products ===== */}
-          <div id="my-products" className="bg-white border border-gray-100 rounded-2xl p-5 flex flex-col mb-4">
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="font-bold text-sm text-gray-900">My Active Products</h3>
-              <button className="text-[10px] font-semibold text-gray-500 hover:text-gray-900">View All</button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-              {products.slice(0, 3).map(product => (
-                <div key={product.id} className="border border-gray-100 rounded-xl overflow-hidden flex flex-col group relative hover:border-gray-200 transition-all">
-                  <div className="aspect-[4/3] w-full relative overflow-hidden bg-gray-50">
-                    <img
-                      src={product.imageUrl}
-                      alt={product.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                  <div className="p-4 flex flex-col flex-1">
-                    <div className="flex justify-between items-start mb-1.5">
-                      <h3 className="font-bold text-gray-900 text-sm leading-tight">{product.title}</h3>
-                    </div>
-                    <p className="text-[10px] text-gray-500 mb-2 truncate">{product.description}</p>
-                    <div className="mt-auto flex items-end justify-between pt-3 border-t border-gray-50">
-                      <div>
-                        <div className="flex items-baseline space-x-0.5">
-                          <span className="text-lg font-black text-gray-900">₹{product.price}</span>
-                          <span className="text-xs text-gray-500 font-medium">/{product.unit}</span>
-                        </div>
-                      </div>
-                      <span className="text-[10px] font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">In Stock</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+
 
           {/* ===== ROW 4: Advisory | Insights | Quick Actions | Govt Schemes ===== */}
           <div className="grid grid-cols-12 gap-4">

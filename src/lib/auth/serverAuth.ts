@@ -7,7 +7,10 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 const prisma = globalForPrisma.prisma || new PrismaClient();
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key_for_development";
+const JWT_SECRET = process.env.JWT_SECRET as string;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is not defined");
+}
 
 export async function requireAuth(allowedRoles?: RoleType[]) {
   try {

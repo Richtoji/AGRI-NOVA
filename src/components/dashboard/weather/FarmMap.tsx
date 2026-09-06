@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { MapPin } from 'lucide-react';
@@ -28,6 +28,7 @@ interface FarmMapProps {
   latitude: number;
   longitude: number;
   locationName: string;
+  onLocationSelect?: (lat: number, lng: number) => void;
 }
 
 function MapUpdater({ lat, lng }: { lat: number, lng: number }) {
@@ -38,7 +39,16 @@ function MapUpdater({ lat, lng }: { lat: number, lng: number }) {
   return null;
 }
 
-export default function FarmMap({ latitude, longitude, locationName }: FarmMapProps) {
+function MapClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number, lng: number) => void }) {
+  useMapEvents({
+    click(e) {
+      onLocationSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
+export default function FarmMap({ latitude, longitude, locationName, onLocationSelect }: FarmMapProps) {
   const position: [number, number] = [latitude, longitude];
 
   return (
@@ -62,6 +72,7 @@ export default function FarmMap({ latitude, longitude, locationName }: FarmMapPr
           </Popup>
         </Marker>
         <MapUpdater lat={latitude} lng={longitude} />
+        {onLocationSelect && <MapClickHandler onLocationSelect={onLocationSelect} />}
       </MapContainer>
     </div>
   );

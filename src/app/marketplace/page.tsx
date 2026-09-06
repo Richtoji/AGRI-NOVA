@@ -6,6 +6,7 @@ import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { Search, ShoppingBag, Star, ShieldCheck, Check, MapPin, SlidersHorizontal, Loader2 } from "lucide-react";
 import { FeedStore } from "@/components/marketplace/FeedStore";
 import { VetPharmacy } from "@/components/marketplace/VetPharmacy";
+import { MyListings } from "@/components/marketplace/MyListings";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 
@@ -16,7 +17,7 @@ export default function MarketplacePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [addedItem, setAddedItem] = useState<string | null>(null);
-  const [subMarket, setSubMarket] = useState<"produce" | "feed" | "vet">("produce");
+  const [subMarket, setSubMarket] = useState<"produce" | "feed" | "vet" | "my-listings">("produce");
   const [sortBy, setSortBy] = useState("price-asc");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [minRating, setMinRating] = useState(0);
@@ -103,6 +104,7 @@ export default function MarketplacePage() {
               { key: "produce", label: "Farm Produce" },
               { key: "feed", label: "Feed & Seeds" },
               { key: "vet", label: "Vet Pharmacy" },
+              { key: "my-listings", label: "My Listings" },
             ].map((tab) => (
               <button
                 key={tab.key}
@@ -120,7 +122,9 @@ export default function MarketplacePage() {
         </div>
 
         {/* ===== SUB MARKETS ===== */}
-        {subMarket === "feed" ? (
+        {subMarket === "my-listings" ? (
+          <MyListings />
+        ) : subMarket === "feed" ? (
           <FeedStore />
         ) : subMarket === "vet" ? (
           <VetPharmacy />

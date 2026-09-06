@@ -7,6 +7,8 @@ RUN npm install --legacy-peer-deps
 
 COPY . .
 RUN npm run prisma:generate
+ARG JWT_SECRET
+ENV JWT_SECRET=$JWT_SECRET
 RUN npm run build
 
 FROM node:22-alpine AS runner

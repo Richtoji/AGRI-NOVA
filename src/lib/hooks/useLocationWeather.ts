@@ -112,6 +112,11 @@ export function useLocationWeather() {
     );
   }, []);
 
+  const setLocationManually = useCallback((lat: number, lng: number) => {
+    setCoordinates({ lat, lng });
+    fetchWeather(lat, lng);
+  }, []);
+
   useEffect(() => {
     // Initial detection on mount
     detectLocation();
@@ -123,6 +128,7 @@ export function useLocationWeather() {
     loading,
     error,
     permissionState,
-    refresh: detectLocation
+    refresh: detectLocation,
+    setLocationManually
   };
 }

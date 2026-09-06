@@ -4,7 +4,10 @@ import { cookies } from 'next/headers';
 import * as jose from 'jose';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key_for_development";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error("JWT_SECRET environment variable is not defined");
+}
 
 async function getUserId() {
   const token = (await cookies()).get('auth_token')?.value;
