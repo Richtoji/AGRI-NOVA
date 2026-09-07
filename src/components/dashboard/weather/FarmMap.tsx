@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { MapPin } from 'lucide-react';
+import { MapPin, Maximize, Minimize } from 'lucide-react';
 
 // Fix for default Leaflet icon in React
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -50,30 +50,61 @@ function MapClickHandler({ onLocationSelect }: { onLocationSelect: (lat: number,
 
 export default function FarmMap({ latitude, longitude, locationName, onLocationSelect }: FarmMapProps) {
   const position: [number, number] = [latitude, longitude];
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   return (
-    <div key={Math.random()} className="w-full h-full rounded-xl overflow-hidden relative z-0">
-      <MapContainer 
-        center={position} 
-        zoom={14} 
-        scrollWheelZoom={true} 
-        style={{ height: '100%', width: '100%', minHeight: '130px' }}
-        attributionControl={false}
+    <div ref={containerRef} className="w-full h-full rounded-xl overflow-hidden relative z-0 bg-white group">
+      <div key={Math.random()} className="w-full h-full relative z-0">
+        <MapContainer 
+          center={position} 
+          zoom={14} 
+          scrollWheelZoom={true} 
+          style={{ height: '100%', width: '100%', minHeight: '130px' }}
+          attributionControl={false}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Marker position={position}>
+            <Popup>
+              <div className="text-center font-bold text-gray-900 text-xs">
+                Your Farm Location <br/>
+                <span className="text-[10px] font-normal text-gray-500">{locationName}</span>
+              </div>
+            </Popup>
+          </Marker>
+          <MapUpdater lat={latitude} lng={longitude} />
+          {onLocationSelect && <MapClickHandler onLocationSelect={onLocationSelect} />}
+        </MapContainer>
+      </div>
+      
+      {/* Fullscreen Toggle Button */}
+      <button 
+        onClick={toggleFullscreen}
+        className="absolute top-2 right-2 z-[1000] bg-white border border-gray-200 shadow-md rounded-lg p-2 text-gray-700 hover:bg-gray-50 hover:text-green-600 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+        title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
       >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Marker position={position}>
-          <Popup>
-            <div className="text-center font-bold text-gray-900 text-xs">
-              Your Farm Location <br/>
-              <span className="text-[10px] font-normal text-gray-500">{locationName}</span>
-            </div>
-          </Popup>
-        </Marker>
-        <MapUpdater lat={latitude} lng={longitude} />
-        {onLocationSelect && <MapClickHandler onLocationSelect={onLocationSelect} />}
-      </MapContainer>
+        {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+      </button>
     </div>
   );
 }
