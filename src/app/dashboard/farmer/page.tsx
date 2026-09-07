@@ -40,6 +40,15 @@ export default function FarmerDashboard() {
   const { currentUser } = useAuthRole();
   const userName = currentUser?.name || "Farmer";
   
+  const [greeting, setGreeting] = useState("Good Morning");
+
+  useEffect(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting("Good Morning");
+    else if (hour < 18) setGreeting("Good Afternoon");
+    else setGreeting("Good Evening");
+  }, []);
+  
   const { coordinates, weatherData, loading, error, permissionState, refresh, setLocationManually } = useLocationWeather();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -135,7 +144,7 @@ export default function FarmerDashboard() {
                   <Sprout className="w-5 h-5 text-gray-700" strokeWidth={1.5} />
                 </div>
                 <h2 className="text-2xl font-black text-gray-900 leading-tight mb-1">
-                  Good Morning,<br />{userName}! 👋
+                  {greeting},<br />{userName}! 👋
                 </h2>
                 <p className="text-xs text-gray-500 font-medium">Here's what's happening on your farm today.</p>
               </div>
