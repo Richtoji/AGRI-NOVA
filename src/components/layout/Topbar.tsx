@@ -12,6 +12,10 @@ export const Topbar: React.FC = () => {
     ? currentRole.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
     : "User";
 
+  const defaultAvatar = currentUser?.name 
+    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=f3f4f6&color=111827` 
+    : "https://ui-avatars.com/api/?name=User&background=f3f4f6&color=111827";
+
   return (
     <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
       
@@ -60,7 +64,7 @@ export const Topbar: React.FC = () => {
         {/* User Profile */}
         <div className="flex items-center space-x-3 cursor-pointer group">
           <img
-            src={currentUser?.avatarUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"}
+            src={currentUser?.avatarUrl || defaultAvatar}
             alt={currentUser?.name || "Profile"}
             className="w-8 h-8 rounded-full object-cover border border-gray-200"
           />

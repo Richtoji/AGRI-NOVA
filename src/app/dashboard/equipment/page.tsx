@@ -132,6 +132,24 @@ export default function EquipmentOwnerDashboard() {
     }
   };
 
+  const handleUpdateRentalStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/equipment/requests/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        fetchRentals(); // Refresh the list
+      } else {
+        alert("Failed to update status");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("An error occurred.");
+    }
+  };
+
   return (
     <RouteGuard allowedRoles={["EQUIPMENT_OWNER"]}>
       <AppLayout>
@@ -259,8 +277,12 @@ export default function EquipmentOwnerDashboard() {
               {rentals.map((rental) => (
                 <div key={rental.id} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
                   <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center space-x-3">
-                      <img src={rental.renter.avatarUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"} alt="Avatar" className="w-10 h-10 rounded-full object-cover border border-gray-200" />
+                    <div className="flex items-center space-x-3 mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                    <img 
+                      src={rental.renter.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(rental.renter.name)}&background=f3f4f6&color=111827`} 
+                      alt="Avatar" 
+                      className="w-10 h-10 rounded-full object-cover border border-gray-200" 
+                    />
                       <div>
                         <h4 className="font-bold text-gray-900 text-sm">{rental.renter.name}</h4>
                         <p className="text-xs text-gray-500">{rental.renter.phone}</p>
@@ -292,10 +314,16 @@ export default function EquipmentOwnerDashboard() {
 
                   {rental.status === 'PENDING' && (
                     <div className="flex space-x-2">
-                      <button className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center">
+                      <button 
+                        onClick={() => handleUpdateRentalStatus(rental.id, 'APPROVED')}
+                        className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
+                      >
                         <CheckCircle className="w-4 h-4 mr-1.5" /> Accept Request
                       </button>
-                      <button className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center">
+                      <button 
+                        onClick={() => handleUpdateRentalStatus(rental.id, 'REJECTED')}
+                        className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
+                      >
                         <XCircle className="w-4 h-4 mr-1.5" /> Decline
                       </button>
                     </div>

@@ -137,28 +137,28 @@ export default function FarmerDashboard() {
                 <div>
                   <p className="text-[10px] text-gray-400 font-semibold mb-1">Total Crops</p>
                   <div className="flex items-center space-x-1">
-                    <span className="text-lg font-black text-gray-900">4</span>
+                    <span className="text-lg font-black text-gray-900">0</span>
                     <Sprout className="w-3.5 h-3.5 text-gray-400" />
                   </div>
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-400 font-semibold mb-1">Active Listings</p>
                   <div className="flex items-center space-x-1">
-                    <span className="text-lg font-black text-gray-900">3</span>
+                    <span className="text-lg font-black text-gray-900">0</span>
                     <ShoppingBag className="w-3.5 h-3.5 text-gray-400" />
                   </div>
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-400 font-semibold mb-1">Orders</p>
                   <div className="flex items-center space-x-1">
-                    <span className="text-lg font-black text-gray-900">7</span>
+                    <span className="text-lg font-black text-gray-900">0</span>
                     <ClipboardList className="w-3.5 h-3.5 text-gray-400" />
                   </div>
                 </div>
                 <div>
                   <p className="text-[10px] text-gray-400 font-semibold mb-1">Equipment Bookings</p>
                   <div className="flex items-center space-x-1">
-                    <span className="text-lg font-black text-gray-900">2</span>
+                    <span className="text-lg font-black text-gray-900">0</span>
                     <Tractor className="w-3.5 h-3.5 text-gray-400" />
                   </div>
                 </div>

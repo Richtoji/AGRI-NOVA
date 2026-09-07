@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sprout, User, Mail, Lock, CheckCircle2, Phone, AlertCircle, Loader2, Calendar } from "lucide-react";
+import { Sprout, User, Mail, Lock, CheckCircle2, Phone, AlertCircle, Loader2, Calendar, Upload } from "lucide-react";
 import { validateFullName, validateEmailWithDetails, validatePhoneWithDetails, validatePasswords, validateRole, validateDob } from "@/lib/validation";
 
 export default function RegisterPage() {
@@ -16,7 +16,8 @@ export default function RegisterPage() {
     dob: "",
     role: "FARMER",
     password: "",
-    confirmPassword: ""
+    confirmPassword: "",
+    avatarBase64: ""
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -90,7 +91,8 @@ export default function RegisterPage() {
           dob: formData.dob,
           role: formData.role,
           password: formData.password,
-          confirmPassword: formData.confirmPassword
+          confirmPassword: formData.confirmPassword,
+          ...(formData.avatarBase64 && { avatarBase64: formData.avatarBase64 })
         }),
       });
 
@@ -142,6 +144,27 @@ export default function RegisterPage() {
 
       return newData;
     });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        setErrors(prev => ({ ...prev, avatar: "Image size must be less than 2MB" }));
+        return;
+      }
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.avatar;
+        return newErrors;
+      });
+      
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, avatarBase64: reader.result as string }));
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -216,6 +239,28 @@ export default function RegisterPage() {
                   />
                 </div>
                 {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
+              </div>
+
+              {/* Profile Image (Optional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Profile Image (Optional)</label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Upload className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="appearance-none block w-full pl-10 px-3 py-1.5 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
+                  />
+                </div>
+                {errors.avatar && <p className="mt-1 text-xs text-red-500">{errors.avatar}</p>}
+                {formData.avatarBase64 && (
+                  <div className="mt-2 flex justify-center">
+                    <img src={formData.avatarBase64} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-gray-200 shadow-sm" />
+                  </div>
+                )}
               </div>
 
               {/* Account Role */}

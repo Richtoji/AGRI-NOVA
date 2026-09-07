@@ -12,8 +12,13 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState(currentUser?.phone || "+91 98765 43210");
   const [email, setEmail] = useState(currentUser?.email || "farmer@agri-nova.com");
   const [is2FaEnabled, setIs2FaEnabled] = useState(false);
+  const [avatarBase64, setAvatarBase64] = useState<string>("");
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  const defaultAvatar = currentUser?.name 
+    ? `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name)}&background=f3f4f6&color=111827` 
+    : "https://ui-avatars.com/api/?name=User&background=f3f4f6&color=111827";
 
   const deviceHistory = [
     { device: "Chrome (Windows 11) • Noida, UP", time: "Active Now", current: true },
@@ -21,7 +26,7 @@ export default function ProfilePage() {
     { device: "Firefox (Ubuntu Linux) • Delhi NCR", time: "July 21, 2026, 11:15 AM", current: false },
   ];
 
-  const handleUpdateProfile = (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccessMsg(null);
     setValidationError(null);
@@ -35,23 +40,48 @@ export default function ProfilePage() {
       return;
     }
 
-    updateProfile(name, email, phone);
-    setSuccessMsg("Profile metrics synchronized successfully!");
-    setTimeout(() => setSuccessMsg(null), 3000);
+    const result = await updateProfile(name, email, phone, avatarBase64);
+    
+    if (result.success) {
+      setSuccessMsg("Profile metrics synchronized successfully!");
+      setTimeout(() => setSuccessMsg(null), 3000);
+    } else {
+      setValidationError(result.error || "Failed to update profile.");
+    }
   };
 
   return (
     <AppLayout>
       <div className="space-y-6">
-        
+
         {/* Header */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <img
-              src={currentUser?.avatarUrl || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"}
-              alt={name}
-              className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm"
-            />
+            <div className="relative group">
+              <img
+                src={avatarBase64 || currentUser?.avatarUrl || defaultAvatar}
+                alt={name}
+                className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm"
+              />
+              <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-xs font-semibold">
+                Edit
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onloadend = () => {
+                        setAvatarBase64(reader.result as string);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                />
+              </label>
+            </div>
             <div>
               <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{name}</h1>
               <p className="text-xs text-gray-500">Manage your credentials, security settings, and device history</p>
@@ -63,7 +93,7 @@ export default function ProfilePage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          
+
           {/* Left: General Settings */}
           <div className="lg:col-span-7 space-y-6">
             <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4">
@@ -153,7 +183,7 @@ export default function ProfilePage() {
 
           {/* Right: Security & Sessions */}
           <div className="lg:col-span-5 space-y-6">
-            
+
             {/* Two Factor Authentication Settings */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6 space-y-4">
               <h3 className="text-sm font-bold text-gray-900 flex items-center space-x-2 border-b border-gray-100 pb-3">
@@ -173,9 +203,8 @@ export default function ProfilePage() {
                   </div>
                   <button
                     onClick={() => setIs2FaEnabled(!is2FaEnabled)}
-                    className={`px-4 py-1.5 rounded-lg font-bold text-[10px] uppercase transition-all ${
-                      is2FaEnabled ? "bg-gray-100 text-gray-800 hover:bg-emerald-200" : "bg-gray-200 text-gray-600 hover:bg-gray-300"
-                    }`}
+                    className={`px-4 py-1.5 rounded-lg font-bold text-[10px] uppercase transition-all ${is2FaEnabled ? "bg-gray-100 text-gray-800 hover:bg-emerald-200" : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                      }`}
                   >
                     {is2FaEnabled ? "Enabled" : "Disabled"}
                   </button>

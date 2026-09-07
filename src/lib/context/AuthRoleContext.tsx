@@ -28,8 +28,8 @@ interface AuthRoleContextType {
   currentUser: UserProfile | null;
   isLoggedIn: boolean;
   login: (email: string, password: string, role: RoleType) => Promise<{ success: boolean; error?: string }>;
-  registerUser: (name: string, email: string, phone: string, role: RoleType, password?: string, confirmPassword?: string, roleMetadata?: string) => Promise<{ success: boolean; error?: string }>;
-  updateProfile: (name: string, email: string, phone: string) => void;
+  registerUser: (name: string, email: string, phone: string, role: RoleType, password?: string, confirmPassword?: string, roleMetadata?: string, avatarBase64?: string) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (name: string, email: string, phone: string, avatarBase64?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   cartCount: number;
   cartItems: CartItem[];
@@ -201,15 +201,23 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const updateProfile = (name: string, email: string, phone: string) => {
-    if (!currentUser) return;
-    const updatedUser = {
-      ...currentUser,
-      name: name.trim(),
-      email: email.trim(),
-      phone: phone.trim(),
-    };
-    setCurrentUser(updatedUser);
+  const updateProfile = async (name: string, email: string, phone: string, avatarBase64?: string) => {
+    if (!currentUser) return { success: false, error: "Not logged in" };
+    try {
+      const res = await fetch("/api/auth/me", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, phone, avatarBase64 })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, error: data.error || "Failed to update profile." };
+      }
+      setCurrentUser(data.user);
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: "Network error." };
+    }
   };
 
   const logout = async () => {

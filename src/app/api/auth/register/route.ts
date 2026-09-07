@@ -10,6 +10,9 @@ import {
   validateRoleMetadata,
   validateDob
 } from "@/lib/validation";
+import { writeFile } from "fs/promises";
+import path from "path";
+import crypto from "crypto";
 
 // Prevent multiple instances of Prisma Client in development
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
@@ -19,7 +22,7 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, dob, password, confirmPassword, role, roleMetadata } = body;
+    const { name, email, phone, dob, password, confirmPassword, role, roleMetadata, avatarBase64 } = body;
 
     // 1. Strict Server-Side Validation for Every Single Field
     const nameVal = validateFullName(name || "");
@@ -87,7 +90,25 @@ export async function POST(request: Request) {
     const salt = await bcrypt.genSalt(10);
     const passwordHash = await bcrypt.hash(password, salt);
 
-    // 4. Create User
+    // 4. Handle Avatar
+    let avatarUrl = null;
+    if (avatarBase64) {
+      try {
+        const matches = avatarBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+        if (matches && matches.length === 3) {
+          const buffer = Buffer.from(matches[2], "base64");
+          const uniqueSuffix = crypto.randomBytes(6).toString("hex");
+          const filename = `avatar_${uniqueSuffix}.jpg`;
+          const filePath = path.join(process.cwd(), "public/uploads", filename);
+          await writeFile(filePath, buffer);
+          avatarUrl = `/uploads/${filename}`;
+        }
+      } catch (err) {
+        console.error("Failed to parse and save avatar image", err);
+      }
+    }
+
+    // 5. Create User
     const createdUser = await prisma.user.create({
       data: {
         email: normalizedEmail,
@@ -96,7 +117,8 @@ export async function POST(request: Request) {
         name: name.trim(),
         passwordHash: passwordHash,
         role: role,
-        kycStatus: "PENDING"
+        kycStatus: "PENDING",
+        ...(avatarUrl && { avatarUrl }),
       },
       select: { // Do not return passwordHash
         id: true,

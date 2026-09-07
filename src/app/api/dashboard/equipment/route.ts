@@ -4,9 +4,9 @@ import { cookies } from 'next/headers';
 import * as jose from 'jose';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET;
 
 async function getUserId() {
+  const JWT_SECRET = process.env.JWT_SECRET;
   if (!JWT_SECRET) return null;
   const token = (await cookies()).get('auth_token')?.value;
   if (!token) return null;
