@@ -72,18 +72,25 @@ export default function FarmerDashboard() {
 
   const [cropRecommendations, setCropRecommendations] = useState<any[]>([]);
   const [cropZone, setCropZone] = useState<string>("");
+  const [cropRecsError, setCropRecsError] = useState<string>("");
 
   useEffect(() => {
     if (coordinates) {
+      setCropRecsError("");
       fetch(`/api/crops/recommendations?latitude=${coordinates.lat}&longitude=${coordinates.lng}`)
         .then(res => res.json())
         .then(data => {
           if (data.recommendations) {
             setCropRecommendations(data.recommendations);
             setCropZone(data.zone);
+          } else {
+            setCropRecsError(data.error || "Failed to generate recommendations");
           }
         })
-        .catch(err => console.error("Failed to load crop recommendations", err));
+        .catch(err => {
+          console.error("Failed to load crop recommendations", err);
+          setCropRecsError("Failed to communicate with server");
+        });
     }
   }, [coordinates]);
 
@@ -377,9 +384,14 @@ export default function FarmerDashboard() {
                       View Details
                     </button>
                   </div>
-                )) : (
+                )) : cropRecsError ? (
+                  <div className="col-span-2 flex flex-col items-center justify-center text-red-400 py-10">
+                    <AlertTriangle className="w-10 h-10 mb-2 opacity-50" />
+                    <p className="text-xs font-semibold">{cropRecsError}</p>
+                  </div>
+                ) : (
                   <div className="col-span-2 flex flex-col items-center justify-center text-gray-400 py-10">
-                    <Sprout className="w-10 h-10 mb-2 opacity-50" />
+                    <Sprout className="w-10 h-10 mb-2 opacity-50 animate-pulse" />
                     <p className="text-xs font-semibold">Loading recommendations...</p>
                   </div>
                 )}
