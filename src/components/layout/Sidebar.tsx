@@ -21,7 +21,8 @@ import {
   Settings,
   LogOut,
   Truck,
-  ShoppingCart
+  ShoppingCart,
+  ArrowLeft
 } from "lucide-react";
 
 export const Sidebar: React.FC = () => {
@@ -169,8 +170,15 @@ export const Sidebar: React.FC = () => {
         </nav>
       </div>
 
-      {/* Footer Area - Logout */}
-      <div className="p-2 border-t border-gray-100">
+      {/* Footer Area */}
+      <div className="p-2 border-t border-gray-100 space-y-1">
+        <Link
+          href="/"
+          className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4 text-gray-400" />
+          <span>Back to Website</span>
+        </Link>
         <button
           onClick={logout}
           className="w-full flex items-center space-x-2.5 px-3 py-2 rounded-lg text-[12px] font-semibold text-gray-500 hover:bg-gray-50 hover:text-red-600 transition-colors"

@@ -61,9 +61,26 @@ export function useLocationWeather() {
     }
   };
 
-  const detectLocation = useCallback(() => {
+  const detectLocation = useCallback((force = false) => {
     setLoading(true);
     setError(null);
+
+    // 1. Check if user previously set a manual location (unless forcing a refresh)
+    if (!force) {
+      try {
+        const saved = localStorage.getItem('agrinova_saved_location');
+        if (saved) {
+          const { lat, lng } = JSON.parse(saved);
+          if (lat && lng) {
+            setCoordinates({ lat, lng });
+            fetchWeather(lat, lng);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to read saved location from localStorage");
+      }
+    }
 
     const fallbackToIPLocation = async () => {
       try {
@@ -117,14 +134,19 @@ export function useLocationWeather() {
         fallbackToIPLocation();
       },
       {
-        enableHighAccuracy: true,
-        timeout: 20000,
+        enableHighAccuracy: false,
+        timeout: 10000,
         maximumAge: 0 
       }
     );
   }, []);
 
   const setLocationManually = useCallback((lat: number, lng: number) => {
+    try {
+      localStorage.setItem('agrinova_saved_location', JSON.stringify({ lat, lng }));
+    } catch (e) {
+      console.warn("Failed to save location to localStorage");
+    }
     setCoordinates({ lat, lng });
     fetchWeather(lat, lng);
   }, []);
@@ -140,7 +162,7 @@ export function useLocationWeather() {
     loading,
     error,
     permissionState,
-    refresh: detectLocation,
+    refresh: () => detectLocation(true),
     setLocationManually
   };
 }

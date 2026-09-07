@@ -83,6 +83,7 @@ model User {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   deletedAt     DateTime?
+  dob           String?
 
   farms                  FarmProfile[]
   cropRecommendations    CropRecommendationLog[]
@@ -317,4 +318,27 @@ model CartItem {
 
   cart    Cart    @relation(fields: [cartId], references: [id], onDelete: Cascade)
   product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model AgroClimaticZone {
+  id           String   @id @default(uuid())
+  name         String   @unique
+  minElevation Float
+  maxElevation Float
+  landform     String
+  majorCrops   String[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model CropProfile {
+  id               String   @id @default(uuid())
+  name             String   @unique
+  expectedYield    String
+  growingPeriod    String
+  waterRequirement Float
+  fertilizer       String
+  pesticide        String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

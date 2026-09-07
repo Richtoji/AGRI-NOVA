@@ -9,13 +9,13 @@ if (!JWT_SECRET) {
   throw new Error("JWT_SECRET environment variable is not defined");
 }
 
-async function getUserId() {
+async function getUserSession() {
   const token = (await cookies()).get('auth_token')?.value;
   if (!token) return null;
   try {
     const secret = new TextEncoder().encode(JWT_SECRET);
     const { payload } = await jose.jwtVerify(token, secret);
-    return payload.userId as string;
+    return { userId: payload.userId as string, role: payload.role as string };
   } catch (err) {
     return null;
   }
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
     // - Seller fetching their own products -> show all (no status filter unless specified)
     // - Public marketplace -> only show APPROVED
     if (status) {
-      where.status = status;
+      if (status !== 'ALL') where.status = status;
     } else if (!sellerId) {
       where.status = 'APPROVED';
     }
@@ -73,10 +73,12 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const sellerId = await getUserId();
-    if (!sellerId) {
+    const session = await getUserSession();
+    if (!session || !session.userId) {
       return NextResponse.json({ error: 'Please log in to sell a product.' }, { status: 401 });
     }
+    const sellerId = session.userId;
+    const isAdmin = session.role === 'ADMIN';
 
     const body = await request.json();
     const { title, description, category, price, unit, stockQuantity, imageUrl, location, quality, rating } = body;
@@ -98,7 +100,7 @@ export async function POST(request: Request) {
         location,
         quality: quality || null,
         rating: rating ? parseFloat(rating) : 5.0,
-        status: 'PENDING'
+        status: isAdmin ? 'APPROVED' : 'PENDING'
       }
     });
 

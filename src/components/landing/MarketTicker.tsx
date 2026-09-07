@@ -20,11 +20,11 @@ export const MarketTicker: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         
         <div className="flex items-center space-x-2 text-[10px] font-bold text-gray-800 uppercase tracking-wider shrink-0 pr-4 border-r border-gray-200">
-          <RefreshCw className="w-3.5 h-3.5 text-gray-900 animate-spin" />
-          <span>Live Kerala Prices</span>
+          <RefreshCw className="w-3.5 h-3.5 text-gray-900 animate-spin shrink-0" />
+          <span className="whitespace-nowrap">Live Kerala Prices</span>
         </div>
 
-        <div className="flex items-center space-x-8 overflow-x-auto no-scrollbar whitespace-nowrap text-xs text-gray-600 py-0.5">
+        <div className="flex items-center space-x-8 overflow-x-auto whitespace-nowrap text-xs text-gray-600 py-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full pl-4">
           {tickerItems.map((item, idx) => (
             <div key={idx} className="flex items-center space-x-2 font-medium">
               <span className="text-gray-500 font-semibold">{item.crop}:</span>

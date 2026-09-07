@@ -51,11 +51,11 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center space-x-3 group">
-          <div className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-900 group-hover:bg-gray-100 transition-colors">
+        <Link href="/" className="flex items-center space-x-3 group shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-900 group-hover:bg-gray-100 transition-colors shrink-0">
             <Sprout className="w-5 h-5" />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col whitespace-nowrap">
             <span className="font-bold text-lg text-gray-900 tracking-tight">
               AGRI-NOVA
             </span>
@@ -66,47 +66,47 @@ export const Navbar: React.FC = () => {
         </Link>
 
         {/* Desktop Navigation Links */}
-        <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold text-gray-600">
-          <Link href="/" className="hover:text-gray-900 transition-colors">
+        <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold text-gray-600 ml-4 mr-4">
+          <Link href="/" className="hover:text-gray-900 transition-colors whitespace-nowrap">
             Home
           </Link>
-          <Link href="/marketplace" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5">
+          <Link href="/marketplace" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
             <ShoppingBag className="w-3.5 h-3.5 text-gray-900" />
             <span>Marketplace</span>
           </Link>
-          <Link href="/equipment" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5">
+          <Link href="/equipment" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
             <Tractor className="w-3.5 h-3.5 text-amber-500" />
             <span>Machinery Rental</span>
           </Link>
-          <Link href="/schemes" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5">
+          <Link href="/schemes" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
             <FileText className="w-3.5 h-3.5 text-sky-500" />
             <span>Government Schemes</span>
           </Link>
-          <Link href="/contact" className="hover:text-gray-900 transition-colors">
+          <Link href="/contact" className="hover:text-gray-900 transition-colors whitespace-nowrap">
             Contact
           </Link>
         </nav>
 
         {/* Right Action Bar */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 shrink-0">
           
           {/* Quick Search Shortcut */}
           <button
             onClick={triggerCommandPalette}
-            className="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+            className="hidden lg:flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-500 hover:bg-gray-100 hover:text-gray-900 transition-colors whitespace-nowrap shrink-0"
             title="Search Platform"
           >
-            <Search className="w-3.5 h-3.5 text-gray-500" />
+            <Search className="w-3.5 h-3.5 text-gray-500 shrink-0" />
             <span>Search...</span>
           </button>
 
           {/* Cart Icon */}
           <Link
             href="/marketplace"
-            className="relative p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors"
+            className="relative p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors shrink-0"
             title="Cart"
           >
-            <ShoppingBag className="w-5 h-5 text-gray-600" />
+            <ShoppingBag className="w-5 h-5 text-gray-600 shrink-0" />
             {cartCount > 0 && (
               <span className="absolute top-1 right-1 w-4 h-4 bg-gray-700 text-white font-bold text-[10px] rounded-full flex items-center justify-center">
                 {cartCount}
@@ -117,10 +117,10 @@ export const Navbar: React.FC = () => {
           {/* Theme Toggle */}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors"
+            className="p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors shrink-0"
             title="Toggle Theme"
           >
-            {theme === "dark" ? <Sun className="w-5 h-5 text-amber-500" /> : <Moon className="w-5 h-5 text-indigo-500" />}
+            {theme === "dark" ? <Sun className="w-5 h-5 text-amber-500 shrink-0" /> : <Moon className="w-5 h-5 text-indigo-500 shrink-0" />}
           </button>
 
           {isLoggedIn && currentUser ? (
@@ -128,43 +128,44 @@ export const Navbar: React.FC = () => {
               {/* Dashboard Button */}
               <Link
                 href={getDashboardPath()}
-                className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200 font-semibold text-xs transition-colors"
+                className="hidden xl:flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-800 border border-gray-200 font-semibold text-xs transition-colors whitespace-nowrap shrink-0"
               >
-                <LayoutDashboard className="w-3.5 h-3.5" />
+                <LayoutDashboard className="w-3.5 h-3.5 shrink-0" />
                 <span>Dashboard ({currentRole.split('_')[0]})</span>
               </Link>
 
               {/* Profile / Settings Button */}
               <Link
                 href="/dashboard/profile"
-                className="p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors"
+                className="p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors shrink-0"
                 title="Profile & Settings"
               >
-                <Settings className="w-5 h-5" />
+                <Settings className="w-5 h-5 shrink-0" />
               </Link>
 
               {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors"
+                className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors shrink-0"
                 title="Logout"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-5 h-5 shrink-0" />
               </button>
 
               {/* User Avatar */}
-              <div className="hidden lg:flex items-center space-x-2 pl-2 border-l border-gray-200">
+              <div className="hidden lg:flex items-center space-x-2 pl-2 border-l border-gray-200 shrink-0">
                 <img
                   src={currentUser.avatarUrl}
                   alt={currentUser.name}
-                  className="w-8 h-8 rounded-full object-cover border border-gray-100"
+                  className="w-8 h-8 rounded-full object-cover border border-gray-100 shrink-0"
                 />
-                <div className="flex flex-col text-xs leading-tight">
-                  <span className="font-semibold text-gray-900 truncate max-w-[100px]">{currentUser.name}</span>
+                <div className="flex flex-col text-xs leading-tight whitespace-nowrap">
+                  <span className="font-semibold text-gray-900 truncate max-w-[120px]">{currentUser.name}</span>
                   <span className="text-[10px] text-gray-900 font-bold uppercase">{currentRole}</span>
                 </div>
               </div>
             </>
+
           ) : (
             <div className="flex items-center space-x-2">
               <Link href="/auth/login">

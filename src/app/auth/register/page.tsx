@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sprout, User, Mail, Lock, CheckCircle2, Phone, AlertCircle, Loader2 } from "lucide-react";
-import { validateFullName, validateEmailWithDetails, validatePhoneWithDetails, validatePasswords, validateRole } from "@/lib/validation";
+import { Sprout, User, Mail, Lock, CheckCircle2, Phone, AlertCircle, Loader2, Calendar } from "lucide-react";
+import { validateFullName, validateEmailWithDetails, validatePhoneWithDetails, validatePasswords, validateRole, validateDob } from "@/lib/validation";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +13,7 @@ export default function RegisterPage() {
     name: "",
     email: "",
     phone: "",
+    dob: "",
     role: "FARMER",
     password: "",
     confirmPassword: ""
@@ -34,6 +35,9 @@ export default function RegisterPage() {
     } else if (name === "phone") {
       const res = validatePhoneWithDetails(value);
       if (!res.isValid) error = res.error || "Phone number must contain exactly 10 digits.";
+    } else if (name === "dob") {
+      const res = validateDob(value);
+      if (!res.isValid) error = res.error || "Invalid date of birth.";
     } else if (name === "password") {
       const res = validatePasswords(value, currentData.confirmPassword);
       if (!res.isValid && res.error !== "Passwords do not match." && res.error !== "Confirm password is required.") {
@@ -53,7 +57,7 @@ export default function RegisterPage() {
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-    const fields = ["name", "email", "phone", "password", "confirmPassword", "role"] as const;
+    const fields = ["name", "email", "phone", "dob", "password", "confirmPassword", "role"] as const;
     
     fields.forEach(field => {
       const error = validateField(field, formData[field], formData);
@@ -83,6 +87,7 @@ export default function RegisterPage() {
           name: formData.name.trim(),
           email: formData.email.trim().toLowerCase(),
           phone: formData.phone.trim(),
+          dob: formData.dob,
           role: formData.role,
           password: formData.password,
           confirmPassword: formData.confirmPassword
@@ -274,6 +279,26 @@ export default function RegisterPage() {
                   />
                 </div>
                 {errors.phone && <p className="mt-1 text-xs text-red-500">{errors.phone}</p>}
+              </div>
+
+              {/* Date of Birth */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Date of Birth</label>
+                <div className="mt-1 relative rounded-md shadow-sm">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Calendar className="h-4 w-4 text-gray-400" />
+                  </div>
+                  <input
+                    name="dob"
+                    type="date"
+                    required
+                    value={formData.dob}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`appearance-none block w-full pl-10 px-3 py-2 border ${errors.dob ? 'border-red-300' : 'border-gray-300'} rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900`}
+                  />
+                </div>
+                {errors.dob && <p className="mt-1 text-xs text-red-500">{errors.dob}</p>}
               </div>
 
               {/* Password */}

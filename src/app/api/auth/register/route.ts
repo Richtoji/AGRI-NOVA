@@ -7,7 +7,8 @@ import {
   validatePhoneWithDetails,
   validatePasswords,
   validateRole,
-  validateRoleMetadata
+  validateRoleMetadata,
+  validateDob
 } from "@/lib/validation";
 
 // Prevent multiple instances of Prisma Client in development
@@ -18,7 +19,7 @@ if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, email, phone, password, confirmPassword, role, roleMetadata } = body;
+    const { name, email, phone, dob, password, confirmPassword, role, roleMetadata } = body;
 
     // 1. Strict Server-Side Validation for Every Single Field
     const nameVal = validateFullName(name || "");
@@ -34,6 +35,11 @@ export async function POST(request: Request) {
     const phoneVal = validatePhoneWithDetails(phone || "");
     if (!phoneVal.isValid) {
       return NextResponse.json({ error: phoneVal.error }, { status: 400 });
+    }
+
+    const dobVal = validateDob(dob || "");
+    if (!dobVal.isValid) {
+      return NextResponse.json({ error: dobVal.error }, { status: 400 });
     }
 
     // Explicitly validate confirmPassword matches password
@@ -86,6 +92,7 @@ export async function POST(request: Request) {
       data: {
         email: normalizedEmail,
         phone: cleanPhone,
+        dob: dob,
         name: name.trim(),
         passwordHash: passwordHash,
         role: role,
@@ -97,6 +104,7 @@ export async function POST(request: Request) {
         name: true,
         role: true,
         phone: true,
+        dob: true,
         avatarUrl: true,
         kycStatus: true,
       }

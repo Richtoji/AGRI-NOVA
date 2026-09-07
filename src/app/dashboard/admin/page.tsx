@@ -7,6 +7,8 @@ import { mockSeedData } from "../../../../backend/prisma/seed";
 import { ShieldCheck, Cpu, Users, DollarSign, Activity, RefreshCw } from "lucide-react";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 import { MarketplaceApproval } from "@/components/admin/MarketplaceApproval";
+import { AdminProductManagement } from "@/components/admin/AdminProductManagement";
+import { AdminCropManagement } from "@/components/admin/AdminCropManagement";
 
 export default function AdminDashboard() {
   const { currentUser } = useAuthRole();
@@ -117,6 +119,8 @@ export default function AdminDashboard() {
         </div>
 
         <MarketplaceApproval />
+        <AdminProductManagement />
+        <AdminCropManagement />
 
         {/* KYC User Management Table */}
         <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mt-6">

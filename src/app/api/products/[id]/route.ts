@@ -30,20 +30,50 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
     const { id } = await params;
     const body = await request.json();
-    const { status } = body;
+    const { status, title, description, category, price, unit, stockQuantity, imageUrl } = body;
 
-    if (!['APPROVED', 'REJECTED'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status provided.' }, { status: 400 });
+    const dataToUpdate: any = {};
+    if (status) {
+      if (!['APPROVED', 'REJECTED'].includes(status)) {
+        return NextResponse.json({ error: 'Invalid status provided.' }, { status: 400 });
+      }
+      dataToUpdate.status = status;
     }
+    if (title) dataToUpdate.title = title;
+    if (description !== undefined) dataToUpdate.description = description;
+    if (category) dataToUpdate.category = category;
+    if (price !== undefined) dataToUpdate.price = parseFloat(price);
+    if (unit) dataToUpdate.unit = unit;
+    if (stockQuantity !== undefined) dataToUpdate.stockQuantity = parseInt(stockQuantity, 10);
+    if (imageUrl) dataToUpdate.imageUrl = imageUrl;
 
     const updatedProduct = await prisma.product.update({
       where: { id },
-      data: { status }
+      data: dataToUpdate
     });
 
     return NextResponse.json({ success: true, product: updatedProduct });
   } catch (error) {
-    console.error('Failed to update product status:', error);
-    return NextResponse.json({ error: 'Unable to update product status.' }, { status: 500 });
+    console.error('Failed to update product:', error);
+    return NextResponse.json({ error: 'Unable to update product.' }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const isAdmin = await getAdminRole();
+    if (!isAdmin) {
+      return NextResponse.json({ error: 'Unauthorized. Admin access required.' }, { status: 403 });
+    }
+
+    const { id } = await params;
+    await prisma.product.delete({
+      where: { id }
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Failed to delete product:', error);
+    return NextResponse.json({ error: 'Unable to delete product.' }, { status: 500 });
   }
 }

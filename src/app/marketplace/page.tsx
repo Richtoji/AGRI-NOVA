@@ -53,15 +53,15 @@ export default function MarketplacePage() {
 
   const filteredProducts = products
     .filter((p) => {
-      const matchesCategory = selectedCategory === "All" || p.category.toLowerCase() === selectedCategory.toLowerCase();
+      const matchesCategory = selectedCategory === "All" || (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
       const matchesLocation = selectedLocation === "All Locations" || (p.location && p.location.toLowerCase() === selectedLocation.toLowerCase());
       const query = searchQuery.toLowerCase().trim();
       const matchesSearch =
-        p.title.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query) ||
+        (p.title && p.title.toLowerCase().includes(query)) ||
+        (p.description && p.description.toLowerCase().includes(query)) ||
         (p.localName && p.localName.toLowerCase().includes(query)) ||
         (p.location && p.location.toLowerCase().includes(query)) ||
-        p.category.toLowerCase().includes(query);
+        (p.category && p.category.toLowerCase().includes(query));
       const matchesRating = p.rating >= minRating;
       return matchesCategory && matchesLocation && matchesSearch && matchesRating;
     })

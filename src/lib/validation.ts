@@ -28,9 +28,46 @@ export function validatePhoneWithDetails(phone: string): { isValid: boolean; err
   if (/[a-zA-Z]/.test(phone)) {
     return { isValid: false, error: "Phone number cannot contain letters." };
   }
-  if (!/^\d{10}$/.test(phone)) {
+  
+  // Remove all non-digit characters for checking length and patterns
+  const cleanPhone = phone.trim().replace(/\D/g, "");
+
+  if (cleanPhone.length !== 10) {
     return { isValid: false, error: "Phone number must contain exactly 10 digits." };
   }
+
+  // Reject all identical digits
+  if (/^(\d)\1{9}$/.test(cleanPhone)) {
+    return { isValid: false, error: "Phone number cannot be all identical digits." };
+  }
+
+  // Reject sequential patterns
+  const sequentialPatterns = ["1234567890", "0123456789", "9876543210", "0987654321"];
+  if (sequentialPatterns.includes(cleanPhone)) {
+    return { isValid: false, error: "Phone number cannot be a simple sequential pattern." };
+  }
+
+  return { isValid: true };
+}
+
+// DOB Validation
+export function validateDob(dob: string): { isValid: boolean; error?: string } {
+  if (!dob) {
+    return { isValid: false, error: "Date of Birth is required." };
+  }
+  
+  const parsedDate = new Date(dob);
+  if (isNaN(parsedDate.getTime())) {
+    return { isValid: false, error: "Invalid date format." };
+  }
+
+  // Optional: Add age restriction (e.g. at least 13 or 18 years old)
+  // For this project, we just require a valid date.
+  const today = new Date();
+  if (parsedDate > today) {
+    return { isValid: false, error: "Date of Birth cannot be in the future." };
+  }
+
   return { isValid: true };
 }
 

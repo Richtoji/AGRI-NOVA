@@ -359,8 +359,17 @@ export default function FarmerDashboard() {
                             <p className="text-[9px] text-gray-500"><strong className="text-gray-700">Pesticide:</strong> {crop.pesticide}</p>
                           </div>
                         </div>
-                        <div className="w-20 h-20 bg-gray-200 rounded-lg ml-2 flex items-center justify-center">
-                           <Sprout className="w-8 h-8 text-gray-400" />
+                        <div className="w-20 h-20 rounded-lg ml-2 flex items-center justify-center overflow-hidden bg-gray-200 relative">
+                          <img 
+                            src={crop.image} 
+                            alt={crop.name} 
+                            className="w-full h-full object-cover z-10" 
+                            onError={(e) => { 
+                              e.currentTarget.style.display = 'none'; 
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden'); 
+                            }} 
+                          />
+                          <Sprout className="w-8 h-8 text-gray-400 absolute hidden z-0" />
                         </div>
                       </div>
                     </div>
