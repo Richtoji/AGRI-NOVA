@@ -152,11 +152,11 @@ export default function LoginPage() {
                     }}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900"
                   >
-                    <option value="FARMER">Farmer (Crop & AI Diagnostic Tools)</option>
-                    <option value="BUYER">Buyer (Agri-Commerce Marketplace)</option>
-                    <option value="EQUIPMENT_OWNER">Equipment Owner (Machinery Rental)</option>
-                    <option value="VETERINARY_EXPERT">Veterinary Expert (Telehealth)</option>
-                    <option value="DELIVERY_PARTNER">Delivery Partner (Logistics)</option>
+                    <option value="FARMER">Farmer</option>
+                    <option value="BUYER">Buyer</option>
+                    <option value="EQUIPMENT_OWNER">Equipment Owner</option>
+                    <option value="VETERINARY_EXPERT">Veterinary Expert</option>
+                    <option value="DELIVERY_PARTNER">Delivery Partner</option>
                     <option value="ADMIN">System Admin</option>
                   </select>
                 </div>
