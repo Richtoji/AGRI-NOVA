@@ -11,7 +11,7 @@ async function main() {
 
   for (const user of mockSeedData.users) {
     const existing = await prisma.user.findUnique({
-      where: { email: user.email }
+      where: { id: user.id }
     });
 
     if (!existing) {
