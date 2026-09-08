@@ -103,18 +103,19 @@ export function useLocationWeather() {
 
     const fallbackToIPLocation = async () => {
       try {
-        const res = await fetch('https://ipapi.co/json/');
+        const res = await fetch('http://ip-api.com/json/');
         if (res.ok) {
           const data = await res.json();
-          if (data.latitude && data.longitude) {
-            const lat = Number(data.latitude);
-            const lng = Number(data.longitude);
+          if (data.status === 'success' && data.lat && data.lon) {
+            const lat = Number(data.lat);
+            const lng = Number(data.lon);
             saveCachedLocation(lat, lng);
             setCoordinates({ lat, lng });
             fetchWeather(lat, lng);
             return;
           }
         }
+
         // Second fallback
         const res2 = await fetch('https://get.geojs.io/v1/ip/geo.json');
         if (res2.ok) {
@@ -128,10 +129,30 @@ export function useLocationWeather() {
             return;
           }
         }
-        throw new Error('IP location failed');
+
+        // Third fallback
+        const res3 = await fetch('https://ipapi.co/json/');
+        if (res3.ok) {
+          const data3 = await res3.json();
+          if (data3.latitude && data3.longitude) {
+            const lat = Number(data3.latitude);
+            const lng = Number(data3.longitude);
+            saveCachedLocation(lat, lng);
+            setCoordinates({ lat, lng });
+            fetchWeather(lat, lng);
+            return;
+          }
+        }
+
+        throw new Error('All IP location services failed');
       } catch (err) {
-        setError('Unable to determine your current location. Please enable GPS or check connection.');
-        setLoading(false);
+        console.warn("Location detection failed. Defaulting to Central India.");
+        // Ultimate fallback to a central agricultural location (e.g. Nagpur)
+        const lat = 21.1458;
+        const lng = 79.0882;
+        saveCachedLocation(lat, lng);
+        setCoordinates({ lat, lng });
+        fetchWeather(lat, lng);
       }
     };
 
