@@ -53,9 +53,12 @@ export async function POST(request: Request) {
     // Execute Order creation, Stock reduction, and Cart clearing in a transaction
     await prisma.$transaction(async (tx) => {
       let totalAmount = 0;
+      let pickupLocation = "Multiple Locations"; // Fallback
+      
       const orderItemsData = cart.cartItems.map(item => {
         const itemTotal = item.quantity * item.product.price;
         totalAmount += itemTotal;
+        if (item.product.location) pickupLocation = item.product.location; // Just pick the location of one item for simplicity
         return {
           productId: item.productId,
           quantity: item.quantity,
@@ -94,6 +97,23 @@ export async function POST(request: Request) {
       await tx.cartItem.deleteMany({
         where: { cartId: cart.id }
       });
+
+      // 4. Create Delivery Task
+      const driver = await tx.user.findFirst({
+        where: { role: 'DELIVERY_PARTNER' }
+      });
+      
+      if (driver) {
+        await tx.deliveryTask.create({
+          data: {
+            orderId: order.id,
+            driverId: driver.id,
+            pickupLocation: pickupLocation,
+            deliveryLocation: "Buyer Default Address", // In a real app, buyer's selected address
+            earnings: 50, // Static fee payout
+          }
+        });
+      }
     });
 
     return NextResponse.json({ success: true, message: 'Order placed successfully!' });

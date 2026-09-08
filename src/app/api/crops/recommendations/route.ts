@@ -65,6 +65,7 @@ export async function GET(request: Request) {
           waterRequirement: 3,
           fertilizer: "Standard NPK",
           pesticide: "Standard",
+          imageUrl: null,
           createdAt: new Date(),
           updatedAt: new Date()
         };
@@ -89,7 +90,7 @@ export async function GET(request: Request) {
         waterRequirement: profile.waterRequirement,
         fertilizer: profile.fertilizer,
         pesticide: profile.pesticide,
-        image: `/images/crops/${cropName.toLowerCase().replace(" ", "-")}.jpg`,
+        image: profile.imageUrl || `/images/crops/${cropName.toLowerCase().replace(" ", "-")}.jpg`,
         zoneName: zone.name,
         elevation: elevation
       };

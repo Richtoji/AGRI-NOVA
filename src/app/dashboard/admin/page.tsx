@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { mockSeedData } from "../../../../backend/prisma/seed";
@@ -10,25 +11,70 @@ import { MarketplaceApproval } from "@/components/admin/MarketplaceApproval";
 import { AdminProductManagement } from "@/components/admin/AdminProductManagement";
 import { AdminCropManagement } from "@/components/admin/AdminCropManagement";
 import { AdminSchemeManagement } from "@/components/admin/AdminSchemeManagement";
+import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const { currentUser } = useAuthRole();
-  const [usersList, setUsersList] = useState(mockSeedData.users);
+  const searchParams = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'dashboard';
+  const [usersList, setUsersList] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(true);
 
-  const toggleKyc = (id: string) => {
+  const fetchUsers = async () => {
+    setLoadingUsers(true);
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      if (data.success) {
+        setUsersList(data.users);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setLoadingUsers(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'users' || activeTab === 'dashboard') {
+      fetchUsers();
+    }
+  }, [activeTab]);
+
+  const toggleKyc = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === "VERIFIED" ? "PENDING" : "VERIFIED";
+    
+    // Optimistic update
     setUsersList((prev) =>
-      prev.map((u) =>
-        u.id === id
-          ? { ...u, kycStatus: u.kycStatus === "VERIFIED" ? "PENDING" : "VERIFIED" }
-          : u
-      )
+      prev.map((u) => (u.id === id ? { ...u, kycStatus: newStatus } : u))
     );
+
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, kycStatus: newStatus })
+      });
+      if (!res.ok) {
+        // Revert on failure
+        setUsersList((prev) =>
+          prev.map((u) => (u.id === id ? { ...u, kycStatus: currentStatus } : u))
+        );
+      }
+    } catch (error) {
+      console.error("Failed to update KYC status", error);
+      // Revert on failure
+      setUsersList((prev) =>
+        prev.map((u) => (u.id === id ? { ...u, kycStatus: currentStatus } : u))
+      );
+    }
   };
 
   const handleRefreshTelemetry = () => {
     setRefreshing(true);
-    setRefreshing(false);
+    fetchUsers();
   };
 
   return (
@@ -119,81 +165,117 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <MarketplaceApproval />
-        <AdminProductManagement />
-        <AdminCropManagement />
-        <AdminSchemeManagement />
+        {activeTab === 'dashboard' && (
+          <ErrorBoundary name="MarketplaceApproval">
+            <MarketplaceApproval />
+          </ErrorBoundary>
+        )}
 
-        {/* KYC User Management Table */}
-        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mt-6">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-black text-gray-900 flex items-center space-x-2">
-                <ShieldCheck className="w-5 h-5 text-gray-700" />
-                <span>KYC & Identity Verification Queue</span>
-              </h2>
-              <p className="text-xs text-gray-500 mt-1">Manage user onboarding and role verification manually</p>
+        {activeTab === 'products' && (
+          <ErrorBoundary name="AdminProductManagement">
+            <AdminProductManagement />
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'stock' && (
+          <ErrorBoundary name="AdminCropManagement">
+            <AdminCropManagement />
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'schemes' && (
+          <ErrorBoundary name="AdminSchemeManagement">
+            <AdminSchemeManagement />
+          </ErrorBoundary>
+        )}
+
+        {activeTab === 'users' && (
+          <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden mt-6">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-black text-gray-900 flex items-center space-x-2">
+                  <ShieldCheck className="w-5 h-5 text-gray-700" />
+                  <span>KYC & Identity Verification Queue</span>
+                </h2>
+                <p className="text-xs text-gray-500 mt-1">Manage user onboarding and role verification manually</p>
+              </div>
+              <button
+                onClick={handleRefreshTelemetry}
+                disabled={refreshing}
+                className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
+                <span>Refresh</span>
+              </button>
             </div>
-            <button
-              onClick={handleRefreshTelemetry}
-              disabled={refreshing}
-              className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-gray-50 border border-gray-200 text-xs text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? "animate-spin" : ""}`} />
-              <span>Refresh</span>
-            </button>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm text-left">
-              <thead className="text-xs text-gray-500 bg-gray-50 uppercase font-medium border-b border-gray-100">
-                <tr>
-                  <th className="px-6 py-4">User</th>
-                  <th className="px-6 py-4">Role</th>
-                  <th className="px-6 py-4">Email / Phone</th>
-                  <th className="px-6 py-4 text-center">KYC Status</th>
-                  <th className="px-6 py-4 text-right">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {usersList.slice(0, 5).map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
-                    <td className="px-6 py-4 font-semibold text-gray-900">{user.name}</td>
-                    <td className="px-6 py-4">
-                      <span className="text-[10px] px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-medium border border-gray-200">
-                        {user.role}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-gray-500 font-mono text-xs">{user.email}</td>
-                    <td className="px-6 py-4 text-center">
-                      <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
-                        user.kycStatus === "VERIFIED"
-                          ? "bg-gray-50 text-gray-800 border-gray-200"
-                          : "bg-amber-50 text-amber-700 border-amber-200"
-                      }`}>
-                        {user.kycStatus}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => toggleKyc(user.id)}
-                        className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors border ${
-                          user.kycStatus === "VERIFIED"
-                            ? "bg-white text-rose-600 border-rose-200 hover:bg-rose-50"
-                            : "bg-gray-900 text-white border-transparent hover:bg-gray-800"
-                        }`}
-                      >
-                        {user.kycStatus === "VERIFIED" ? "Revoke" : "Approve KYC"}
-                      </button>
-                    </td>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-xs text-gray-500 bg-gray-50 uppercase font-medium border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4">User</th>
+                    <th className="px-6 py-4">Role</th>
+                    <th className="px-6 py-4">Email / Phone</th>
+                    <th className="px-6 py-4 text-center">KYC Status</th>
+                    <th className="px-6 py-4 text-right">Action</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {loadingUsers ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Loading users...</td>
+                    </tr>
+                  ) : usersList.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">No users found.</td>
+                    </tr>
+                  ) : usersList.slice(0, 50).map((user) => (
+                    <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                      <td className="px-6 py-4 font-semibold text-gray-900">{user.name}</td>
+                      <td className="px-6 py-4">
+                        <span className="text-[10px] px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-medium border border-gray-200">
+                          {user.role}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-gray-500 font-mono text-xs">{user.email || user.phone}</td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full border ${
+                          user.kycStatus === "VERIFIED"
+                            ? "bg-gray-50 text-gray-800 border-gray-200"
+                            : "bg-amber-50 text-amber-700 border-amber-200"
+                        }`}>
+                          {user.kycStatus}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <button
+                          onClick={() => toggleKyc(user.id, user.kycStatus)}
+                          className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors border ${
+                            user.kycStatus === "VERIFIED"
+                              ? "bg-white text-rose-600 border-rose-200 hover:bg-rose-50"
+                              : "bg-gray-900 text-white border-transparent hover:bg-gray-800"
+                          }`}
+                        >
+                          {user.kycStatus === "VERIFIED" ? "Revoke" : "Approve KYC"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
       </AppLayout>
     </RouteGuard>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-screen">Loading...</div>}>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }

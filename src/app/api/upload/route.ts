@@ -37,16 +37,18 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Generate unique filename to avoid overwrites
     const uniqueSuffix = crypto.randomBytes(6).toString("hex");
     const originalExt = path.extname(file.name) || ".jpg";
     const filename = `${uniqueSuffix}${originalExt}`;
     
     // Path where it will be saved
-    const filePath = path.join(process.cwd(), "public/uploads", filename);
+    const uploadDir = path.join(process.cwd(), "public/uploads");
+    await import("fs/promises").then((fs) => fs.mkdir(uploadDir, { recursive: true }).catch(() => {}));
+    
+    const filePath = path.join(uploadDir, filename);
     await writeFile(filePath, buffer);
 
-    const fileUrl = `/uploads/${filename}`;
+    const fileUrl = `/api/uploads/${filename}`;
     return NextResponse.json({ success: true, url: fileUrl });
   } catch (error) {
     console.error("Upload error:", error);

@@ -224,16 +224,16 @@ export default function FarmerDashboard() {
                      <RefreshCw className="w-5 h-5 mb-2 animate-spin text-gray-400" />
                      Detecting your location...
                    </div>
-                ) : error ? (
+                ) : error && !coordinates ? (
                    <div className="text-xs text-red-500 font-medium px-4 text-center">
                      {error}
                    </div>
-                ) : coordinates && weatherData ? (
+                ) : coordinates ? (
                    <div className="w-full h-full relative">
                      <FarmMap 
                        latitude={coordinates.lat} 
                        longitude={coordinates.lng} 
-                       locationName={weatherData.location.name}
+                       locationName={weatherData?.location?.name || "Locating area..."}
                        onLocationSelect={setLocationManually}
                      />
                      <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none z-[1000]">

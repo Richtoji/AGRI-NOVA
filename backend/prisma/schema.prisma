@@ -339,6 +339,7 @@ model CropProfile {
   waterRequirement Float
   fertilizer       String
   pesticide        String
+  imageUrl         String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }

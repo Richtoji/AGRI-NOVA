@@ -45,19 +45,20 @@ export async function GET(request: Request) {
 
     try {
       const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14`,
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=en`,
         {
           headers: {
             // Nominatim requires a unique user-agent
             'User-Agent': 'Agri-NOVA-App/1.0 (contact@agrinova.local)',
           },
+          signal: AbortSignal.timeout(4000)
         }
       );
       if (geoRes.ok) {
         const geoData = await geoRes.json();
         if (geoData && geoData.address) {
-          const { neighbourhood, suburb, village, town, city_district, district, city, county, municipality, state_district, state, country } = geoData.address;
-          const localArea = neighbourhood || suburb || village || town || city_district || city || district || county || municipality || state_district || 'Unknown Area';
+          const { city, town, village, suburb, neighbourhood, city_district, district, county, municipality, state_district, state, country } = geoData.address;
+          const localArea = city || town || village || district || county || suburb || neighbourhood || city_district || municipality || state_district || 'Unknown Area';
           locationInfo = {
             name: localArea,
             details: `${localArea}, ${state || ''}, ${country || ''}`.replace(/,\s*,/g, ',').replace(/^,\s*/, '').replace(/,\s*$/, ''),
@@ -73,7 +74,9 @@ export async function GET(request: Request) {
     // 2. Fetch Weather Data from Open-Meteo
     const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,rain,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum&timezone=auto`;
     
-    const weatherRes = await fetch(weatherUrl);
+    const weatherRes = await fetch(weatherUrl, {
+      signal: AbortSignal.timeout(5000)
+    });
     
     if (!weatherRes.ok) {
       return NextResponse.json(

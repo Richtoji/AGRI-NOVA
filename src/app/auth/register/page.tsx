@@ -274,8 +274,8 @@ export default function RegisterPage() {
                     onBlur={handleBlur}
                     className={`appearance-none block w-full px-3 py-2 border ${errors.role ? 'border-red-300' : 'border-gray-300'} rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900`}
                   >
-                    <option value="FARMER">Farmer (Producer)</option>
-                    <option value="BUYER">Buyer (Wholesale/Retail)</option>
+                    <option value="FARMER">Farmer</option>
+                    <option value="BUYER">Buyer</option>
                     <option value="EQUIPMENT_OWNER">Equipment Owner</option>
                     <option value="VETERINARY_EXPERT">Veterinary Expert</option>
                     <option value="DELIVERY_PARTNER">Delivery Partner</option>

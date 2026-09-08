@@ -65,6 +65,14 @@ export function useLocationWeather() {
     setLoading(true);
     setError(null);
 
+    const saveCachedLocation = (lat: number, lng: number) => {
+      try {
+        localStorage.setItem('agrinova_cached_location', JSON.stringify({ lat, lng, timestamp: Date.now() }));
+      } catch (e) {
+        console.warn("Failed to cache location");
+      }
+    };
+
     // 1. Check if user previously set a manual location (unless forcing a refresh)
     if (!force) {
       try {
@@ -77,8 +85,19 @@ export function useLocationWeather() {
             return;
           }
         }
+        
+        // 2. Check cached automatic location (valid for 1 hour)
+        const cached = localStorage.getItem('agrinova_cached_location');
+        if (cached) {
+          const { lat, lng, timestamp } = JSON.parse(cached);
+          if (lat && lng && timestamp && (Date.now() - timestamp < 3600000)) {
+            setCoordinates({ lat, lng });
+            fetchWeather(lat, lng);
+            return;
+          }
+        }
       } catch (e) {
-        console.warn("Failed to read saved location from localStorage");
+        console.warn("Failed to read location from localStorage");
       }
     }
 
@@ -90,6 +109,7 @@ export function useLocationWeather() {
           if (data.latitude && data.longitude) {
             const lat = Number(data.latitude);
             const lng = Number(data.longitude);
+            saveCachedLocation(lat, lng);
             setCoordinates({ lat, lng });
             fetchWeather(lat, lng);
             return;
@@ -102,6 +122,7 @@ export function useLocationWeather() {
           if (data2.latitude && data2.longitude) {
             const lat = Number(data2.latitude);
             const lng = Number(data2.longitude);
+            saveCachedLocation(lat, lng);
             setCoordinates({ lat, lng });
             fetchWeather(lat, lng);
             return;
@@ -123,6 +144,7 @@ export function useLocationWeather() {
       (position) => {
         setPermissionState('granted');
         const { latitude, longitude } = position.coords;
+        saveCachedLocation(latitude, longitude);
         setCoordinates({ lat: latitude, lng: longitude });
         fetchWeather(latitude, longitude);
       },

@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { 
   Home,
@@ -28,6 +28,8 @@ import {
 export const Sidebar: React.FC = () => {
   const { currentRole, logout, toggleCart } = useAuthRole();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'dashboard';
 
   const getDashboardPath = () => {
     switch (currentRole) {
@@ -88,14 +90,14 @@ export const Sidebar: React.FC = () => {
       case "ADMIN":
         return [
           { label: "Dashboard", href: "/dashboard/admin", icon: <Home className="w-4 h-4" /> },
-          { label: "Users", href: "/dashboard/admin", icon: <User className="w-4 h-4" /> },
+          { label: "Users", href: "/dashboard/admin?tab=users", icon: <User className="w-4 h-4" /> },
           { label: "Marketplace", href: "/marketplace", icon: <ShoppingBag className="w-4 h-4" /> },
-          { label: "Products", href: "/dashboard/admin", icon: <Store className="w-4 h-4" /> },
-          { label: "Stock", href: "/dashboard/admin", icon: <ClipboardList className="w-4 h-4" /> },
+          { label: "Products", href: "/dashboard/admin?tab=products", icon: <Store className="w-4 h-4" /> },
+          { label: "Stock", href: "/dashboard/admin?tab=stock", icon: <ClipboardList className="w-4 h-4" /> },
           { label: "Equipment", href: "/equipment", icon: <Tractor className="w-4 h-4" /> },
           { label: "Veterinary", href: "/veterinary", icon: <PawPrint className="w-4 h-4" /> },
-          { label: "Government Schemes", href: "/schemes", icon: <FileText className="w-4 h-4" /> },
-          { label: "System Management", href: "/dashboard/admin", icon: <Settings className="w-4 h-4" /> },
+          { label: "Government Schemes", href: "/dashboard/admin?tab=schemes", icon: <FileText className="w-4 h-4" /> },
+          { label: "System Management", href: "/dashboard/admin?tab=system", icon: <Settings className="w-4 h-4" /> },
         ];
       case "DELIVERY_PARTNER":
         return [
@@ -135,7 +137,23 @@ export const Sidebar: React.FC = () => {
         {/* Navigation Menu */}
         <nav className="p-2 space-y-0.5">
           {menuItems.map((item: any) => {
-            const isActive = item.href ? pathname === item.href && item.label === "Dashboard" : false;
+            let isActive = false;
+            
+            if (item.href) {
+              const itemUrl = new URL(item.href, 'http://localhost');
+              const itemTab = itemUrl.searchParams.get('tab');
+              
+              if (itemTab) {
+                // If it has a tab param, it's active if the current tab matches and pathname matches
+                isActive = pathname === itemUrl.pathname && currentTab === itemTab;
+              } else if (item.label === 'Dashboard') {
+                // Dashboard is active if pathname matches and there's no tab or tab is 'dashboard'
+                isActive = pathname === item.href && (currentTab === 'dashboard' || !searchParams.has('tab'));
+              } else {
+                // Generic fallback
+                isActive = pathname === item.href;
+              }
+            }
             
             const className = `flex items-center w-full space-x-2.5 px-3 py-2 rounded-lg text-[12px] font-semibold transition-colors ${
               isActive

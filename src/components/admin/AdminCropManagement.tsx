@@ -19,7 +19,7 @@ export function AdminCropManagement() {
     name: "", minElevation: "", maxElevation: "", landform: "", majorCrops: ""
   });
   const [cropForm, setCropForm] = useState({
-    name: "", expectedYield: "", growingPeriod: "", waterRequirement: "", fertilizer: "", pesticide: ""
+    name: "", expectedYield: "", growingPeriod: "", waterRequirement: "", fertilizer: "", pesticide: "", imageUrl: ""
   });
 
   const fetchData = async () => {
@@ -77,10 +77,11 @@ export function AdminCropManagement() {
         growingPeriod: item.growingPeriod,
         waterRequirement: item.waterRequirement.toString(),
         fertilizer: item.fertilizer,
-        pesticide: item.pesticide
+        pesticide: item.pesticide,
+        imageUrl: item.imageUrl || ""
       });
     } else {
-      setCropForm({ name: "", expectedYield: "", growingPeriod: "", waterRequirement: "", fertilizer: "", pesticide: "" });
+      setCropForm({ name: "", expectedYield: "", growingPeriod: "", waterRequirement: "", fertilizer: "", pesticide: "", imageUrl: "" });
     }
     setIsCropModalOpen(true);
   };
@@ -217,7 +218,16 @@ export function AdminCropManagement() {
             <tbody className="divide-y divide-gray-100">
               {filteredCrops.map(c => (
                 <tr key={c.id} className="hover:bg-gray-50/50">
-                  <td className="px-4 py-3 font-bold text-gray-900">{c.name}</td>
+                  <td className="px-4 py-3 font-bold text-gray-900 flex items-center">
+                    {c.imageUrl ? (
+                      <img src={c.imageUrl} alt={c.name} className="w-8 h-8 rounded-full object-cover mr-3 border border-gray-100" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center mr-3 border border-green-200">
+                        <Leaf className="w-4 h-4 text-green-600" />
+                      </div>
+                    )}
+                    {c.name}
+                  </td>
                   <td className="px-4 py-3 text-xs text-gray-600">{c.expectedYield}</td>
                   <td className="px-4 py-3 text-xs text-gray-600">{c.growingPeriod}</td>
                   <td className="px-4 py-3 text-[10px] text-gray-500">
@@ -260,10 +270,66 @@ export function AdminCropManagement() {
       {/* Crop Modal */}
       {isCropModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <form onSubmit={saveCrop} className="bg-white rounded-2xl w-full max-w-md p-6">
+          <form onSubmit={async (e) => {
+            e.preventDefault();
+            let finalImageUrl = cropForm.imageUrl;
+            
+            // Handle image upload if there's a file
+            const fileInput = (e.target as HTMLFormElement).querySelector('input[type="file"]') as HTMLInputElement;
+            if (fileInput && fileInput.files && fileInput.files[0]) {
+              const file = fileInput.files[0];
+              const formData = new FormData();
+              formData.append("file", file);
+              try {
+                const uploadRes = await fetch("/api/upload", {
+                  method: "POST",
+                  body: formData,
+                });
+                if (uploadRes.ok) {
+                  const { url } = await uploadRes.json();
+                  finalImageUrl = url;
+                } else {
+                  alert("Image upload failed");
+                  return;
+                }
+              } catch (err) {
+                alert("Image upload error");
+                return;
+              }
+            }
+
+            const payload = {
+              ...cropForm,
+              imageUrl: finalImageUrl,
+              waterRequirement: parseFloat(cropForm.waterRequirement)
+            };
+            
+            if (editingItem) {
+              await fetch(`/api/admin/crops`, { method: "PATCH", body: JSON.stringify({ id: editingItem.id, ...payload }) });
+            } else {
+              await fetch(`/api/admin/crops`, { method: "POST", body: JSON.stringify(payload) });
+            }
+            setIsCropModalOpen(false);
+            fetchData();
+          }} className="bg-white rounded-2xl w-full max-w-md p-6">
             <h3 className="font-black text-sm mb-4 uppercase">{editingItem ? "Edit Crop" : "Add Crop"}</h3>
             <div className="space-y-3">
               <input required name="name" value={cropForm.name} onChange={handleCropChange} placeholder="Crop Name" className="w-full px-3 py-2 text-sm bg-gray-50 border rounded-xl" />
+              
+              <div className="flex flex-col space-y-1">
+                <label className="text-xs font-bold text-gray-700">Crop Image</label>
+                <div className="flex items-center space-x-3">
+                  {cropForm.imageUrl && (
+                    <img src={cropForm.imageUrl} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-gray-200" />
+                  )}
+                  <input type="file" accept="image/*" onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setCropForm({ ...cropForm, imageUrl: URL.createObjectURL(e.target.files[0]) });
+                    }
+                  }} className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100" />
+                </div>
+              </div>
+
               <input required name="expectedYield" value={cropForm.expectedYield} onChange={handleCropChange} placeholder="Expected Yield" className="w-full px-3 py-2 text-sm bg-gray-50 border rounded-xl" />
               <input required name="growingPeriod" value={cropForm.growingPeriod} onChange={handleCropChange} placeholder="Growing Period" className="w-full px-3 py-2 text-sm bg-gray-50 border rounded-xl" />
               <input required type="number" step="0.1" name="waterRequirement" value={cropForm.waterRequirement} onChange={handleCropChange} placeholder="Water Req (1-5)" className="w-full px-3 py-2 text-sm bg-gray-50 border rounded-xl" />

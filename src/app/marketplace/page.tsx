@@ -17,6 +17,7 @@ export default function MarketplacePage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [addedItem, setAddedItem] = useState<string | null>(null);
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [subMarket, setSubMarket] = useState<"produce" | "feed" | "vet" | "my-listings">("produce");
   const [sortBy, setSortBy] = useState("price-asc");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
@@ -73,8 +74,8 @@ export default function MarketplacePage() {
     });
 
   const handleAddToCart = async (product: any) => {
-    // Default quantity is 1 for now, user can adjust in CartPanel
-    const result = await addToCart(product.id, 1);
+    const qty = quantities[product.id] || (product as any).minOrderQuantity || 1;
+    const result = await addToCart(product.id, qty);
     if (result.success) {
       setAddedItem(product.id);
       setTimeout(() => setAddedItem(null), 1500);
@@ -237,27 +238,55 @@ export default function MarketplacePage() {
                       )}
                     </div>
 
-                    <div className="mt-auto flex items-end justify-between pt-3 border-t border-gray-50">
-                      <div>
-                        <div className="flex items-baseline space-x-0.5">
-                          <span className="text-lg font-black text-gray-900">₹{product.price}</span>
-                          <span className="text-xs text-gray-500 font-medium">/{product.unit}</span>
+                    <div className="mt-auto pt-3 border-t border-gray-50 flex flex-col space-y-3">
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <div className="flex items-baseline space-x-0.5">
+                            <span className="text-lg font-black text-gray-900">₹{product.price}</span>
+                            <span className="text-xs text-gray-500 font-medium">/{product.unit}</span>
+                          </div>
+                          <p className="text-[10px] text-gray-500 font-medium mt-0.5">Min: {(product as any).minOrderQuantity || 1} {product.unit}</p>
                         </div>
-                        <p className="text-[10px] text-gray-500 font-medium mt-0.5">Min: {(product as any).minOrderQuantity} {product.unit}</p>
+                        <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden shrink-0">
+                          <button 
+                            className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold border-r border-gray-200"
+                            onClick={() => {
+                              const min = (product as any).minOrderQuantity || 1;
+                              const current = quantities[product.id] || min;
+                              if (current > min) setQuantities({...quantities, [product.id]: current - 1});
+                            }}
+                          >-</button>
+                          <input 
+                            type="number"
+                            className="w-10 text-center text-xs font-bold text-gray-900 border-none outline-none p-1 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            value={quantities[product.id] || (product as any).minOrderQuantity || 1}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              if (!isNaN(val)) setQuantities({...quantities, [product.id]: val});
+                            }}
+                          />
+                          <button 
+                            className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold border-l border-gray-200"
+                            onClick={() => {
+                              const current = quantities[product.id] || (product as any).minOrderQuantity || 1;
+                              setQuantities({...quantities, [product.id]: current + 1});
+                            }}
+                          >+</button>
+                        </div>
                       </div>
 
                       <button
                         onClick={() => handleAddToCart(product)}
-                        className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-1 ${
+                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1 ${
                           addedItem === product.id
                             ? "bg-gray-100 text-gray-700 border border-gray-200"
                             : "bg-gray-900 text-white hover:bg-gray-800"
                         }`}
                       >
                         {addedItem === product.id ? (
-                          <><Check className="w-3.5 h-3.5 mr-1" /> Added</>
+                          <><Check className="w-3.5 h-3.5 mr-1" /> Added to Cart</>
                         ) : (
-                          <><ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add</>
+                          <><ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Cart</>
                         )}
                       </button>
                     </div>
