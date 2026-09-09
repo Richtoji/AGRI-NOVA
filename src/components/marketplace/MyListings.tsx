@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
-import { Plus, Clock, CheckCircle2, XCircle, PackageOpen, UploadCloud } from "lucide-react";
+import { Plus, Clock, CheckCircle2, XCircle, PackageOpen, UploadCloud, Edit2 } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
 
 export function MyListings() {
@@ -9,6 +9,7 @@ export function MyListings() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -63,12 +64,40 @@ export function MyListings() {
     fetchMyProducts();
   }, [currentUser?.id]);
 
+  const openAddModal = () => {
+    setEditingProductId(null);
+    setFormData({
+      title: "", description: "", category: "Fresh Vegetables", price: "", unit: "kg",
+      stockQuantity: "", imageUrl: "", location: "Palakkad", quality: "Standard", rating: "5.0"
+    });
+    setShowModal(true);
+  };
+
+  const openEditModal = (product: any) => {
+    setEditingProductId(product.id);
+    setFormData({
+      title: product.title,
+      description: product.description,
+      category: product.category,
+      price: product.price.toString(),
+      unit: product.unit,
+      stockQuantity: product.stockQuantity.toString(),
+      imageUrl: product.imageUrl,
+      location: product.location || "Palakkad",
+      quality: product.quality || "Standard",
+      rating: product.rating.toString()
+    });
+    setShowModal(true);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      const res = await fetch("/api/products", {
-        method: "POST",
+      const url = editingProductId ? `/api/products/${editingProductId}` : "/api/products";
+      const method = editingProductId ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData)
       });
@@ -110,7 +139,7 @@ export function MyListings() {
           <p className="text-xs text-gray-500">Manage your products and check approval status.</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
+          onClick={openAddModal}
           className="bg-gray-900 text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center shadow-sm hover:bg-gray-800 transition-colors"
         >
           <Plus className="w-4 h-4 mr-1.5" /> Sell an Item
@@ -150,8 +179,13 @@ export function MyListings() {
                 </div>
               </div>
               <div className="p-4 flex flex-col flex-1">
-                <h3 className="font-bold text-gray-900 text-sm">{p.title}</h3>
-                <p className="text-[10px] text-gray-500 mb-3 line-clamp-2">{p.description}</p>
+                <div className="flex justify-between items-start">
+                  <h3 className="font-bold text-gray-900 text-sm">{p.title}</h3>
+                  <button onClick={() => openEditModal(p)} className="p-1.5 text-gray-400 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors">
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500 mb-3 line-clamp-2 mt-1">{p.description}</p>
                 <div className="mt-auto flex items-end justify-between pt-3 border-t border-gray-50">
                   <div className="flex items-baseline space-x-0.5">
                     <span className="text-lg font-black text-gray-900">₹{p.price}</span>
@@ -172,7 +206,7 @@ export function MyListings() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
             <div className="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-              <h2 className="text-lg font-bold text-gray-900">List Your Product</h2>
+              <h2 className="text-lg font-bold text-gray-900">{editingProductId ? "Edit Your Product" : "List Your Product"}</h2>
               <button onClick={() => setShowModal(false)} className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors text-gray-500">
                 <XCircle className="w-5 h-5" />
               </button>
@@ -256,7 +290,7 @@ export function MyListings() {
                     Cancel
                   </button>
                   <button type="submit" disabled={submitting} className="px-5 py-2 rounded-xl text-sm font-bold text-white bg-green-600 hover:bg-green-700 disabled:opacity-50">
-                    {submitting ? "Submitting..." : "Submit for Approval"}
+                    {submitting ? "Submitting..." : editingProductId ? "Save Changes" : "Submit for Approval"}
                   </button>
                 </div>
 
