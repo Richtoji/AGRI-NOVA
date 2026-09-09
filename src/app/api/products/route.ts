@@ -83,8 +83,22 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { title, description, category, price, unit, stockQuantity, imageUrl, location, quality, rating } = body;
 
-    if (!title || !category || !price || !unit || !stockQuantity || !imageUrl) {
+    if (!title || !category || price === undefined || !unit || stockQuantity === undefined || !imageUrl) {
       return NextResponse.json({ error: 'Missing required product fields.' }, { status: 400 });
+    }
+
+    const parsedPrice = parseFloat(price);
+    const parsedStock = parseInt(stockQuantity, 10);
+    const validUnits = ["kg", "grams", "litres", "ml", "ton", "quintal", "dozen", "unit"];
+
+    if (isNaN(parsedPrice) || parsedPrice < 0) {
+      return NextResponse.json({ error: 'Strict Validation Error: Price must be a positive number.' }, { status: 400 });
+    }
+    if (isNaN(parsedStock) || parsedStock <= 0) {
+      return NextResponse.json({ error: 'Strict Validation Error: Stock quantity must be greater than zero.' }, { status: 400 });
+    }
+    if (!validUnits.includes(unit)) {
+      return NextResponse.json({ error: `Strict Validation Error: Invalid unit. Must be one of ${validUnits.join(", ")}` }, { status: 400 });
     }
 
     const newProduct = await prisma.product.create({
@@ -93,9 +107,9 @@ export async function POST(request: Request) {
         title,
         description: description || "",
         category,
-        price: parseFloat(price),
+        price: parsedPrice,
         unit,
-        stockQuantity: parseInt(stockQuantity, 10),
+        stockQuantity: parsedStock,
         imageUrl,
         location,
         quality: quality || null,

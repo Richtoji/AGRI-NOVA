@@ -34,12 +34,27 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file received." }, { status: 400 });
     }
 
+    if (!file.type.startsWith('image/')) {
+      return NextResponse.json({ error: "Strict Validation Error: Only image files are allowed." }, { status: 400 });
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      return NextResponse.json({ error: "Strict Validation Error: Image size must be less than 5MB." }, { status: 400 });
+    }
+
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
     const uniqueSuffix = crypto.randomBytes(6).toString("hex");
     const originalExt = path.extname(file.name) || ".jpg";
-    const filename = `${uniqueSuffix}${originalExt}`;
+    
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+    const lowerExt = originalExt.toLowerCase();
+    if (!allowedExtensions.includes(lowerExt)) {
+      return NextResponse.json({ error: "Strict Validation Error: Invalid image extension." }, { status: 400 });
+    }
+
+    const filename = `${uniqueSuffix}${lowerExt}`;
     
     // Path where it will be saved
     const uploadDir = path.join(process.cwd(), "public/uploads");

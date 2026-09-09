@@ -27,6 +27,14 @@ export function MyListings() {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        alert("Strict Validation Error: Only image files are allowed.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Strict Validation Error: Image size must be less than 5MB.");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setFormData(prev => ({ ...prev, imageUrl: reader.result as string }));
@@ -92,6 +100,7 @@ export function MyListings() {
 
   const categories = ["Fresh Vegetables", "Fruits", "Rice & Grains", "Pulses", "Tubers", "Kerala Spices", "Plantation Products", "Dairy Products", "Poultry Products"];
   const locations = ["Palakkad", "Wayanad", "Idukki", "Ernakulam", "Thrissur", "Kottayam", "Alappuzha"];
+  const units = ["kg", "grams", "litres", "ml", "ton", "quintal", "dozen", "unit"];
 
   return (
     <div className="space-y-5">
@@ -216,7 +225,9 @@ export function MyListings() {
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-700 mb-1">Unit</label>
-                    <input required type="text" value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 outline-none" placeholder="e.g. kg, ton" />
+                    <select required value={formData.unit} onChange={e => setFormData({...formData, unit: e.target.value})} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-gray-900 outline-none">
+                      {units.map(u => <option key={u} value={u}>{u}</option>)}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-[11px] font-bold text-gray-700 mb-1">Stock</label>

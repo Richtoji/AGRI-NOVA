@@ -53,6 +53,14 @@ export function AdminProductManagement() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!file.type.startsWith('image/')) {
+        alert("Strict Validation Error: Only image files are allowed.");
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        alert("Strict Validation Error: Image size must be less than 5MB.");
+        return;
+      }
       setImageFile(file);
       setFormData({ ...formData, imageUrl: URL.createObjectURL(file) });
     }
@@ -309,9 +317,13 @@ export function AdminProductManagement() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Unit</label>
                   <select name="unit" value={formData.unit} onChange={handleInputChange} className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-gray-900 bg-gray-50 focus:bg-white transition-colors">
                     <option value="kg">kg</option>
-                    <option value="gram">gram</option>
-                    <option value="liter">liter</option>
-                    <option value="piece">piece</option>
+                    <option value="grams">grams</option>
+                    <option value="litres">litres</option>
+                    <option value="ml">ml</option>
+                    <option value="ton">ton</option>
+                    <option value="quintal">quintal</option>
+                    <option value="dozen">dozen</option>
+                    <option value="unit">unit</option>
                   </select>
                 </div>
 
