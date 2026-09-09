@@ -5,10 +5,34 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { Stethoscope, Droplets, Calendar, ChevronRight, Activity, Beaker } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { AppointmentModal } from "@/components/veterinary/AppointmentModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuthRole } from "@/lib/context/AuthRoleContext";
+import { AdminLivestockManagement } from "@/components/admin/AdminLivestockManagement";
 
 export default function VeterinaryPage() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const { currentUser } = useAuthRole();
+  const isAdmin = currentUser?.role === "ADMIN";
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loadingRecs, setLoadingRecs] = useState(true);
+
+  useEffect(() => {
+    if (isAdmin) return; // Admins have their own panel
+    const fetchRecs = async () => {
+      try {
+        const res = await fetch("/api/admin/livestock-recommendations");
+        if (res.ok) {
+          const data = await res.json();
+          setRecommendations(data.recommendations || []);
+        }
+      } catch (err) {
+        console.error("Failed to fetch recommendations", err);
+      } finally {
+        setLoadingRecs(false);
+      }
+    };
+    fetchRecs();
+  }, [isAdmin]);
 
   return (
     <AppLayout>
@@ -24,92 +48,74 @@ export default function VeterinaryPage() {
               Manage your livestock health, view breed recommendations, and book veterinary appointments.
             </p>
           </div>
-          <button 
-            onClick={() => setIsBookingModalOpen(true)}
-            className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center"
-          >
-            <Calendar className="w-4 h-4 mr-2" />
-            Book Vet Appointment
-          </button>
+          {!isAdmin && (
+            <button 
+              onClick={() => setIsBookingModalOpen(true)}
+              className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center"
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Book Vet Appointment
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Main Content Area */}
+          {isAdmin ? (
+            <div className="lg:col-span-3">
+              <AdminLivestockManagement />
+            </div>
+          ) : (
+            <>
           <div className="lg:col-span-2 space-y-6">
             
             {/* Breed Recommendation */}
             <h2 className="text-lg font-black text-gray-900">Recommended Breeds for Your Region</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Jersey Cow */}
-              <div className="bg-white border border-gray-100 rounded-2xl bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col shadow-sm">
-                <div className="h-48 relative">
-                  <SafeImage 
-                    src="/images/jersey-cow.png" 
-                    alt="Jersey Cow" 
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-[10px] font-bold text-gray-800 border border-gray-200 shadow-sm">
-                    HIGH YIELD BREED
-                  </span>
-                </div>
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-lg font-black text-gray-900">Jersey Cow</h3>
-                  <div className="mt-4 space-y-3 flex-1 text-sm">
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-gray-500 flex items-center"><Droplets className="w-4 h-4 mr-2 text-blue-500" /> Expected Milk</span>
-                      <span className="font-bold text-gray-900">18–25 L/day</span>
+            {loadingRecs ? (
+              <div className="text-sm text-gray-500 animate-pulse">Loading recommended breeds...</div>
+            ) : recommendations.length === 0 ? (
+              <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-xl">No specific recommendations for your region yet.</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {recommendations.map(rec => (
+                  <div key={rec.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col shadow-sm">
+                    <div className="h-48 relative bg-gray-50">
+                      {rec.imageUrl && (
+                        <SafeImage 
+                          src={rec.imageUrl} 
+                          alt={rec.breedName} 
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      <span className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-[10px] font-bold text-gray-800 border border-gray-200 shadow-sm uppercase">
+                        {rec.location}
+                      </span>
                     </div>
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-gray-500 flex items-center"><Activity className="w-4 h-4 mr-2 text-gray-700" /> Fat Content</span>
-                      <span className="font-bold text-gray-900">4.5% - 5.5%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 flex items-center"><Beaker className="w-4 h-4 mr-2 text-amber-500" /> Maintenance</span>
-                      <span className="font-bold text-gray-900">Medium</span>
-                    </div>
-                  </div>
-                  <button className="mt-5 w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-sm rounded-lg transition-colors border border-gray-200">
-                    View Full Details
-                  </button>
-                </div>
-              </div>
-
-              {/* Murrah Buffalo */}
-              <div className="bg-white border border-gray-100 rounded-2xl bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col shadow-sm">
-                <div className="h-48 relative">
-                  <SafeImage 
-                    src="/images/murrah-buffalo.jpg" 
-                    alt="Murrah Buffalo" 
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-[10px] font-bold text-gray-800 border border-gray-200 shadow-sm">
-                    HIGH FAT CONTENT
-                  </span>
-                </div>
-                <div className="p-5 flex-1 flex flex-col">
-                  <h3 className="text-lg font-black text-gray-900">Murrah Buffalo</h3>
-                  <div className="mt-4 space-y-3 flex-1 text-sm">
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-gray-500 flex items-center"><Droplets className="w-4 h-4 mr-2 text-blue-500" /> Expected Milk</span>
-                      <span className="font-bold text-gray-900">12–16 L/day</span>
-                    </div>
-                    <div className="flex justify-between border-b border-gray-100 pb-2">
-                      <span className="text-gray-500 flex items-center"><Activity className="w-4 h-4 mr-2 text-gray-700" /> Fat Content</span>
-                      <span className="font-bold text-gray-900">7.0% - 8.5%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500 flex items-center"><Beaker className="w-4 h-4 mr-2 text-amber-500" /> Maintenance</span>
-                      <span className="font-bold text-gray-900">High</span>
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h3 className="text-lg font-black text-gray-900">{rec.breedName}</h3>
+                      <div className="mt-4 space-y-3 flex-1 text-sm">
+                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                          <span className="text-gray-500 flex items-center"><Droplets className="w-4 h-4 mr-2 text-blue-500" /> Expected Yield</span>
+                          <span className="font-bold text-gray-900">{rec.expectedYield}</span>
+                        </div>
+                        <div className="flex justify-between border-b border-gray-100 pb-2">
+                          <span className="text-gray-500 flex items-center"><Activity className="w-4 h-4 mr-2 text-gray-700" /> Fat Content</span>
+                          <span className="font-bold text-gray-900">{rec.fatContent}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-gray-500 flex items-center"><Beaker className="w-4 h-4 mr-2 text-amber-500" /> Maintenance</span>
+                          <span className="font-bold text-gray-900">{rec.maintenanceLevel}</span>
+                        </div>
+                      </div>
+                      <button className="mt-5 w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-sm rounded-lg transition-colors border border-gray-200">
+                        View Full Details
+                      </button>
                     </div>
                   </div>
-                  <button className="mt-5 w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-sm rounded-lg transition-colors border border-gray-200">
-                    View Full Details
-                  </button>
-                </div>
+                ))}
               </div>
-            </div>
+            )}
 
             {/* Feed Requirements */}
             <div className="bg-white border border-gray-100 rounded-2xl p-6 bg-white border border-gray-200 rounded-xl mt-6">
@@ -179,6 +185,8 @@ export default function VeterinaryPage() {
             </div>
 
           </div>
+            </>
+          )}
 
         </div>
       </div>

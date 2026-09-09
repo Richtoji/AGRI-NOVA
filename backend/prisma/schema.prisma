@@ -343,3 +343,15 @@ model CropProfile {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
+model LivestockRecommendation {
+  id               String   @id @default(uuid())
+  location         String   // Region e.g. "Idukki", "Palakkad"
+  breedName        String
+  expectedYield    String
+  fatContent       String
+  maintenanceLevel String
+  imageUrl         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
