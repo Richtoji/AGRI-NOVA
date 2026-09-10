@@ -8,7 +8,7 @@ import { RouteGuard } from "@/components/layout/RouteGuard";
 import { validatePrescription } from "@/lib/validation";
 import { useSearchParams } from "next/navigation";
 
-export default function VeterinaryDashboard() {
+function VeterinaryDashboardContent() {
   const { currentUser } = useAuthRole();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get('tab') || 'dashboard';
@@ -218,5 +218,13 @@ export default function VeterinaryDashboard() {
 
       </AppLayout>
     </RouteGuard>
+  );
+}
+
+export default function VeterinaryDashboard() {
+  return (
+    <React.Suspense fallback={<div className="p-8 text-center text-gray-500">Loading Dashboard...</div>}>
+      <VeterinaryDashboardContent />
+    </React.Suspense>
   );
 }
