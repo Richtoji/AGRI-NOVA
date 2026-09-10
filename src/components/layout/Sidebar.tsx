@@ -91,7 +91,6 @@ export const Sidebar: React.FC = () => {
         return [
           { label: "Dashboard", href: "/dashboard/admin", icon: <Home className="w-4 h-4" /> },
           { label: "Users", href: "/dashboard/admin?tab=users", icon: <User className="w-4 h-4" /> },
-          { label: "Marketplace", href: "/marketplace", icon: <ShoppingBag className="w-4 h-4" /> },
           { label: "Products", href: "/dashboard/admin?tab=products", icon: <Store className="w-4 h-4" /> },
           { label: "Stock", href: "/dashboard/admin?tab=stock", icon: <ClipboardList className="w-4 h-4" /> },
           { label: "Equipment", href: "/equipment", icon: <Tractor className="w-4 h-4" /> },
