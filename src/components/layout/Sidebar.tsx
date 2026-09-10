@@ -82,9 +82,9 @@ export const Sidebar: React.FC = () => {
       case "VETERINARY_EXPERT":
         return [
           { label: "Dashboard", href: "/dashboard/veterinary", icon: <Home className="w-4 h-4" /> },
-          { label: "Appointments", href: "/dashboard/veterinary", icon: <ClipboardList className="w-4 h-4" /> },
-          { label: "Consultations", href: "/dashboard/veterinary", icon: <MessageSquare className="w-4 h-4" /> },
-          { label: "Schedule", href: "/dashboard/veterinary", icon: <Settings className="w-4 h-4" /> },
+          { label: "Appointments", href: "/dashboard/veterinary?tab=appointments", icon: <ClipboardList className="w-4 h-4" /> },
+          { label: "Consultations", href: "/dashboard/veterinary?tab=consultations", icon: <MessageSquare className="w-4 h-4" /> },
+          { label: "Schedule", href: "/dashboard/veterinary?tab=schedule", icon: <Settings className="w-4 h-4" /> },
           { label: "Profile", href: "/dashboard/profile", icon: <User className="w-4 h-4" /> },
         ];
       case "ADMIN":
