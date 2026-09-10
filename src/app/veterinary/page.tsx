@@ -10,28 +10,12 @@ import { Map, MapPin, Loader2, Target } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { AppointmentModal } from "@/components/veterinary/AppointmentModal";
 
-const regionalAnalysis = [
-  { district: "Thiruvananthapuram", livestock: "Cows, Goats, Poultry (Broiler & Layer), Pigs, Rabbits", focus: "Extensive dairy cooperatives, Malabari goat breeding, and rabbit farming." },
-  { district: "Kollam", livestock: "Cows, Goats, Poultry, Buffaloes, Ducks", focus: "Dairy farming, backyard goat rearing, and coastal wetland duck farming." },
-  { district: "Pathanamthitta", livestock: "Cows, Buffaloes, Goats, Ducks, Pigs", focus: "Dairy farming and Upper Kuttanad wetland duck farming." },
-  { district: "Alappuzha", livestock: "Ducks, Cows, Buffaloes, Goats, Poultry", focus: "State leader in duck farming (Kuttanad belt) and wetland cattle grazing." },
-  { district: "Kottayam", livestock: "Cows, Buffaloes, Ducks, Pigs, Goats, Poultry", focus: "Origin of the dwarf Vechur cow; extensive duck and pig rearing." },
-  { district: "Idukki", livestock: "Cows, Pigs, Goats, Buffaloes, Poultry", focus: "High-altitude dairy cattle, large-scale commercial piggery, and goat farming." },
-  { district: "Ernakulam", livestock: "Cows, Poultry, Goats, Pigs, Buffaloes, Ducks", focus: "Large-scale commercial poultry hubs, peri-urban dairies, and piggeries." },
-  { district: "Thrissur", livestock: "Cows, Buffaloes, Goats, Pigs, Poultry, Ducks", focus: "Major dairy cluster, significant buffalo numbers, and commercial pig breeding hubs." },
-  { district: "Palakkad", livestock: "Cows, Buffaloes, Goats, Sheep, Poultry", focus: "State leader in cattle and buffalo populations; home to the native Attappady Black goat." },
-  { district: "Malappuram", livestock: "Cows, Goats, Buffaloes, Poultry, Ducks", focus: "High poultry and Malabari goat population, supported by crossbred dairy farming." },
-  { district: "Kozhikode", livestock: "Cows, Goats, Poultry, Pigs, Rabbits", focus: "Commercial poultry breeding, Malabari goats, and local dairy units." },
-  { district: "Wayanad", livestock: "Cows, Pigs, Goats, Buffaloes, Poultry", focus: "Hill-tract dairy operations, prominent pig farming units, and free-range goat rearing." },
-  { district: "Kannur", livestock: "Cows, Goats, Pigs, Poultry, Buffaloes", focus: "Center for Malabari goat conservation, commercial poultry, and piggeries." },
-  { district: "Kasaragod", livestock: "Cows, Goats, Buffaloes, Poultry", focus: "Dairy farming, Kasaragod Dwarf cattle rearing, and backyard goat production." }
-];
-
 export default function VeterinaryPage() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
   const { currentUser } = useAuthRole();
   const isAdmin = currentUser?.role === "ADMIN";
   const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [regionalAnalysis, setRegionalAnalysis] = useState<any[]>([]);
   const [loadingRecs, setLoadingRecs] = useState(true);
   
   // Location-based recommendation state
@@ -44,10 +28,19 @@ export default function VeterinaryPage() {
     if (isAdmin) return; // Admins have their own panel
     const fetchRecs = async () => {
       try {
-        const res = await fetch("/api/admin/livestock-recommendations");
-        if (res.ok) {
-          const data = await res.json();
+        const [resLivestock, resRegions] = await Promise.all([
+          fetch("/api/admin/livestock-recommendations"),
+          fetch("/api/admin/regional-livestock")
+        ]);
+        
+        if (resLivestock.ok) {
+          const data = await resLivestock.json();
           setRecommendations(data.recommendations || []);
+        }
+        
+        if (resRegions.ok) {
+          const data = await resRegions.json();
+          setRegionalAnalysis(data.regions || []);
         }
       } catch (err) {
         console.error("Failed to fetch recommendations", err);
@@ -183,8 +176,12 @@ export default function VeterinaryPage() {
                     className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-gray-900/10 flex-1 max-w-xs"
                   >
                     <option value="">Select your district manually...</option>
-                    {regionalAnalysis.map(r => (
-                      <option key={r.district} value={r.district}>{r.district}</option>
+                    {[
+                      "Thiruvananthapuram", "Kollam", "Pathanamthitta", "Alappuzha", 
+                      "Kottayam", "Idukki", "Ernakulam", "Thrissur", "Palakkad", 
+                      "Malappuram", "Kozhikode", "Wayanad", "Kannur", "Kasaragod"
+                    ].map(district => (
+                      <option key={district} value={district}>{district}</option>
                     ))}
                   </select>
                   
@@ -212,6 +209,12 @@ export default function VeterinaryPage() {
                   </div>
                 )}
                 
+                {userDistrict && !recommendedRegionData && !isLocating && (
+                  <div className="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-sm font-semibold flex items-center">
+                    No specific data for {userDistrict} yet. Please check back later.
+                  </div>
+                )}
+                
                 {recommendedRegionData && (
                   <div className="mt-6 bg-gray-50 border border-gray-100 rounded-xl p-5">
                     <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
@@ -219,22 +222,25 @@ export default function VeterinaryPage() {
                         <MapPin className="w-3.5 h-3.5 mr-1 text-gray-400" />
                         {locationCoords ? `${locationCoords.lat.toFixed(4)}° N, ${locationCoords.lng.toFixed(4)}° E` : ''}
                       </div>
-                      <span className="bg-gray-900 text-white text-[10px] uppercase font-black px-2 py-1 rounded">
-                        High Match
-                      </span>
+                      <h3 className="text-lg font-black text-gray-900">
+                        {recommendedRegionData.district} Region Profile
+                      </h3>
                     </div>
-                    
-                    <h3 className="text-2xl font-black text-gray-900 mb-1">
-                      {recommendedRegionData.district} Region
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                      <div>
-                        <p className="text-gray-500 text-xs uppercase font-bold mb-1">Ideal Livestock Profile</p>
-                        <p className="text-gray-900 font-bold">{recommendedRegionData.livestock}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500 text-xs uppercase font-bold mb-1">Regional Strategic Focus</p>
-                        <p className="text-gray-600 text-sm leading-relaxed">{recommendedRegionData.focus}</p>
+                    <div className="flex flex-col md:flex-row gap-6 mt-4">
+                      {recommendedRegionData.imageUrl && (
+                        <div className="md:w-1/3 flex-shrink-0">
+                          <img src={recommendedRegionData.imageUrl} alt={recommendedRegionData.district} className="w-full h-40 object-cover rounded-xl border border-gray-200 shadow-sm" />
+                        </div>
+                      )}
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <p className="text-gray-500 text-xs uppercase font-bold mb-1">Ideal Livestock Profile</p>
+                          <p className="text-gray-900 font-bold">{recommendedRegionData.primaryLivestock}</p>
+                        </div>
+                        <div>
+                          <p className="text-gray-500 text-xs uppercase font-bold mb-1">Regional Strategic Focus</p>
+                          <p className="text-gray-600 text-sm leading-relaxed">{recommendedRegionData.focusAreas}</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -317,35 +323,6 @@ export default function VeterinaryPage() {
                 </div>
               </div>
             </div>
-
-            {/* Regional Livestock Analysis */}
-            <div className="bg-white border border-gray-100 rounded-2xl p-6 mt-6">
-              <h3 className="text-lg font-black text-gray-900 mb-4 flex items-center">
-                <Map className="w-5 h-5 mr-2 text-gray-900" />
-                Regional Livestock Analysis (Kerala)
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-gray-200 bg-gray-50 text-gray-600">
-                      <th className="py-3 px-4 font-bold rounded-tl-lg">District</th>
-                      <th className="py-3 px-4 font-bold">Primary Livestock Reared</th>
-                      <th className="py-3 px-4 font-bold rounded-tr-lg">Key Focus Areas & Specialties</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {regionalAnalysis.map((region, idx) => (
-                      <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                        <td className="py-3 px-4 font-bold text-gray-900">{region.district}</td>
-                        <td className="py-3 px-4 text-gray-600">{region.livestock}</td>
-                        <td className="py-3 px-4 text-gray-500">{region.focus}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
           </div>
 
           {/* Sidebar Area */}

@@ -62,7 +62,7 @@ export default function VeterinaryDashboard() {
               <div>
                 <div className="flex items-center space-x-2">
                   <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{currentUser?.name}</h1>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-rose-50 text-rose-600 font-semibold border border-rose-100">
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold border border-gray-200">
                     LICENSED VETERINARY SURGEON
                   </span>
                 </div>
@@ -88,10 +88,10 @@ export default function VeterinaryDashboard() {
         <div className="bg-white border border-gray-100 rounded-2xl p-6 mt-6">
           <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
             <h2 className="text-lg font-black text-gray-900 flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-rose-500" />
+              <Calendar className="w-5 h-5 text-gray-900" />
               <span>Today's Telehealth Consultations</span>
             </h2>
-            <span className="text-xs font-semibold text-rose-600 bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
+            <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
               2 Pending
             </span>
           </div>
@@ -117,7 +117,7 @@ export default function VeterinaryDashboard() {
                 <div className="flex space-x-2">
                   <button 
                     onClick={() => setIsVideoModalOpen(true)}
-                    className="flex-1 bg-rose-600 hover:bg-rose-700 text-white py-2 rounded-lg text-xs font-medium flex justify-center items-center space-x-1.5 transition-colors shadow-sm"
+                    className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-medium flex justify-center items-center space-x-1.5 transition-colors shadow-sm"
                   >
                     <Video className="w-4 h-4" />
                     <span>Join Video Call</span>
@@ -158,7 +158,7 @@ export default function VeterinaryDashboard() {
 
                 <div className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col h-[300px] sm:h-auto">
                   <h4 className="text-xs font-bold text-gray-900 uppercase tracking-wider mb-2 flex items-center border-b border-gray-100 pb-2">
-                    <FileText className="w-3.5 h-3.5 mr-1 text-rose-500" /> Generate E-Prescription
+                    <FileText className="w-3.5 h-3.5 mr-1 text-gray-500" /> Generate E-Prescription
                   </h4>
                   
                   {validationError && (
@@ -171,7 +171,7 @@ export default function VeterinaryDashboard() {
                   <textarea 
                     value={prescriptionText}
                     onChange={(e) => setPrescriptionText(e.target.value)}
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-900 resize-none focus:outline-none focus:border-rose-300 focus:ring-1 focus:ring-rose-300 transition-all placeholder-gray-400"
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg p-2 text-xs text-gray-900 resize-none focus:outline-none focus:border-gray-400 focus:ring-1 focus:ring-gray-400 transition-all placeholder-gray-400"
                     placeholder="Enter diagnosis, medicines, and dosage instructions here..."
                   ></textarea>
                   <button 

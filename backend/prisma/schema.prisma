@@ -355,3 +355,13 @@ model LivestockRecommendation {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
+
+model RegionalLivestockAnalysis {
+  id               String   @id @default(uuid())
+  district         String   @unique
+  primaryLivestock String
+  focusAreas       String
+  imageUrl         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
