@@ -297,10 +297,32 @@ export function AdminProductManagement() {
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Category</label>
                   <select name="category" value={formData.category} onChange={handleInputChange} className="w-full px-3 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-gray-900 bg-gray-50 focus:bg-white transition-colors">
                     <option value="Vegetables">Vegetables</option>
+                    <option value="Fresh Vegetables">Fresh Vegetables</option>
                     <option value="Fruits">Fruits</option>
                     <option value="Seeds">Seeds</option>
                     <option value="Spices">Spices</option>
+                    <option value="Kerala Spices">Kerala Spices</option>
                     <option value="Dairy">Dairy</option>
+                    <option value="Dairy Products">Dairy Products</option>
+                    <option value="Livestock">Livestock</option>
+                    <option value="Poultry Products">Poultry Products</option>
+                    <option value="Fish & Aquaculture">Fish & Aquaculture</option>
+                    <option value="Rice & Grains">Rice & Grains</option>
+                    <option value="Pulses">Pulses</option>
+                    <option value="Tubers">Tubers</option>
+                    <option value="Plantation Products">Plantation Products</option>
+                    <option value="Coconut Products">Coconut Products</option>
+                    <option value="Honey & Beekeeping">Honey & Beekeeping</option>
+                    <option value="Organic Farming">Organic Farming</option>
+                    <option value="Fertilizers & Manure">Fertilizers & Manure</option>
+                    <option value="Biofertilizers & Biopesticides">Biofertilizers & Biopesticides</option>
+                    <option value="Farming Tools">Farming Tools</option>
+                    <option value="Nursery Supplies">Nursery Supplies</option>
+                    <option value="Cattle Feed">Cattle Feed</option>
+                    <option value="Poultry Feed">Poultry Feed</option>
+                    <option value="Fish Feed">Fish Feed</option>
+                    <option value="Goat Feed">Goat Feed</option>
+                    <option value="Pig Feed">Pig Feed</option>
                   </select>
                 </div>
                 
