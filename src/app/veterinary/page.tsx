@@ -165,25 +165,45 @@ export default function VeterinaryPage() {
                   Smart Livestock Recommender
                 </h2>
                 <p className="text-gray-500 text-sm mb-6 max-w-lg">
-                  Detect your farm's location to get AI-driven livestock recommendations perfectly suited for your local climate and geography.
+                  Select your district or detect your farm's location to get AI-driven livestock recommendations perfectly suited for your local climate and geography.
                 </p>
                 
-                {!userDistrict && !isLocating && (
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <select 
+                    value={userDistrict || ""}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        setUserDistrict(e.target.value);
+                        setLocationCoords(null);
+                        setLocationError(null);
+                      } else {
+                        setUserDistrict(null);
+                      }
+                    }}
+                    className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-gray-900/10 flex-1 max-w-xs"
+                  >
+                    <option value="">Select your district manually...</option>
+                    {regionalAnalysis.map(r => (
+                      <option key={r.district} value={r.district}>{r.district}</option>
+                    ))}
+                  </select>
+                  
+                  <div className="flex items-center justify-center">
+                    <span className="text-gray-400 font-bold text-xs uppercase mx-2">or</span>
+                  </div>
+
                   <button 
                     onClick={detectLocationAndRecommend}
-                    className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center"
+                    disabled={isLocating}
+                    className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center justify-center disabled:opacity-70"
                   >
-                    <Target className="w-4 h-4 mr-2" />
-                    Detect My Location & Recommend
+                    {isLocating ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Locating...</>
+                    ) : (
+                      <><Target className="w-4 h-4 mr-2" /> Auto Detect Location</>
+                    )}
                   </button>
-                )}
-                
-                {isLocating && (
-                  <div className="flex items-center text-gray-700 text-sm font-bold bg-gray-50 w-fit px-4 py-2.5 rounded-xl border border-gray-200">
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin text-gray-700" />
-                    Analyzing geography & climate...
-                  </div>
-                )}
+                </div>
                 
                 {locationError && (
                   <div className="mt-4 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 text-sm font-semibold flex items-center">
