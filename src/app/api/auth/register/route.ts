@@ -61,6 +61,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: metaVal.error }, { status: 400 });
     }
 
+    if (!avatarBase64 || avatarBase64.trim() === "") {
+      return NextResponse.json({ error: "Profile picture is required." }, { status: 400 });
+    }
+
     // Normalize values
     const normalizedEmail = email.trim().toLowerCase();
     const cleanPhone = phone.trim().replace(/[\s-()]/g, "");

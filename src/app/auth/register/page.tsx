@@ -67,6 +67,10 @@ export default function RegisterPage() {
       }
     });
 
+    if (!formData.avatarBase64) {
+      newErrors.avatar = "Profile Image is required.";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -241,9 +245,9 @@ export default function RegisterPage() {
                 {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
               </div>
 
-              {/* Profile Image (Optional) */}
+              {/* Profile Image (Required) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Profile Image (Optional)</label>
+                <label className="block text-sm font-medium text-gray-700">Profile Image</label>
                 <div className="mt-1 relative rounded-md shadow-sm">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Upload className="h-4 w-4 text-gray-400" />
@@ -251,6 +255,7 @@ export default function RegisterPage() {
                   <input
                     type="file"
                     accept="image/*"
+                    required
                     onChange={handleImageChange}
                     className="appearance-none block w-full pl-10 px-3 py-1.5 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
                   />
