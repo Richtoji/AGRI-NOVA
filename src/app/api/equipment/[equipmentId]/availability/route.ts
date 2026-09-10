@@ -5,10 +5,10 @@ const prisma = new PrismaClient();
 
 export async function GET(
   request: Request,
-  { params }: { params: { equipmentId: string } }
+  { params }: { params: Promise<{ equipmentId: string }> }
 ) {
   try {
-    const { equipmentId } = params;
+    const { equipmentId } = await params;
 
     if (!equipmentId) {
       return NextResponse.json({ error: 'Equipment ID is required' }, { status: 400 });
