@@ -43,7 +43,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const body = await request.json();
-    const { status, title, description, category, price, unit, stockQuantity, imageUrl } = body;
+    const { status, title, description, category, price, unit, stockQuantity, imageUrl, location } = body;
 
     const dataToUpdate: any = {};
     if (isAdmin && status) {
@@ -60,6 +60,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (title) dataToUpdate.title = title;
     if (description !== undefined) dataToUpdate.description = description;
     if (category) dataToUpdate.category = category;
+    if (location !== undefined) dataToUpdate.location = location;
     
     if (price !== undefined) {
       const parsedPrice = parseFloat(price);
@@ -70,11 +71,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     
     if (unit) {
+      const lowerUnit = unit.toLowerCase();
       const validUnits = ["kg", "grams", "litres", "ml", "ton", "quintal", "dozen", "unit"];
-      if (!validUnits.includes(unit)) {
+      if (!validUnits.includes(lowerUnit)) {
          return NextResponse.json({ error: 'Strict Validation Error: Invalid unit.' }, { status: 400 });
       }
-      dataToUpdate.unit = unit;
+      dataToUpdate.unit = lowerUnit;
     }
     
     if (stockQuantity !== undefined) {

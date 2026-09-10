@@ -97,7 +97,8 @@ export async function POST(request: Request) {
     if (isNaN(parsedStock) || parsedStock <= 0) {
       return NextResponse.json({ error: 'Strict Validation Error: Stock quantity must be greater than zero.' }, { status: 400 });
     }
-    if (!validUnits.includes(unit)) {
+    const lowerUnit = unit.toLowerCase();
+    if (!validUnits.includes(lowerUnit)) {
       return NextResponse.json({ error: `Strict Validation Error: Invalid unit. Must be one of ${validUnits.join(", ")}` }, { status: 400 });
     }
 
@@ -108,7 +109,7 @@ export async function POST(request: Request) {
         description: description || "",
         category,
         price: parsedPrice,
-        unit,
+        unit: lowerUnit,
         stockQuantity: parsedStock,
         imageUrl,
         location,

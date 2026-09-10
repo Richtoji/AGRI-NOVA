@@ -151,7 +151,8 @@ export function AdminProductManagement() {
           fetchProducts();
           setIsEditModalOpen(false);
         } else {
-          alert("Failed to update product");
+          const data = await res.json();
+          alert(`Failed to update product: ${data.error || res.statusText}`);
         }
       } else if (isAddModalOpen) {
         const res = await fetch("/api/products", {
