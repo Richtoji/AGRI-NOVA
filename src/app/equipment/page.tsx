@@ -10,10 +10,28 @@ export default function EquipmentPage() {
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEq, setSelectedEq] = useState<any | null>(null);
-  const [days, setDays] = useState<number | string>(2);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [bookedDates, setBookedDates] = useState<any[]>([]);
   const [bookingSuccess, setBookingSuccess] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [isBooking, setIsBooking] = useState(false);
+
+  useEffect(() => {
+    if (selectedEq) {
+      fetch(`/api/equipment/${selectedEq.id}/availability`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.bookings) setBookedDates(data.bookings);
+        })
+        .catch(console.error);
+    } else {
+      setStartDate("");
+      setEndDate("");
+      setBookedDates([]);
+      setValidationError(null);
+    }
+  }, [selectedEq]);
 
   useEffect(() => {
     const fetchEquipment = async () => {
@@ -32,22 +50,60 @@ export default function EquipmentPage() {
     fetchEquipment();
   }, []);
 
+  const calculateDays = () => {
+    if (!startDate || !endDate) return 0;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const diffTime = end.getTime() - start.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
+
   const handleConfirmBooking = async () => {
     setValidationError(null);
-    const validation = validateRentalDays(days);
-    if (!validation.isValid) {
-      setValidationError(validation.error || "Invalid duration.");
+    
+    if (!startDate || !endDate) {
+      setValidationError("Please select both start and end dates.");
       return;
     }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    if (start < now) {
+      setValidationError("Start date cannot be in the past.");
+      return;
+    }
+
+    const days = calculateDays();
+    if (days < 1) {
+      setValidationError("Minimum booking duration is 1 day.");
+      return;
+    }
+
+    // Check overlaps
+    const hasOverlap = bookedDates.some((b: any) => {
+      const bStart = new Date(b.startDate);
+      const bEnd = new Date(b.endDate);
+      return (start < bEnd && end > bStart);
+    });
+
+    if (hasOverlap) {
+      setValidationError("Selected dates conflict with an existing booking.");
+      return;
+    }
+
     setIsBooking(true);
     try {
-      const totalCost = (selectedEq.dailyRate * (Number(days) || 0)) + 850;
+      const totalCost = (selectedEq.dailyRate * days) + 850;
       const res = await fetch("/api/equipment/book", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           equipmentId: selectedEq.id,
-          days: Number(days),
+          startDate,
+          endDate,
           totalCost
         })
       });
@@ -58,7 +114,6 @@ export default function EquipmentPage() {
       } else {
         setBookingSuccess(true);
         setSelectedEq(null);
-        setDays(2);
         setTimeout(() => {
           setBookingSuccess(false);
         }, 2000);
@@ -155,26 +210,39 @@ export default function EquipmentPage() {
                    </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-semibold text-gray-700">Rental Duration (Days)</label>
-                  <input 
-                    type="number" 
-                    min={1} max={30}
-                    value={days}
-                    onChange={(e) => setDays(e.target.value)}
-                    className="w-full bg-white border border-gray-300 rounded-xl px-4 py-2.5 text-gray-900 text-sm focus:border-gray-700 focus:ring-1 focus:ring-gray-700 outline-none"
-                  />
-                  {validationError && (
-                    <p className="text-xs text-red-500 flex items-center mt-1">
-                      <AlertCircle className="w-3 h-3 mr-1" /> {validationError}
-                    </p>
-                  )}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-700">Start Date</label>
+                    <input 
+                      type="date" 
+                      min={new Date().toISOString().split('T')[0]}
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-gray-900 text-sm focus:border-gray-700 focus:ring-1 focus:ring-gray-700 outline-none"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-gray-700">End Date</label>
+                    <input 
+                      type="date" 
+                      min={startDate || new Date().toISOString().split('T')[0]}
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-gray-900 text-sm focus:border-gray-700 focus:ring-1 focus:ring-gray-700 outline-none"
+                    />
+                  </div>
                 </div>
+                
+                {validationError && (
+                  <p className="text-xs text-red-500 flex items-center">
+                    <AlertCircle className="w-3 h-3 mr-1" /> {validationError}
+                  </p>
+                )}
 
                 <div className="bg-gray-50 border border-gray-100 p-4 rounded-xl space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Base Cost</span>
-                    <span className="font-medium text-gray-900">₹{selectedEq.dailyRate * (Number(days) || 0)}</span>
+                    <span className="font-medium text-gray-900">₹{selectedEq.dailyRate * calculateDays()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Insurance & Transport</span>
@@ -182,7 +250,7 @@ export default function EquipmentPage() {
                   </div>
                   <div className="border-t border-gray-200 pt-2 flex justify-between">
                     <span className="font-bold text-gray-900">Total Estimate</span>
-                    <span className="font-black text-gray-800 text-lg">₹{(selectedEq.dailyRate * (Number(days) || 0)) + 850}</span>
+                    <span className="font-black text-gray-800 text-lg">₹{(selectedEq.dailyRate * calculateDays()) + (calculateDays() > 0 ? 850 : 0)}</span>
                   </div>
                 </div>
               </div>

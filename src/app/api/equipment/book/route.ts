@@ -28,10 +28,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please log in to book equipment.' }, { status: 401 });
     }
 
-    const { equipmentId, days, totalCost } = await request.json();
+    const { equipmentId, startDate, endDate, totalCost } = await request.json();
     
-    if (!equipmentId || typeof days !== 'number' || days < 1) {
-      return NextResponse.json({ error: 'Invalid booking details.' }, { status: 400 });
+    if (!equipmentId || !startDate || !endDate) {
+      return NextResponse.json({ error: 'Missing required booking details.' }, { status: 400 });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    // Validate dates
+    const now = new Date();
+    now.setHours(0, 0, 0, 0); // reset to midnight for start date comparison
+    
+    if (start < now) {
+      return NextResponse.json({ error: 'Start date cannot be in the past.' }, { status: 400 });
+    }
+
+    const diffTime = end.getTime() - start.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 1) {
+      return NextResponse.json({ error: 'Minimum booking duration is 1 day.' }, { status: 400 });
     }
 
     const equipment = await prisma.equipment.findUnique({ where: { id: equipmentId } });
@@ -39,16 +57,28 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'This equipment is currently unavailable.' }, { status: 404 });
     }
 
-    const startDate = new Date();
-    const endDate = new Date();
-    endDate.setDate(startDate.getDate() + days);
+    // Check for conflicts
+    const conflictingBooking = await prisma.rentalBooking.findFirst({
+      where: {
+        equipmentId,
+        status: { in: ['PENDING', 'APPROVED', 'ACTIVE'] },
+        AND: [
+          { startDate: { lt: end } },
+          { endDate: { gt: start } }
+        ]
+      }
+    });
+
+    if (conflictingBooking) {
+      return NextResponse.json({ error: 'The selected dates conflict with an existing booking.' }, { status: 409 });
+    }
 
     const booking = await prisma.rentalBooking.create({
       data: {
         equipmentId,
         renterId: userId,
-        startDate,
-        endDate,
+        startDate: start,
+        endDate: end,
         totalCost,
         status: 'PENDING'
       }
