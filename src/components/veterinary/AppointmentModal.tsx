@@ -16,31 +16,51 @@ export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setApiError(null);
     setIsSubmitting(true);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const res = await fetch("/api/veterinary/book", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setApiError(data.error || "Failed to book appointment");
+      } else {
+        setIsSuccess(true);
+        setTimeout(() => {
+          setIsSuccess(false);
+          setFormData({
+            name: '',
+            animal: '',
+            date: '',
+            time: '',
+            symptoms: ''
+          });
+          onClose();
+        }, 2000);
+      }
+    } catch (err) {
+      setApiError("Network error occurred. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      setIsSuccess(true);
-      
-      // Close after 2 seconds
-      setTimeout(() => {
-        setIsSuccess(false);
-        setFormData({
-          name: '',
-          animal: '',
-          date: '',
-          time: '',
-          symptoms: ''
-        });
-        onClose();
-      }, 2000);
-    }, 1500);
+    }
   };
 
 // Generate time slots from 8:00 AM to 11:30 PM
@@ -88,6 +108,11 @@ export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
+              {apiError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium">
+                  {apiError}
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <label className="text-xs font-bold text-gray-700 flex items-center">
@@ -123,6 +148,7 @@ export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
                   <input 
                     type="date" 
                     required
+                    min={getTomorrowDate()}
                     value={formData.date}
                     onChange={(e) => setFormData({...formData, date: e.target.value})}
                     className="w-full bg-gray-50 border border-gray-200 text-sm text-gray-900 rounded-lg px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
