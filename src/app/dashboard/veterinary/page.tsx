@@ -6,9 +6,13 @@ import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { Stethoscope, Video, Calendar, FileText, CheckCircle2, User, X, AlertCircle } from "lucide-react";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 import { validatePrescription } from "@/lib/validation";
+import { useSearchParams } from "next/navigation";
 
 export default function VeterinaryDashboard() {
   const { currentUser } = useAuthRole();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'dashboard';
+  
   const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   const [prescriptionText, setPrescriptionText] = useState("");
   const [rxSent, setRxSent] = useState(false);
@@ -50,86 +54,111 @@ export default function VeterinaryDashboard() {
     <RouteGuard allowedRoles={["VETERINARY_EXPERT"]}>
       <AppLayout>
         
-        {/* Header Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
-              <img
-                src={currentUser?.avatarUrl || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150"}
-                alt={currentUser?.name || "Veterinary Specialist"}
-                className="w-14 h-14 rounded-full object-cover border border-gray-200 shadow-sm"
-              />
-              <div>
-                <div className="flex items-center space-x-2">
-                  <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{currentUser?.name}</h1>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold border border-gray-200">
-                    LICENSED VETERINARY SURGEON
-                  </span>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Regn No: VET-IND-99402 | Bovine & Livestock Specialist</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white border border-gray-100 rounded-2xl p-6 flex items-center justify-around">
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-1">Consultations Done</div>
-              <div className="font-bold text-gray-900 text-xl">142</div>
-            </div>
-            <div className="w-px h-10 bg-gray-100"></div>
-            <div className="text-center">
-              <div className="text-xs text-gray-500 mb-1">Rating</div>
-              <div className="font-bold text-amber-500 text-xl">4.9 / 5.0</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Appointments Grid */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 mt-6">
-          <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
-            <h2 className="text-lg font-black text-gray-900 flex items-center space-x-2">
-              <Calendar className="w-5 h-5 text-gray-900" />
-              <span>Today's Telehealth Consultations</span>
-            </h2>
-            <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
-              2 Pending
-            </span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {appointments.map((apt) => (
-              <div key={apt.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <div className="flex justify-between items-start mb-3">
+        {currentTab === 'dashboard' && (
+          <>
+            {/* Header Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center space-x-4">
+                  <img
+                    src={currentUser?.avatarUrl || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150"}
+                    alt={currentUser?.name || "Veterinary Specialist"}
+                    className="w-14 h-14 rounded-full object-cover border border-gray-200 shadow-sm"
+                  />
                   <div>
-                    <h3 className="text-sm font-bold text-gray-900 flex items-center">
-                      <User className="w-4 h-4 text-gray-400 mr-1" /> {apt.farmerName}
-                    </h3>
-                    <p className="text-xs font-semibold text-gray-900 mt-0.5">{apt.animal}</p>
+                    <div className="flex items-center space-x-2">
+                      <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{currentUser?.name}</h1>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold border border-gray-200">
+                        LICENSED VETERINARY SURGEON
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">Regn No: VET-IND-99402 | Bovine & Livestock Specialist</p>
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 bg-white border border-gray-200 px-2 py-1 rounded-md shadow-sm">
-                    {apt.time}
-                  </span>
-                </div>
-                <p className="text-xs text-gray-600 bg-white p-2 rounded-lg border border-gray-100 mb-4 line-clamp-2">
-                  <span className="font-semibold block mb-0.5">Symptoms:</span>
-                  {apt.symptoms}
-                </p>
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => setIsVideoModalOpen(true)}
-                    className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-medium flex justify-center items-center space-x-1.5 transition-colors shadow-sm"
-                  >
-                    <Video className="w-4 h-4" />
-                    <span>Join Video Call</span>
-                  </button>
-                  <button className="px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-medium transition-colors shadow-sm">
-                    Reschedule
-                  </button>
                 </div>
               </div>
-            ))}
+
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 flex items-center justify-around">
+                <div className="text-center">
+                  <div className="text-xs text-gray-500 mb-1">Consultations Done</div>
+                  <div className="font-bold text-gray-900 text-xl">142</div>
+                </div>
+                <div className="w-px h-10 bg-gray-100"></div>
+                <div className="text-center">
+                  <div className="text-xs text-gray-500 mb-1">Rating</div>
+                  <div className="font-bold text-amber-500 text-xl">4.9 / 5.0</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Appointments Grid */}
+            <div className="bg-white border border-gray-100 rounded-2xl p-6 mt-6">
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-4">
+                <h2 className="text-lg font-black text-gray-900 flex items-center space-x-2">
+                  <Calendar className="w-5 h-5 text-gray-900" />
+                  <span>Today's Telehealth Consultations</span>
+                </h2>
+                <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-100">
+                  2 Pending
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {appointments.map((apt) => (
+                  <div key={apt.id} className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                    <div className="flex justify-between items-start mb-3">
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-900 flex items-center">
+                          <User className="w-4 h-4 text-gray-400 mr-1" /> {apt.farmerName}
+                        </h3>
+                        <p className="text-xs font-semibold text-gray-900 mt-0.5">{apt.animal}</p>
+                      </div>
+                      <span className="text-xs font-semibold text-gray-700 bg-white border border-gray-200 px-2 py-1 rounded-md shadow-sm">
+                        {apt.time}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 bg-white p-2 rounded-lg border border-gray-100 mb-4 line-clamp-2">
+                      <span className="font-semibold block mb-0.5">Symptoms:</span>
+                      {apt.symptoms}
+                    </p>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => setIsVideoModalOpen(true)}
+                        className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-medium flex justify-center items-center space-x-1.5 transition-colors shadow-sm"
+                      >
+                        <Video className="w-4 h-4" />
+                        <span>Join Video Call</span>
+                      </button>
+                      <button className="px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-medium transition-colors shadow-sm">
+                        Reschedule
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {currentTab === 'appointments' && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-black text-gray-900 mb-4">Appointments</h2>
+            <p className="text-sm text-gray-500">Manage all your upcoming and past appointments here.</p>
           </div>
-        </div>
+        )}
+
+        {currentTab === 'consultations' && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-black text-gray-900 mb-4">Consultations History</h2>
+            <p className="text-sm text-gray-500">Review your past telehealth consultations and e-prescriptions.</p>
+          </div>
+        )}
+
+        {currentTab === 'schedule' && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-black text-gray-900 mb-4">My Schedule</h2>
+            <p className="text-sm text-gray-500">Set your availability and manage your working hours.</p>
+          </div>
+        )}
 
         {/* Video Call Modal */}
         {isVideoModalOpen && (

@@ -73,10 +73,10 @@ export const Sidebar: React.FC = () => {
       case "EQUIPMENT_OWNER":
         return [
           { label: "Dashboard", href: "/dashboard/equipment", icon: <Home className="w-4 h-4" /> },
-          { label: "My Equipment", href: "/dashboard/equipment", icon: <Tractor className="w-4 h-4" /> },
-          { label: "Rental Requests", href: "/dashboard/equipment", icon: <Bell className="w-4 h-4" /> },
-          { label: "Active Rentals", href: "/dashboard/equipment", icon: <ClipboardList className="w-4 h-4" /> },
-          { label: "Rental History", href: "/dashboard/equipment", icon: <Store className="w-4 h-4" /> },
+          { label: "My Equipment", href: "/dashboard/equipment?tab=my-equipment", icon: <Tractor className="w-4 h-4" /> },
+          { label: "Rental Requests", href: "/dashboard/equipment?tab=requests", icon: <Bell className="w-4 h-4" /> },
+          { label: "Active Rentals", href: "/dashboard/equipment?tab=active", icon: <ClipboardList className="w-4 h-4" /> },
+          { label: "Rental History", href: "/dashboard/equipment?tab=history", icon: <Store className="w-4 h-4" /> },
           { label: "Profile", href: "/dashboard/profile", icon: <User className="w-4 h-4" /> },
         ];
       case "VETERINARY_EXPERT":

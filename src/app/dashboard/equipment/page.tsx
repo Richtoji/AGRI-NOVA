@@ -5,9 +5,13 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { Tractor, Calendar, IndianRupee, Plus, CheckCircle, XCircle, Pencil, Trash2 } from "lucide-react";
 import { RouteGuard } from "@/components/layout/RouteGuard";
+import { useSearchParams } from "next/navigation";
 
 export default function EquipmentOwnerDashboard() {
   const { currentUser } = useAuthRole();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams.get('tab') || 'dashboard';
+  
   const [rentals, setRentals] = useState<any[]>([]);
   const [fleet, setFleet] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -154,7 +158,9 @@ export default function EquipmentOwnerDashboard() {
     <RouteGuard allowedRoles={["EQUIPMENT_OWNER"]}>
       <AppLayout>
         
-        {/* Header */}
+        {currentTab === 'dashboard' && (
+          <>
+            {/* Header */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
             <img
@@ -333,6 +339,36 @@ export default function EquipmentOwnerDashboard() {
             </div>
           )}
         </div>
+        </>
+        )}
+
+        {currentTab === 'my-equipment' && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-black text-gray-900 mb-4">My Equipment</h2>
+            <p className="text-sm text-gray-500">Manage all your listed machinery and equipment.</p>
+          </div>
+        )}
+
+        {currentTab === 'requests' && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-black text-gray-900 mb-4">Rental Requests</h2>
+            <p className="text-sm text-gray-500">Review and manage incoming booking requests from farmers.</p>
+          </div>
+        )}
+
+        {currentTab === 'active' && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-black text-gray-900 mb-4">Active Rentals</h2>
+            <p className="text-sm text-gray-500">Monitor equipment currently rented out.</p>
+          </div>
+        )}
+
+        {currentTab === 'history' && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-6">
+            <h2 className="text-xl font-black text-gray-900 mb-4">Rental History</h2>
+            <p className="text-sm text-gray-500">View past rentals and transactions.</p>
+          </div>
+        )}
 
         {/* Add/Edit Modal */}
         {showModal && (
