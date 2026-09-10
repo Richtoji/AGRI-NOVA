@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, Plus, ShieldCheck, Heart, Sparkles, Upload, FileText, CheckCircle2, AlertCircle } from "lucide-react";
+import { Search, Sparkles, Upload, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
