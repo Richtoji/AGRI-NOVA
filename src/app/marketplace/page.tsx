@@ -11,7 +11,7 @@ import { SafeImage } from "@/components/ui/SafeImage";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 
 export default function MarketplacePage() {
-  const { addToCart } = useAuthRole();
+  const { addToCart, currentRole } = useAuthRole();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -105,7 +105,7 @@ export default function MarketplacePage() {
               { key: "produce", label: "Farm Produce" },
               { key: "feed", label: "Feed & Seeds" },
               { key: "vet", label: "Vet Pharmacy" },
-              { key: "my-listings", label: "My Listings" },
+              ...(currentRole !== "BUYER" ? [{ key: "my-listings", label: "My Listings" }] : []),
             ].map((tab) => (
               <button
                 key={tab.key}
