@@ -28,9 +28,21 @@ export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setApiError(null);
     setIsSubmitting(true);
+    setApiError(null);
     
+    // Strict date validation: Must be at least 1 day from now
+    const selectedDate = new Date(formData.date);
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < tomorrow) {
+      setApiError("Appointments must be booked at least 1 day in advance.");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const res = await fetch("/api/veterinary/book", {
         method: "POST",
@@ -63,16 +75,14 @@ export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
     }
   };
 
-// Generate time slots from 8:00 AM to 11:30 PM
+// Generate time slots from 8:00 AM to 11:00 PM (1-hour slots)
   const timeOptions = [];
   for (let hour = 8; hour < 24; hour++) {
-    for (const min of ['00', '30']) {
-      const isPM = hour >= 12;
-      const displayHour = hour > 12 ? hour - 12 : hour;
-      const formattedHour = displayHour.toString().padStart(2, '0');
-      const period = isPM ? 'PM' : 'AM';
-      timeOptions.push(`${formattedHour}:${min} ${period}`);
-    }
+    const isPM = hour >= 12;
+    const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour;
+    const formattedHour = displayHour.toString().padStart(2, '0');
+    const period = isPM ? 'PM' : 'AM';
+    timeOptions.push(`${formattedHour}:00 ${period}`);
   }
 
   return (
