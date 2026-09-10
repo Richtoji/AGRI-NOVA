@@ -153,6 +153,10 @@ export default function RegisterPage() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (!file.type.startsWith("image/")) {
+        setErrors(prev => ({ ...prev, avatar: "Only image files (JPEG, PNG, etc.) are allowed" }));
+        return;
+      }
       if (file.size > 2 * 1024 * 1024) { // 2MB limit
         setErrors(prev => ({ ...prev, avatar: "Image size must be less than 2MB" }));
         return;
