@@ -323,6 +323,11 @@ export function AdminProductManagement() {
                     <option value="Fish Feed">Fish Feed</option>
                     <option value="Goat Feed">Goat Feed</option>
                     <option value="Pig Feed">Pig Feed</option>
+                    <option value="Veterinary Medicine">Veterinary Medicine</option>
+                    <option value="Vaccine">Vaccine</option>
+                    <option value="Antibiotic">Antibiotic</option>
+                    <option value="Dewormer">Dewormer</option>
+                    <option value="Supplement">Supplement</option>
                   </select>
                 </div>
                 

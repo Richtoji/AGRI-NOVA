@@ -42,9 +42,9 @@ export default function MarketplacePage() {
 
   const categories = [
     "All", "Fresh Vegetables", "Fruits", "Rice & Grains", "Pulses", "Tubers",
-    "Kerala Spices", "Plantation Products", "Coconut Products", "Organic Farming",
-    "Fertilizers & Manure", "Farming Tools", "Nursery Supplies", "Dairy Products",
-    "Poultry Products", "Honey & Beekeeping", "Fish & Aquaculture", "Livestock"
+    "Kerala Spices", "Plantation Products", "Coconut Products", "Dairy Products",
+    "Poultry Products", "Honey & Beekeeping", "Fish & Aquaculture", "Livestock",
+    "Vegetables", "Spices", "Dairy"
   ];
 
   const locations = [
@@ -54,7 +54,8 @@ export default function MarketplacePage() {
 
   const filteredProducts = products
     .filter((p) => {
-      const matchesCategory = selectedCategory === "All" || (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
+      const isProduceCategory = p.category && categories.includes(p.category);
+      const matchesCategory = selectedCategory === "All" ? isProduceCategory : (p.category && p.category.toLowerCase() === selectedCategory.toLowerCase());
       const matchesLocation = selectedLocation === "All Locations" || (p.location && p.location.toLowerCase() === selectedLocation.toLowerCase());
       const query = searchQuery.toLowerCase().trim();
       const matchesSearch =
@@ -126,9 +127,9 @@ export default function MarketplacePage() {
         {subMarket === "my-listings" ? (
           <MyListings />
         ) : subMarket === "feed" ? (
-          <FeedStore />
+          <FeedStore products={products} />
         ) : subMarket === "vet" ? (
-          <VetPharmacy />
+          <VetPharmacy products={products} />
         ) : (
           <div className="space-y-5">
 

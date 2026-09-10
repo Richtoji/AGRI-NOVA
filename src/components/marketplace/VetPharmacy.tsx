@@ -4,12 +4,13 @@ import React, { useState } from "react";
 import { Search, Plus, ShieldCheck, Heart, Sparkles, Upload, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { productImages } from "@/lib/productImages";
+
+import { useAuthRole } from "@/lib/context/AuthRoleContext";
 
 interface MedicineItem {
   id: string;
   name: string;
-  type: "Vaccine" | "Antibiotic" | "Dewormer" | "Supplement";
+  type: string;
   requiresPrescription: boolean;
   price: number;
   rating: number;
@@ -17,56 +18,35 @@ interface MedicineItem {
   description: string;
 }
 
-export const VetPharmacy: React.FC = () => {
+interface VetPharmacyProps {
+  products?: any[];
+}
+
+export const VetPharmacy: React.FC<VetPharmacyProps> = ({ products = [] }) => {
+  const { addToCart } = useAuthRole();
   const [searchQuery, setSearchQuery] = useState("");
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [rxAlert, setRxAlert] = useState(false);
   const [diagnosedDisease, setDiagnosedDisease] = useState("");
   const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
-  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [addedItem, setAddedItem] = useState<string | null>(null);
 
-  const medicines: MedicineItem[] = [
-    {
-      id: "med-1",
-      name: "Bovine Rotavirus Vaccine",
-      type: "Vaccine",
-      requiresPrescription: true,
-      price: 1850,
-      rating: 4.8,
-      image: productImages.rotavirusVaccine,
-      description: "Preventative rotavirus vaccine for cows and newborn calves."
-    },
-    {
-      id: "med-2",
-      name: "Broad Spectrum Antibiotic Paste",
-      type: "Antibiotic",
-      requiresPrescription: true,
-      price: 920,
-      rating: 4.6,
-      image: productImages.antibioticPaste,
-      description: "Fast-acting formulation for bovine respiratory ailments."
-    },
-    {
-      id: "med-3",
-      name: "Broad-Spectrum Dewormer Suspension",
-      type: "Dewormer",
-      requiresPrescription: false,
-      price: 480,
-      rating: 4.7,
-      image: productImages.dewormerSuspension,
-      description: "Fights internal parasites in cattle, goats, and sheep fleets."
-    },
-    {
-      id: "med-4",
-      name: "Liquid Calcium & D3 Feed Supplement",
-      type: "Supplement",
-      requiresPrescription: false,
-      price: 650,
-      rating: 4.9,
-      image: productImages.calciumSupplement,
-      description: "Aids in reducing risk of milk fever in high-yield dairy cows."
-    }
-  ];
+  const vetCategories = ["Vaccine", "Antibiotic", "Dewormer", "Supplement", "Veterinary Medicine"];
+  
+  const medicines: MedicineItem[] = products
+    .filter((p) => vetCategories.includes(p.category))
+    .map((p) => ({
+      id: p.id,
+      name: p.title,
+      type: p.category,
+      requiresPrescription: p.category === "Vaccine" || p.category === "Antibiotic",
+      price: p.price,
+      rating: p.rating || 4.5,
+      image: p.imageUrl,
+      description: p.description || ""
+    }));
+
+
 
   const handleUploadPrescription = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -75,13 +55,18 @@ export const VetPharmacy: React.FC = () => {
     }
   };
 
-  const handlePurchase = (item: MedicineItem) => {
+  const handlePurchase = async (item: MedicineItem) => {
     if (item.requiresPrescription && !uploadedFile) {
       setRxAlert(true);
       return;
     }
-    setCheckoutSuccess(true);
-    setTimeout(() => setCheckoutSuccess(false), 2500);
+    const result = await addToCart(item.id, 1);
+    if (result.success) {
+      setAddedItem(item.id);
+      setTimeout(() => setAddedItem(null), 2500);
+    } else {
+      alert(result.error);
+    }
   };
 
   const handleAiRecommendation = () => {
@@ -197,9 +182,9 @@ export const VetPharmacy: React.FC = () => {
           </div>
         )}
 
-        {checkoutSuccess && (
+        {addedItem && (
           <div className="p-3 rounded-xl bg-gray-700/10 border border-gray-700/30 text-gray-600 text-center font-bold">
-            Medicine ordered successfully! Dispatch routing initialized.
+            Medicine added to cart successfully!
           </div>
         )}
 
