@@ -102,3 +102,65 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'An unexpected error occurred while booking.' }, { status: 500 });
   }
 }
+
+export async function GET(request: Request) {
+  try {
+    const userId = await getUserId();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if the user is a vet
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Fetch appointments where the user is either the vet or the farmer
+    const appointments = await prisma.vetConsultation.findMany({
+      where: {
+        OR: [
+          { vetId: userId },
+          { farmerId: userId }
+        ]
+      },
+      include: {
+        farmer: { select: { name: true } },
+        vet: { select: { name: true } }
+      },
+      orderBy: { scheduledAt: 'asc' }
+    });
+
+    const formattedAppointments = appointments.map((apt) => {
+      // Extract Animal and Symptoms from notes string (format: "Animal: X\nSymptoms: Y")
+      const notes = apt.notes || "";
+      const animalMatch = notes.match(/Animal:\s*(.*)/);
+      const symptomsMatch = notes.match(/Symptoms:\s*(.*)/);
+      const animal = animalMatch ? animalMatch[1] : "Unknown";
+      const symptoms = symptomsMatch ? symptomsMatch[1] : notes;
+      
+      const dateObj = new Date(apt.scheduledAt);
+      const formattedTime = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ", " + 
+                            dateObj.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+      return {
+        id: apt.id,
+        farmerName: apt.farmer.name,
+        vetName: apt.vet.name,
+        animal,
+        symptoms,
+        time: formattedTime,
+        status: apt.status
+      };
+    });
+
+    return NextResponse.json({ success: true, appointments: formattedAppointments });
+  } catch (error) {
+    console.error('Failed to fetch appointments:', error);
+    return NextResponse.json({ error: 'Unable to fetch appointments' }, { status: 500 });
+  }
+}

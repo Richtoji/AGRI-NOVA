@@ -18,24 +18,24 @@ function VeterinaryDashboardContent() {
   const [rxSent, setRxSent] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const appointments = [
-    {
-      id: "VET-881",
-      farmerName: "Rajesh Kumar",
-      animal: "Gir Cow Tag #IN-904",
-      symptoms: "Mild fever and decreased milk yield over 2 days",
-      time: "Today, 02:30 PM",
-      status: "SCHEDULED"
-    },
-    {
-      id: "VET-882",
-      farmerName: "Suresh Patel",
-      animal: "Murrah Buffalo Tag #IN-712",
-      symptoms: "Routine Mastitis Preventive Vaccination Audit",
-      time: "Today, 04:00 PM",
-      status: "SCHEDULED"
-    }
-  ];
+  const [appointments, setAppointments] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchAppointments = async () => {
+      try {
+        const res = await fetch("/api/veterinary/book");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setAppointments(data.appointments);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch appointments", err);
+      }
+    };
+    fetchAppointments();
+  }, []);
 
   const handleSendPrescription = () => {
     setValidationError(null);

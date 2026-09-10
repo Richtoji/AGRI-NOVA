@@ -70,10 +70,12 @@ export const Navbar: React.FC = () => {
           <Link href="/" className="hover:text-gray-900 transition-colors whitespace-nowrap">
             Home
           </Link>
-          <Link href="/marketplace" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
-            <ShoppingBag className="w-3.5 h-3.5 text-gray-900" />
-            <span>Marketplace</span>
-          </Link>
+          {currentRole !== "ADMIN" && (
+            <Link href="/marketplace" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
+              <ShoppingBag className="w-3.5 h-3.5 text-gray-900" />
+              <span>Marketplace</span>
+            </Link>
+          )}
           <Link href="/equipment" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
             <Tractor className="w-3.5 h-3.5 text-amber-500" />
             <span>Machinery Rental</span>

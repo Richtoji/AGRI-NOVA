@@ -1,110 +1,53 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, ShoppingCart, Filter, Star, Info, CheckCircle2, ChevronRight } from "lucide-react";
-import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { productImages } from "@/lib/productImages";
+import { Search, ShoppingCart, CheckCircle2, Star } from "lucide-react";
 
-interface FeedItem {
-  id: string;
-  name: string;
-  category: "Cattle" | "Poultry" | "Fish" | "Goat" | "Supplements";
-  price: number;
-  weight: string;
-  rating: number;
-  image: string;
-  discount: number;
-  stock: number;
-  description: string;
+import { useAuthRole } from "@/lib/context/AuthRoleContext";
+
+interface FeedStoreProps {
+  products?: any[];
 }
 
-export const FeedStore: React.FC = () => {
+export const FeedStore: React.FC<FeedStoreProps> = ({ products = [] }) => {
+  const { addToCart } = useAuthRole();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
-  const [cart, setCart] = useState<{ id: string; qty: number }[]>([]);
-  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [addedItem, setAddedItem] = useState<string | null>(null);
 
-  const feeds: FeedItem[] = [
-    {
-      id: "feed-1",
-      name: "High-Protein Dairy Bovine Feed",
-      category: "Cattle",
-      price: 1450,
-      weight: "50 kg",
-      rating: 4.8,
-      image: productImages.cattleFeed,
-      discount: 10,
-      stock: 45,
-      description: "Optimized formulation for maximizing daily dairy milk production yield."
-    },
-    {
-      id: "feed-2",
-      name: "Layer Poultry Starter Feed Crumble",
-      category: "Poultry",
-      price: 1800,
-      weight: "40 kg",
-      rating: 4.7,
-      image: productImages.poultryFeed,
-      discount: 5,
-      stock: 28,
-      description: "Calcium-dense crumbles ideal for egg-laying hens and broiler growth acceleration."
-    },
-    {
-      id: "feed-3",
-      name: "Floating Aquaculture Fish Feed Pellets",
-      category: "Fish",
-      price: 2100,
-      weight: "35 kg",
-      rating: 4.9,
-      image: productImages.fishFeed,
-      discount: 15,
-      stock: 60,
-      description: "Specialized floating micro-pellets formulated for Tilapia and Rohu carp fingerlings."
-    },
-    {
-      id: "feed-4",
-      name: "Organic Caprine Goat & Sheep Feed",
-      category: "Goat",
-      price: 1200,
-      weight: "50 kg",
-      rating: 4.6,
-      image: productImages.goatFeed,
-      discount: 0,
-      stock: 12,
-      description: "High-fiber feed blend loaded with mineral mixtures to assist in body weight gain."
-    },
-    {
-      id: "feed-5",
-      name: "Premium Veterinary Mineral Supplement",
-      category: "Supplements",
-      price: 850,
-      weight: "5 kg",
-      rating: 4.9,
-      image: productImages.calciumSupplement,
-      discount: 8,
-      stock: 80,
-      description: "Essential trace minerals, calcium, and vitamin D3 to enhance cattle bone integrity."
-    }
+  const feedCategories = [
+    "Cattle Feed", "Poultry Feed", "Fish Feed", "Goat Feed", "Pig Feed",
+    "Organic Farming", "Fertilizers & Manure", "Biofertilizers & Biopesticides", "Farming Tools", "Nursery Supplies", "Seeds"
   ];
 
-  const handleAddToCart = (id: string) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.id === id);
-      if (existing) {
-        return prev.map((item) => (item.id === id ? { ...item, qty: item.qty + 1 } : item));
-      }
-      return [...prev, { id, qty: 1 }];
-    });
+  const feeds = products
+    .filter(p => feedCategories.includes(p.category))
+    .map(p => ({
+      id: p.id,
+      name: p.title,
+      category: p.category,
+      price: p.price,
+      weight: "1 " + p.unit,
+      rating: p.rating || 4.5,
+      image: p.imageUrl,
+      discount: 0,
+      stock: p.stockQuantity,
+      description: p.description
+    }));
+
+  const availableCategories = Array.from(new Set(feeds.map(f => f.category)));
+
+  const handleAddToCart = async (id: string) => {
+    const result = await addToCart(id, 1);
+    if (result.success) {
+      setAddedItem(id);
+      setTimeout(() => setAddedItem(null), 1500);
+    } else {
+      alert(result.error);
+    }
   };
 
-  const handleCheckout = () => {
-    setCart([]);
-    setCheckoutSuccess(true);
-    setTimeout(() => {
-      setCheckoutSuccess(false);
-    }, 1500);
-  };
+
 
   const filteredFeeds = feeds.filter((feed) => {
     const matchesSearch = feed.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -113,10 +56,10 @@ export const FeedStore: React.FC = () => {
   });
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+    <div className="space-y-5">
       
       {/* Catalog */}
-      <div className="lg:col-span-8 space-y-5">
+      <div className="space-y-5">
         
         {/* Search & Category Pills */}
         <div className="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
@@ -132,7 +75,7 @@ export const FeedStore: React.FC = () => {
           </div>
 
           <div className="flex space-x-1.5 overflow-x-auto w-full sm:w-auto">
-            {["ALL", "Cattle", "Poultry", "Fish", "Goat", "Supplements"].map((cat) => (
+            {["ALL", ...availableCategories].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
@@ -149,7 +92,7 @@ export const FeedStore: React.FC = () => {
         </div>
 
         {/* Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredFeeds.map((feed) => {
             const finalPrice = feed.discount > 0 ? feed.price * (1 - feed.discount / 100) : feed.price;
 
@@ -189,8 +132,17 @@ export const FeedStore: React.FC = () => {
                     </div>
 
                     <button onClick={() => handleAddToCart(feed.id)} className="px-3 py-2 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors flex items-center">
-                      <ShoppingCart className="w-3.5 h-3.5 mr-1" />
-                      Add to Cart
+                      {addedItem === feed.id ? (
+                        <>
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                          Added
+                        </>
+                      ) : (
+                        <>
+                          <ShoppingCart className="w-3.5 h-3.5 mr-1" />
+                          Add to Cart
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -200,65 +152,6 @@ export const FeedStore: React.FC = () => {
         </div>
 
       </div>
-
-      {/* Cart Sidebar */}
-      <div className="lg:col-span-4">
-        <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-4">
-          <h3 className="text-sm font-bold text-gray-900 flex items-center space-x-2 border-b border-gray-100 pb-3">
-            <ShoppingCart className="w-4 h-4 text-gray-700" />
-            <span>Feed Order Cart ({cart.length})</span>
-          </h3>
-
-          {cart.length === 0 ? (
-            <div className="text-center py-8 text-gray-400 text-xs font-medium">
-              No feed items selected. Click "Add to Cart" to start.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                {cart.map((cartItem) => {
-                  const feed = feeds.find((f) => f.id === cartItem.id)!;
-                  const finalPrice = feed.discount > 0 ? feed.price * (1 - feed.discount / 100) : feed.price;
-
-                  return (
-                    <div key={cartItem.id} className="flex justify-between items-center text-[11px] text-gray-600">
-                      <div>
-                        <div className="font-bold text-gray-900 line-clamp-1">{feed.name}</div>
-                        <div className="text-gray-400">₹{finalPrice} x {cartItem.qty}</div>
-                      </div>
-                      <span className="font-bold text-gray-900">₹{finalPrice * cartItem.qty}</span>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="pt-3 border-t border-gray-100 flex justify-between font-bold text-gray-900 text-xs">
-                <span>Total Amount:</span>
-                <span>
-                  ₹{cart.reduce((acc, cItem) => {
-                    const fd = feeds.find((f) => f.id === cItem.id)!;
-                    const pr = fd.discount > 0 ? fd.price * (1 - fd.discount / 100) : fd.price;
-                    return acc + pr * cItem.qty;
-                  }, 0)}
-                </span>
-              </div>
-
-              {checkoutSuccess ? (
-                <div className="p-3 rounded-xl bg-gray-50 border border-gray-200 text-gray-700 flex items-center justify-center space-x-2 font-bold text-xs">
-                  <CheckCircle2 className="w-4 h-4 text-gray-700" />
-                  <span>Feed Order Placed!</span>
-                </div>
-              ) : (
-                <button onClick={handleCheckout} className="w-full py-2.5 bg-gray-900 text-white rounded-xl text-xs font-bold hover:bg-gray-800 transition-colors flex items-center justify-center">
-                  <span>Pay with Integrated Escrow</span>
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
     </div>
   );
 };

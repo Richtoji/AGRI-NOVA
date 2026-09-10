@@ -30,7 +30,7 @@ export function AdminProductManagement() {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/products?status=ALL");
+      const res = await fetch("/api/products?status=ALL", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
         setProducts(data.products || []);
