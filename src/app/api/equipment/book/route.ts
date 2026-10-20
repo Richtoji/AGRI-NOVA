@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { cookies } from 'next/headers';
 import * as jose from 'jose';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is not defined");
-}
+const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
 async function getUserId() {
   const token = (await cookies()).get('auth_token')?.value;

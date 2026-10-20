@@ -1,0 +1,9 @@
+{
+  "command": "npm run start:catalyst",
+  "buildPath": ".",
+  "stack": "node20",
+  "env_variables": {
+    "NODE_ENV": "production"
+  },
+  "memory": 1024
+}

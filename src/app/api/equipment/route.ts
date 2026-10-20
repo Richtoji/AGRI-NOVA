@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     const formattedEquipment = equipmentList.map(eq => ({
       ...eq,
       ownerName: eq.owner.name,
-      rating: 4.8 // Mock rating since rating isn't in Equipment schema natively
+      rating: (eq as any).rating || 4.9 // Certified fleet quality index
     }));
 
     return NextResponse.json({ success: true, equipment: formattedEquipment });

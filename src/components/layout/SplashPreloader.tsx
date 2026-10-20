@@ -5,10 +5,12 @@ import { Sprout } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export const SplashPreloader: React.FC = () => {
+  const [mounted, setMounted] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    setMounted(true);
     // Speed up splash screen to feel immediate
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -19,10 +21,12 @@ export const SplashPreloader: React.FC = () => {
         }
         return prev + 25;
       });
-    }, 10);
+    }, 15);
 
     return () => clearInterval(interval);
   }, []);
+
+  if (!mounted || !isVisible) return null;
 
   return (
     <AnimatePresence>

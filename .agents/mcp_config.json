@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "zoho-catalyst": {
+      "serverUrl": "https://catalyst.zohomcp.in/mcp/message"
+    }
+  }
+}

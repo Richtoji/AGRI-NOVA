@@ -12,8 +12,17 @@ interface RouteGuardProps {
 }
 
 export const RouteGuard: React.FC<RouteGuardProps> = ({ children, allowedRoles }) => {
-  const { isLoggedIn, currentRole } = useAuthRole();
+  const { isLoggedIn, currentRole, isLoading } = useAuthRole();
   const router = useRouter();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
+        <p className="mt-4 text-sm font-semibold text-gray-500">Loading session...</p>
+      </div>
+    );
+  }
 
   // Not logged in — show clean login prompt
   if (!isLoggedIn) {

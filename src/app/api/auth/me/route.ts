@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/serverAuth";
-import { PrismaClient } from "@prisma/client";
 import { writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
-
-const prisma = new PrismaClient();
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const { error, user } = await requireAuth();
@@ -44,19 +42,7 @@ export async function PUT(request: Request) {
 
     let avatarUrl = undefined;
     if (avatarBase64) {
-      try {
-        const matches = avatarBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-        if (matches && matches.length === 3) {
-          const buffer = Buffer.from(matches[2], "base64");
-          const uniqueSuffix = crypto.randomBytes(6).toString("hex");
-          const filename = `avatar_${uniqueSuffix}.jpg`;
-          const filePath = path.join(process.cwd(), "public/uploads", filename);
-          await writeFile(filePath, buffer);
-          avatarUrl = `/uploads/${filename}`;
-        }
-      } catch (err) {
-        console.error("Failed to parse and save avatar image", err);
-      }
+      avatarUrl = avatarBase64;
     }
 
     const updatedUser = await prisma.user.update({

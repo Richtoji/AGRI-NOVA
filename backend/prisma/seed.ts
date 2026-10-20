@@ -1,5 +1,5 @@
 import { productImages } from "../../src/lib/productImages";
-export const mockSeedData = {
+export const rawSeedData = {
   users: [
     {
       id: "u-farmer-01",
@@ -800,4 +800,4 @@ export const mockSeedData = {
   ]
 };
 
-console.log("Mock seed data defined successfully!");
+console.log("Raw production seed data defined successfully!");

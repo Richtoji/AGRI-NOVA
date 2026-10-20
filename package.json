@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start:catalyst": "next start -p ${X_ZOHO_CATALYST_LISTEN_PORT:-3000}",
     "lint": "next lint",
     "test": "tsx tests/run.ts",
     "backend:dev": "tsx backend/src/server.ts",

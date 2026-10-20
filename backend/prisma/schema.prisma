@@ -98,6 +98,7 @@ model User {
   deliveries             DeliveryTask[]         @relation("DriverDeliveries")
   auditLogs              AuditLog[]
   cart                   Cart?
+  farmerCultivations     FarmerCultivation[]    @relation("FarmerCultivations")
 
   @@index([email])
   @@index([role])
@@ -342,7 +343,172 @@ model CropProfile {
   imageUrl         String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+
+  scientificName     String?
+  category           String?
+  description        String?
+  suitableSeason     String?
+  suitableRegions    String?
+  climateRequirements String?
+  soilRequirements   String?
+
+  cultivationGuide CropCultivationGuide?
+  farmerCultivations FarmerCultivation[]
 }
+
+model CropCultivationGuide {
+  id               String   @id @default(uuid())
+  cropProfileId    String   @unique
+  landPreparation  String?
+  seedInformation  String?
+  plantingMethod   String?
+  spacing          String?
+  weedManagement   String?
+  pestManagement   String?
+  diseaseManagement String?
+  harvesting       String?
+  postHarvest      String?
+  additionalNotes  String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  cropProfile      CropProfile @relation(fields: [cropProfileId], references: [id], onDelete: Cascade)
+  wateringSchedules WateringSchedule[]
+  manureFertilizers ManureFertilizer[]
+  cultivationStages CultivationStage[]
+  pestDiseases      PestDisease[]
+}
+
+model WateringSchedule {
+  id               String   @id @default(uuid())
+  guideId          String
+  growthStage      String
+  frequency        String
+  waterRequirement Float?
+  irrigationMethod String?
+  specialInstructions String?
+  daysAfterPlanting Int?
+
+  guide            CropCultivationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+}
+
+model ManureFertilizer {
+  id               String   @id @default(uuid())
+  guideId          String
+  inputType        String   // e.g. Organic Manure, Chemical Fertilizer
+  inputName        String
+  isOrganic        Boolean  @default(false)
+  quantity         String
+  unit             String?
+  applicationStage String?
+  daysAfterPlanting Int?
+  frequency        String?
+  applicationMethod String?
+  instructions     String?
+  precautions      String?
+
+  guide            CropCultivationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+}
+
+model CultivationStage {
+  id               String   @id @default(uuid())
+  guideId          String
+  stageName        String
+  stageOrder       Int
+  startDay         Int
+  endDay           Int?
+  description      String?
+  waterReq         String?
+  manureReq        String?
+  careInstructions String?
+  approvalRequired Boolean  @default(true)
+  imageRequired    Boolean  @default(false)
+
+  guide            CropCultivationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+  submissions      StageSubmission[]
+}
+
+model PestDisease {
+  id               String   @id @default(uuid())
+  guideId          String
+  problemType      String   // Pest or Disease
+  problemName      String
+  symptoms         String?
+  prevention       String?
+  management       String?
+  treatment        String?
+  precautions      String?
+
+  guide            CropCultivationGuide @relation(fields: [guideId], references: [id], onDelete: Cascade)
+}
+
+model FarmerCultivation {
+  id               String   @id @default(uuid())
+  farmerId         String
+  cropProfileId    String
+  region           String?
+  startDate        DateTime @default(now())
+  status           String   @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
+  currentStageId   String?
+  progress         Float    @default(0)
+  weeklyPhotoStatus String  @default("NOT DUE")
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  farmer           User        @relation("FarmerCultivations", fields: [farmerId], references: [id], onDelete: Cascade)
+  cropProfile      CropProfile @relation(fields: [cropProfileId], references: [id], onDelete: Cascade)
+  activities       CultivationActivity[]
+  stageSubmissions StageSubmission[]
+  weeklyPhotos     WeeklyGrowthRecord[]
+}
+
+model CultivationActivity {
+  id               String   @id @default(uuid())
+  cultivationId    String
+  activityName     String
+  activityType     String
+  scheduledDate    DateTime
+  status           String   @default("PENDING") // PENDING, COMPLETED, SKIPPED
+  notes            String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  cultivation      FarmerCultivation @relation(fields: [cultivationId], references: [id], onDelete: Cascade)
+}
+
+model StageSubmission {
+  id               String   @id @default(uuid())
+  cultivationId    String
+  stageId          String
+  imageUrl         String?
+  farmerNotes      String?
+  status           String   @default("PENDING REVIEW") // PENDING REVIEW, APPROVED, REJECTED, RESUBMISSION REQUIRED
+  adminComment     String?
+  submittedAt      DateTime @default(now())
+  reviewedAt       DateTime?
+
+  cultivation      FarmerCultivation @relation(fields: [cultivationId], references: [id], onDelete: Cascade)
+  stage            CultivationStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+}
+
+model WeeklyGrowthRecord {
+  id               String   @id @default(uuid())
+  cultivationId    String
+  weekNumber       Int
+  dueDate          DateTime
+  imageUrl         String?
+  farmerNotes      String?
+  status           String   @default("DUE") // NOT DUE, DUE, SUBMITTED, PENDING REVIEW, APPROVED, REJECTED, RESUBMISSION REQUIRED, MISSED
+  adminComment     String?
+  submittedAt      DateTime?
+  reviewedAt       DateTime?
+
+  cultivation      FarmerCultivation @relation(fields: [cultivationId], references: [id], onDelete: Cascade)
+}
+
 
 model LivestockRecommendation {
   id               String   @id @default(uuid())

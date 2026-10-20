@@ -37,38 +37,58 @@ export async function GET(request: Request) {
       );
     }
 
-    // 1. Fetch Location Name from Nominatim (OpenStreetMap)
+    // 1. Fetch Location Name using multi-strategy geocoding
     let locationInfo = {
-      name: 'Unknown Location',
-      details: 'Unable to determine location',
+      name: 'Local Farm Area',
+      details: `Coordinates: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
     };
 
+    // Strategy 1: BigDataCloud reverse geocode (fast, free, unlimited, HTTPS)
     try {
-      const geoRes = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&accept-language=en`,
-        {
-          headers: {
-            // Nominatim requires a unique user-agent
-            'User-Agent': 'Agri-NOVA-App/1.0 (contact@agrinova.local)',
-          },
-          signal: AbortSignal.timeout(4000)
-        }
+      const bdcRes = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
+        { signal: AbortSignal.timeout(3500) }
       );
-      if (geoRes.ok) {
-        const geoData = await geoRes.json();
-        if (geoData && geoData.address) {
-          const { city, town, village, suburb, neighbourhood, city_district, district, county, municipality, state_district, state, country } = geoData.address;
-          const localArea = city || town || village || district || county || suburb || neighbourhood || city_district || municipality || state_district || 'Unknown Area';
+      if (bdcRes.ok) {
+        const bdcData = await bdcRes.json();
+        const city = bdcData.locality || bdcData.city || bdcData.principalSubdivision;
+        const state = bdcData.principalSubdivision || '';
+        const country = bdcData.countryName || 'India';
+        if (city) {
           locationInfo = {
-            name: localArea,
-            details: `${localArea}, ${state || ''}, ${country || ''}`.replace(/,\s*,/g, ',').replace(/^,\s*/, '').replace(/,\s*$/, ''),
+            name: city,
+            details: [city, state, country].filter(Boolean).join(', ')
           };
         }
       }
-    } catch (err) {
-      console.error('Geocoding error:', err);
-      // fallback to coords if fails
-      locationInfo.details = `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`;
+    } catch (e) {
+      // Fall through to Nominatim
+    }
+
+    // Strategy 2: OpenStreetMap Nominatim fallback if needed
+    if (locationInfo.name === 'Local Farm Area') {
+      try {
+        const geoRes = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=11&accept-language=en`,
+          {
+            headers: { 'User-Agent': 'Agri-NOVA-Platform/2.0 (contact@agrinova.in)' },
+            signal: AbortSignal.timeout(3500)
+          }
+        );
+        if (geoRes.ok) {
+          const geoData = await geoRes.json();
+          if (geoData && geoData.address) {
+            const { city, town, village, suburb, neighbourhood, city_district, district, county, state, country } = geoData.address;
+            const localArea = city || town || village || district || county || suburb || neighbourhood || city_district || 'Local Area';
+            locationInfo = {
+              name: localArea,
+              details: [localArea, state, country].filter(Boolean).join(', ')
+            };
+          }
+        }
+      } catch (err) {
+        console.warn('Geocoding fallback reached coordinates string');
+      }
     }
 
     // 2. Fetch Weather Data from Open-Meteo

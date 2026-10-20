@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sprout, User, Mail, Lock, CheckCircle2, Phone, AlertCircle, Loader2, Calendar, Upload } from "lucide-react";
+import { Sprout, User, Mail, Lock, CheckCircle2, Phone, AlertCircle, Loader2, Calendar, Upload, Eye, EyeOff } from "lucide-react";
 import { validateFullName, validateEmailWithDetails, validatePhoneWithDetails, validatePasswords, validateRole, validateDob } from "@/lib/validation";
 
 export default function RegisterPage() {
@@ -24,6 +24,8 @@ export default function RegisterPage() {
   const [apiError, setApiError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const validateField = (name: string, value: string, currentData: typeof formData) => {
     let error = "";
@@ -258,7 +260,7 @@ export default function RegisterPage() {
                   </div>
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/png, image/jpeg, image/jpg, image/webp"
                     required
                     onChange={handleImageChange}
                     className="appearance-none block w-full pl-10 px-3 py-1.5 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100"
@@ -364,14 +366,23 @@ export default function RegisterPage() {
                   </div>
                   <input
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={formData.password}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`appearance-none block w-full pl-10 px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900`}
+                    className={`appearance-none block w-full pl-10 pr-10 px-3 py-2 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900`}
                     placeholder="••••••••"
                   />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
               </div>
@@ -385,14 +396,23 @@ export default function RegisterPage() {
                   </div>
                   <input
                     name="confirmPassword"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     required
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`appearance-none block w-full pl-10 px-3 py-2 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900`}
+                    className={`appearance-none block w-full pl-10 pr-10 px-3 py-2 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900`}
                     placeholder="••••••••"
                   />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 {errors.confirmPassword && <p className="mt-1 text-xs text-red-500">{errors.confirmPassword}</p>}
               </div>

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthRole, RoleType } from "@/lib/context/AuthRoleContext";
-import { Sprout, Lock, Mail, ArrowRight, Loader2, Phone, Calendar, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Sprout, Lock, Mail, ArrowRight, Loader2, Phone, Calendar, AlertCircle, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,6 +22,11 @@ export default function LoginPage() {
   const [fpNewPassword, setFpNewPassword] = useState("");
   const [fpConfirmPassword, setFpConfirmPassword] = useState("");
   const [fpSuccess, setFpSuccess] = useState(false);
+  
+  // Show Password States
+  const [showPassword, setShowPassword] = useState(false);
+  const [showFpNewPassword, setShowFpNewPassword] = useState(false);
+  const [showFpConfirmPassword, setShowFpConfirmPassword] = useState(false);
 
   const getRoleDashboardPath = (r: RoleType) => {
     switch (r) {
@@ -186,13 +191,22 @@ export default function LoginPage() {
                     <Lock className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900"
+                    className="appearance-none block w-full pl-10 pr-10 px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900"
                     placeholder="••••••••"
                   />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -272,13 +286,22 @@ export default function LoginPage() {
                     <Lock className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
-                    type="password"
+                    type={showFpNewPassword ? "text" : "password"}
                     required
                     value={fpNewPassword}
                     onChange={(e) => setFpNewPassword(e.target.value)}
-                    className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900"
+                    className="appearance-none block w-full pl-10 pr-10 px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900"
                     placeholder="••••••••"
                   />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowFpNewPassword(!showFpNewPassword)}
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showFpNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -289,13 +312,22 @@ export default function LoginPage() {
                     <Lock className="h-4 w-4 text-gray-400" />
                   </div>
                   <input
-                    type="password"
+                    type={showFpConfirmPassword ? "text" : "password"}
                     required
                     value={fpConfirmPassword}
                     onChange={(e) => setFpConfirmPassword(e.target.value)}
-                    className="appearance-none block w-full pl-10 px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900"
+                    className="appearance-none block w-full pl-10 pr-10 px-3 py-2 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-gray-700 focus:border-gray-700 sm:text-sm bg-white text-gray-900"
                     placeholder="••••••••"
                   />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => setShowFpConfirmPassword(!showFpConfirmPassword)}
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showFpConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

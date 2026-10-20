@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { Stethoscope, Video, Calendar, FileText, CheckCircle2, User, X, AlertCircle } from "lucide-react";
@@ -17,6 +18,10 @@ function VeterinaryDashboardContent() {
   const [prescriptionText, setPrescriptionText] = useState("");
   const [rxSent, setRxSent] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+
+  const [reschedulingApt, setReschedulingApt] = useState<any | null>(null);
+  const [rescheduleTime, setRescheduleTime] = useState("Tomorrow, 10:00 AM");
+  const [rescheduleSuccess, setRescheduleSuccess] = useState(false);
 
   const [appointments, setAppointments] = useState<any[]>([]);
 
@@ -59,22 +64,32 @@ function VeterinaryDashboardContent() {
             {/* Header Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 bg-white border border-gray-100 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center space-x-4">
+                <Link
+                  href="/dashboard/profile"
+                  className="flex items-center space-x-4 group cursor-pointer hover:opacity-95 transition-all"
+                  title="Click to view full profile details"
+                >
                   <img
                     src={currentUser?.avatarUrl || "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150"}
-                    alt={currentUser?.name || "Veterinary Specialist"}
-                    className="w-14 h-14 rounded-full object-cover border border-gray-200 shadow-sm"
+                    alt={currentUser?.name || "Dr. Ananya Sharma, DVM"}
+                    className="w-14 h-14 rounded-full object-cover border border-gray-200 shadow-sm group-hover:ring-2 group-hover:ring-emerald-500 transition-all"
                   />
                   <div>
                     <div className="flex items-center space-x-2">
-                      <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{currentUser?.name}</h1>
+                      <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1 group-hover:text-emerald-700 transition-colors">
+                        {currentUser?.name || "Dr. Ananya Sharma, DVM"}
+                      </h1>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-700 font-semibold border border-gray-200">
                         LICENSED VETERINARY SURGEON
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">Regn No: VET-IND-99402 | Bovine & Livestock Specialist</p>
+                    <p className="text-xs text-gray-500 mt-1 flex items-center space-x-1.5">
+                      <span>Regn No: VET-IND-99402 | Bovine &amp; Livestock Specialist</span>
+                      <span>•</span>
+                      <span className="text-emerald-600 font-semibold group-hover:underline">View Profile Details &rarr;</span>
+                    </p>
                   </div>
-                </div>
+                </Link>
               </div>
 
               <div className="bg-white border border-gray-100 rounded-2xl p-6 flex items-center justify-around">
@@ -128,7 +143,15 @@ function VeterinaryDashboardContent() {
                         <Video className="w-4 h-4" />
                         <span>Join Video Call</span>
                       </button>
-                      <button className="px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 rounded-lg text-xs font-medium transition-colors shadow-sm">
+                      <button 
+                        type="button"
+                        onClick={() => {
+                          setReschedulingApt(apt);
+                          setRescheduleTime("Tomorrow, 10:00 AM");
+                        }}
+                        className="px-3 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 hover:text-emerald-700 rounded-lg text-xs font-medium transition-colors shadow-sm cursor-pointer"
+                        title="Reschedule this appointment slot"
+                      >
                         Reschedule
                       </button>
                     </div>
@@ -212,6 +235,100 @@ function VeterinaryDashboardContent() {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Reschedule Consultation Modal */}
+        {reschedulingApt && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+            <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl border border-gray-100 overflow-hidden animate-scaleUp">
+              
+              <div className="p-5 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-emerald-200" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-sm">Reschedule Consultation</h3>
+                    <p className="text-[10px] text-emerald-200">Patient: {reschedulingApt.animal} ({reschedulingApt.farmerName})</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setReschedulingApt(null)}
+                  className="p-1 rounded-lg text-emerald-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-4">
+                <div className="p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Currently Scheduled For</span>
+                  <div className="font-bold text-xs text-gray-900 mt-0.5">{reschedulingApt.time}</div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-2">Select New Consultation Slot</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      "Tomorrow, 09:30 AM",
+                      "Tomorrow, 11:00 AM",
+                      "Tomorrow, 02:30 PM",
+                      "Tomorrow, 04:30 PM",
+                      "Day After, 10:00 AM",
+                      "Day After, 03:00 PM"
+                    ].map((slot) => (
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => setRescheduleTime(slot)}
+                        className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition-all cursor-pointer ${
+                          rescheduleTime === slot
+                            ? "bg-emerald-50 border-emerald-500 text-emerald-800 ring-1 ring-emerald-500 font-bold"
+                            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {slot}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {rescheduleSuccess && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold flex items-center space-x-2 animate-fadeIn">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>Appointment successfully rescheduled! Notification sent to farmer.</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => setReschedulingApt(null)}
+                  className="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAppointments(prev => prev.map(a => a.id === reschedulingApt.id ? { ...a, time: rescheduleTime } : a));
+                    setRescheduleSuccess(true);
+                    setTimeout(() => {
+                      setRescheduleSuccess(false);
+                      setReschedulingApt(null);
+                    }, 1400);
+                  }}
+                  className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer shadow-xs flex items-center space-x-1.5"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span>Confirm Slot</span>
+                </button>
+              </div>
+
             </div>
           </div>
         )}

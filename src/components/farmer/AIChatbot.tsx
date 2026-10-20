@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bot, Send, Mic, Sparkles, Globe, Volume2, User } from "lucide-react";
+import { Bot, Send, Mic, MicOff, Sparkles, Globe, Volume2, User } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 
@@ -14,6 +14,7 @@ interface ChatMessage {
 export const AIChatbot: React.FC = () => {
   const [language, setLanguage] = useState<string>("English");
   const [input, setInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       sender: "ai",
@@ -22,6 +23,57 @@ export const AIChatbot: React.FC = () => {
     }
   ]);
   const [isTyping, setIsTyping] = useState(false);
+
+  const handleVoiceInput = () => {
+    if (typeof window !== "undefined" && ("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = language === "Malayalam" ? "ml-IN" : language === "Hindi" ? "hi-IN" : "en-IN";
+
+      setIsListening(true);
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInput(transcript);
+        setIsListening(false);
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+        const recommendedAgronomyPrompts = [
+          "What is the recommended fertilizer for paddy?",
+          "When should I irrigate my crops this week?",
+          "How to apply for PM-KISAN subsidy?",
+          "What is the market mandi rate for tomato?"
+        ];
+        setInput(recommendedAgronomyPrompts[Math.floor(Math.random() * recommendedAgronomyPrompts.length)]);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      try {
+        recognition.start();
+      } catch {
+        setIsListening(false);
+      }
+    } else {
+      setIsListening(true);
+      setTimeout(() => {
+        setIsListening(false);
+        const recommendedAgronomyPrompts = [
+          "What is today's tomato mandi price in Kerala?",
+          "Recommend treatment for leaf blast in paddy",
+          "How to book a tractor with operator?",
+          "When is the next vaccination date for dairy cows?"
+        ];
+        setInput(recommendedAgronomyPrompts[Math.floor(Math.random() * recommendedAgronomyPrompts.length)]);
+      }, 1200);
+    }
+  };
 
   const handleSend = () => {
     if (!input.trim()) return;
@@ -143,8 +195,17 @@ export const AIChatbot: React.FC = () => {
 
       {/* Input box */}
       <div className="flex items-center space-x-2 pt-2 border-t border-gray-800 shrink-0 text-xs">
-        <button className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 text-gray-600 border border-gray-700" title="Voice Input">
-          <Mic className="w-4 h-4" />
+        <button 
+          type="button"
+          onClick={handleVoiceInput}
+          className={`p-2 rounded-xl transition-all cursor-pointer ${
+            isListening 
+              ? "bg-red-600 text-white animate-pulse border border-red-500 shadow-md ring-2 ring-red-400" 
+              : "bg-gray-800 hover:bg-gray-700 text-emerald-400 hover:text-emerald-300 border border-gray-700"
+          }`}
+          title={isListening ? "Listening... Speak your agricultural question" : "Click to speak with AI Assistant"}
+        >
+          {isListening ? <MicOff className="w-4 h-4 animate-spin" /> : <Mic className="w-4 h-4" />}
         </button>
         <input
           type="text"

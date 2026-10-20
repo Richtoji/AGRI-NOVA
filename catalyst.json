@@ -1,0 +1,9 @@
+{
+  "appsail": [
+    {
+      "name": "agri-nova",
+      "source": ".",
+      "config": "app-config.json"
+    }
+  ]
+}

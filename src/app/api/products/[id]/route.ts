@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import * as jose from 'jose';
 import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is not defined");
-}
+const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
 async function getUserSession() {
   const token = (await cookies()).get('auth_token')?.value;
@@ -57,37 +53,66 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       dataToUpdate.status = 'PENDING';
     }
 
-    if (title) dataToUpdate.title = title;
-    if (description !== undefined) dataToUpdate.description = description;
+    if (title !== undefined) {
+      if (typeof title !== 'string' || title.trim().length < 3 || title.trim().length > 80) {
+        return NextResponse.json({ error: 'Strict Validation Error: Title must be between 3 and 80 characters long.' }, { status: 400 });
+      }
+      if (!/[a-zA-Z]/.test(title)) {
+        return NextResponse.json({ error: 'Strict Validation Error: Title must contain alphabetical letters.' }, { status: 400 });
+      }
+      dataToUpdate.title = title.trim();
+    }
+
+    if (description !== undefined) {
+      if (typeof description !== 'string' || description.trim().length < 10 || description.trim().length > 1000) {
+        return NextResponse.json({ error: 'Strict Validation Error: Description must be between 10 and 1000 characters.' }, { status: 400 });
+      }
+      dataToUpdate.description = description.trim();
+    }
+
     if (category) dataToUpdate.category = category;
     if (location !== undefined) dataToUpdate.location = location;
     
     if (price !== undefined) {
       const parsedPrice = parseFloat(price);
-      if (isNaN(parsedPrice) || parsedPrice < 0) {
-        return NextResponse.json({ error: 'Strict Validation Error: Price must be a positive number.' }, { status: 400 });
+      if (isNaN(parsedPrice) || parsedPrice <= 0) {
+        return NextResponse.json({ error: 'Strict Validation Error: Price must be strictly greater than ₹0.00.' }, { status: 400 });
+      }
+      if (parsedPrice > 1000000) {
+        return NextResponse.json({ error: 'Strict Validation Error: Price cannot exceed ₹1,000,000 per unit.' }, { status: 400 });
+      }
+      if (!/^\d+(\.\d{1,2})?$/.test(String(price).trim())) {
+        return NextResponse.json({ error: 'Strict Validation Error: Price can have at most 2 decimal places.' }, { status: 400 });
       }
       dataToUpdate.price = parsedPrice;
     }
     
     if (unit) {
-      const lowerUnit = unit.toLowerCase();
-      const validUnits = ["kg", "grams", "litres", "ml", "ton", "quintal", "dozen", "unit"];
+      const lowerUnit = unit.toLowerCase().trim();
+      const validUnits = ["kg", "grams", "litres", "ml", "ton", "quintal", "dozen", "unit", "bunch", "packet"];
       if (!validUnits.includes(lowerUnit)) {
-         return NextResponse.json({ error: 'Strict Validation Error: Invalid unit.' }, { status: 400 });
+         return NextResponse.json({ error: `Strict Validation Error: Invalid unit. Must be one of ${validUnits.join(", ")}` }, { status: 400 });
       }
       dataToUpdate.unit = lowerUnit;
     }
     
     if (stockQuantity !== undefined) {
-      const parsedStock = parseInt(stockQuantity, 10);
-      if (isNaN(parsedStock) || parsedStock <= 0) {
-        return NextResponse.json({ error: 'Strict Validation Error: Stock quantity must be greater than zero.' }, { status: 400 });
+      const numStock = Number(stockQuantity);
+      if (isNaN(numStock) || !Number.isInteger(numStock) || numStock < 1) {
+        return NextResponse.json({ error: 'Strict Validation Error: Stock quantity must be a whole positive integer (min 1).' }, { status: 400 });
       }
-      dataToUpdate.stockQuantity = parsedStock;
+      if (numStock > 100000) {
+        return NextResponse.json({ error: 'Strict Validation Error: Stock quantity cannot exceed 100,000 units.' }, { status: 400 });
+      }
+      dataToUpdate.stockQuantity = numStock;
     }
     
-    if (imageUrl) dataToUpdate.imageUrl = imageUrl;
+    if (imageUrl) {
+      if (typeof imageUrl !== 'string' || imageUrl.trim().length < 5) {
+        return NextResponse.json({ error: 'Strict Validation Error: A valid product photograph is required.' }, { status: 400 });
+      }
+      dataToUpdate.imageUrl = imageUrl;
+    }
 
     const updatedProduct = await prisma.product.update({
       where: { id },

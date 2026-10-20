@@ -77,8 +77,8 @@ export const Footer: React.FC = () => {
         <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col md:flex-row items-center justify-between text-xs text-gray-400">
           <p>&copy; 2026 AGRI-NOVA Smart Agriculture Platform. All rights reserved.</p>
           <div className="flex items-center space-x-6 mt-4 md:mt-0 font-medium">
-            <Link href="#" className="hover:text-gray-900 transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-gray-900 transition-colors">Terms of Service</Link>
+            <Link href="/privacy" className="hover:text-gray-900 transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-gray-900 transition-colors">Terms of Service</Link>
             <Link href="/contact" className="hover:text-gray-900 transition-colors">Support Directory</Link>
           </div>
         </div>

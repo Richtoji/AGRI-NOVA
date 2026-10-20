@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
-import { Search, ShoppingBag, Star, ShieldCheck, Check, MapPin, SlidersHorizontal, Loader2 } from "lucide-react";
+import { Search, ShoppingBag, Star, ShieldCheck, Check, MapPin, SlidersHorizontal, Loader2, AlertCircle } from "lucide-react";
 import { FeedStore } from "@/components/marketplace/FeedStore";
 import { VetPharmacy } from "@/components/marketplace/VetPharmacy";
 import { MyListings } from "@/components/marketplace/MyListings";
@@ -11,12 +11,13 @@ import { SafeImage } from "@/components/ui/SafeImage";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 
 export default function MarketplacePage() {
-  const { addToCart, currentRole } = useAuthRole();
+  const { addToCart, currentRole, openCart } = useAuthRole();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [addedItem, setAddedItem] = useState<string | null>(null);
+  const [validationToast, setValidationToast] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [subMarket, setSubMarket] = useState<"produce" | "feed" | "vet" | "my-listings">("produce");
   const [sortBy, setSortBy] = useState("price-asc");
@@ -75,18 +76,57 @@ export default function MarketplacePage() {
     });
 
   const handleAddToCart = async (product: any) => {
-    const qty = quantities[product.id] || (product as any).minOrderQuantity || 1;
+    const min = (product as any).minOrderQuantity || 1;
+    const max = product.stockQuantity !== undefined ? product.stockQuantity : 99999;
+    const rawQty = quantities[product.id];
+    const qty = rawQty !== undefined ? rawQty : min;
+
+    if (isNaN(qty) || !Number.isInteger(qty) || qty < min) {
+      setValidationToast(`Strict Validation Error: Minimum order quantity for ${product.title} is ${min} ${product.unit}.`);
+      return;
+    }
+    if (qty > max) {
+      setValidationToast(`Strict Validation Error: Requested quantity (${qty} ${product.unit}) exceeds available stock (${max} ${product.unit}).`);
+      return;
+    }
+
+    setValidationToast(null);
     const result = await addToCart(product.id, qty);
     if (result.success) {
       setAddedItem(product.id);
       setTimeout(() => setAddedItem(null), 1500);
     } else {
-      alert(result.error);
+      setValidationToast(result.error || "Failed to add product to cart.");
+    }
+  };
+
+  const handleBuyNow = async (product: any) => {
+    const min = (product as any).minOrderQuantity || 1;
+    const max = product.stockQuantity !== undefined ? product.stockQuantity : 99999;
+    const rawQty = quantities[product.id];
+    const qty = rawQty !== undefined ? rawQty : min;
+
+    if (isNaN(qty) || !Number.isInteger(qty) || qty < min) {
+      setValidationToast(`Strict Validation Error: Minimum order quantity for ${product.title} is ${min} ${product.unit}.`);
+      return;
+    }
+    if (qty > max) {
+      setValidationToast(`Strict Validation Error: Requested quantity (${qty} ${product.unit}) exceeds available stock (${max} ${product.unit}).`);
+      return;
+    }
+
+    setValidationToast(null);
+    const result = await addToCart(product.id, qty);
+    if (result.success) {
+      setAddedItem(product.id);
+      openCart();
+    } else {
+      setValidationToast(result.error || "Failed to proceed to checkout.");
     }
   };
 
   return (
-    <RouteGuard allowedRoles={["FARMER", "BUYER", "ADMIN"]}>
+    <RouteGuard allowedRoles={["FARMER", "BUYER", "ADMIN", "EQUIPMENT_OWNER", "VETERINARY_EXPERT", "DELIVERY_PARTNER"]}>
       <AppLayout>
       <div className="space-y-5 pb-6">
 
@@ -122,6 +162,22 @@ export default function MarketplacePage() {
             ))}
           </div>
         </div>
+
+        {/* Strict Validation Alert Toast */}
+        {validationToast && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl flex items-center justify-between text-xs animate-fadeIn shadow-sm">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+              <span className="font-bold">{validationToast}</span>
+            </div>
+            <button
+              onClick={() => setValidationToast(null)}
+              className="text-red-400 hover:text-red-600 font-black text-sm px-1.5"
+            >
+              ✕
+            </button>
+          </div>
+        )}
 
         {/* ===== SUB MARKETS ===== */}
         {subMarket === "my-listings" ? (
@@ -250,7 +306,9 @@ export default function MarketplacePage() {
                         </div>
                         <div className="flex items-center border border-gray-200 rounded-lg overflow-hidden shrink-0">
                           <button 
-                            className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold border-r border-gray-200"
+                            type="button"
+                            className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold border-r border-gray-200 disabled:opacity-40 cursor-pointer"
+                            disabled={(quantities[product.id] || (product as any).minOrderQuantity || 1) <= ((product as any).minOrderQuantity || 1)}
                             onClick={() => {
                               const min = (product as any).minOrderQuantity || 1;
                               const current = quantities[product.id] || min;
@@ -259,37 +317,61 @@ export default function MarketplacePage() {
                           >-</button>
                           <input 
                             type="number"
-                            className="w-10 text-center text-xs font-bold text-gray-900 border-none outline-none p-1 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            min={(product as any).minOrderQuantity || 1}
+                            max={product.stockQuantity || 99999}
+                            className="w-12 text-center text-xs font-bold text-gray-900 border-none outline-none p-1 bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             value={quantities[product.id] || (product as any).minOrderQuantity || 1}
                             onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              if (!isNaN(val)) setQuantities({...quantities, [product.id]: val});
+                              const min = (product as any).minOrderQuantity || 1;
+                              const max = product.stockQuantity !== undefined ? product.stockQuantity : 99999;
+                              let val = parseInt(e.target.value, 10);
+                              if (isNaN(val)) val = min;
+                              if (val < min) val = min;
+                              if (val > max) val = max;
+                              setQuantities({...quantities, [product.id]: val});
                             }}
                           />
                           <button 
-                            className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold border-l border-gray-200"
+                            type="button"
+                            className="px-2 py-1 bg-gray-50 hover:bg-gray-100 text-gray-700 font-bold border-l border-gray-200 disabled:opacity-40 cursor-pointer"
+                            disabled={(quantities[product.id] || (product as any).minOrderQuantity || 1) >= (product.stockQuantity || 99999)}
                             onClick={() => {
-                              const current = quantities[product.id] || (product as any).minOrderQuantity || 1;
-                              setQuantities({...quantities, [product.id]: current + 1});
+                              const min = (product as any).minOrderQuantity || 1;
+                              const max = product.stockQuantity !== undefined ? product.stockQuantity : 99999;
+                              const current = quantities[product.id] || min;
+                              if (current < max) {
+                                setQuantities({...quantities, [product.id]: current + 1});
+                              }
                             }}
                           >+</button>
                         </div>
                       </div>
 
-                      <button
-                        onClick={() => handleAddToCart(product)}
-                        className={`w-full py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1 ${
-                          addedItem === product.id
-                            ? "bg-gray-100 text-gray-700 border border-gray-200"
-                            : "bg-gray-900 text-white hover:bg-gray-800"
-                        }`}
-                      >
-                        {addedItem === product.id ? (
-                          <><Check className="w-3.5 h-3.5 mr-1" /> Added to Cart</>
-                        ) : (
-                          <><ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Cart</>
-                        )}
-                      </button>
+                      <div className="grid grid-cols-2 gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleAddToCart(product)}
+                          className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1 ${
+                            addedItem === product.id
+                              ? "bg-green-50 text-green-700 border border-green-200"
+                              : "bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200"
+                          }`}
+                        >
+                          {addedItem === product.id ? (
+                            <><Check className="w-3.5 h-3.5 mr-1" /> Added</>
+                          ) : (
+                            <><ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Cart</>
+                          )}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleBuyNow(product)}
+                          className="py-2 px-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-black shadow-xs transition-all flex items-center justify-center space-x-1"
+                        >
+                          <span>⚡ Buy Now</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

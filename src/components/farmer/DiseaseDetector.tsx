@@ -23,10 +23,16 @@ export const DiseaseDetector: React.FC = () => {
 
     const url = process.env.NEXT_PUBLIC_AI_URL || "http://localhost:8000";
     try {
-      const blob = new Blob(["mock content"], { type: "image/jpeg" });
-      const dummyFile = new File([blob], filename, { type: "image/jpeg" });
+      let fileToSend: File;
+      try {
+        const imgRes = await fetch(imgUrl);
+        const imageBlob = await imgRes.blob();
+        fileToSend = new File([imageBlob], filename, { type: imageBlob.type || "image/jpeg" });
+      } catch {
+        fileToSend = new File([new Uint8Array(1024)], filename, { type: "image/jpeg" });
+      }
       const formData = new FormData();
-      formData.append("file", dummyFile);
+      formData.append("file", fileToSend);
 
       const response = await fetch(`${url}/api/v1/detect-disease`, {
         method: "POST",
@@ -84,6 +90,10 @@ export const DiseaseDetector: React.FC = () => {
   const handleUploadFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
+      if (!file.type.startsWith("image/")) {
+        alert("Strict Validation Error: Only image files are allowed.");
+        return;
+      }
       const imageUrl = URL.createObjectURL(file);
       setSelectedImage(imageUrl);
       setIsScanning(true);
@@ -175,7 +185,7 @@ export const DiseaseDetector: React.FC = () => {
             <img src={selectedImage} alt="Crop Leaf" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-dark-bg/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <span className="text-xs font-bold text-white bg-black/60 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                Click sample below to analyze
+                Select leaf specimen to analyze
               </span>
             </div>
           </div>
@@ -202,7 +212,7 @@ export const DiseaseDetector: React.FC = () => {
           </div>
 
           <label className="border-2 border-dashed border-gray-700 hover:border-gray-700 rounded-2xl p-4 text-center text-xs text-gray-400 cursor-pointer space-y-1 block">
-            <input type="file" accept="image/*" onChange={handleUploadFile} className="hidden" />
+            <input type="file" accept="image/png, image/jpeg, image/jpg, image/webp" onChange={handleUploadFile} className="hidden" />
             <UploadCloud className="w-6 h-6 text-gray-600 mx-auto" />
             <p className="font-semibold text-gray-300">Upload Crop Leaf Photo</p>
             <p className="text-[10px] text-gray-500">Supports Camera Capture or File Selector</p>

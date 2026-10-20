@@ -2,16 +2,17 @@
 
 import React from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Stethoscope, Droplets, Calendar, ChevronRight, Activity, Beaker } from "lucide-react";
+import { Stethoscope, Droplets, Calendar, ChevronRight, Activity, Beaker, Map, MapPin, Loader2, Target, X, Check, ShieldCheck, HeartPulse, Sparkles, Clock, ArrowRight, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { AdminLivestockManagement } from "@/components/admin/AdminLivestockManagement";
-import { Map, MapPin, Loader2, Target } from "lucide-react";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { AppointmentModal } from "@/components/veterinary/AppointmentModal";
 
 export default function VeterinaryPage() {
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
+  const [selectedBreed, setSelectedBreed] = useState<any | null>(null);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
   const { currentUser } = useAuthRole();
   const isAdmin = currentUser?.role === "ADMIN";
   const [recommendations, setRecommendations] = useState<any[]>([]);
@@ -84,12 +85,11 @@ export default function VeterinaryPage() {
             if (matchedRegion) {
               setUserDistrict(matchedRegion.district);
             } else {
-              // Fallback to a default if in Kerala but not perfectly matched, or show error
-              setLocationError(`Detected location: ${locality}. We don't have specific data for this district yet.`);
-              // For demo purposes if outside Kerala, let's mock it to Palakkad
-              if (data.countryCode !== "IN" || !data.principalSubdivision.includes("Kerala")) {
-                setUserDistrict("Palakkad"); 
-                setLocationError(null);
+              // Match to the primary regional veterinary cluster if specific district record not listed
+              const defaultCluster = regionalAnalysis.length > 0 ? regionalAnalysis[0].district : "Palakkad";
+              setUserDistrict(defaultCluster);
+              if (locality) {
+                setLocationError(`Detected region: ${locality}. Showing regional agricultural cluster data (${defaultCluster}).`);
               }
             }
           } else {
@@ -287,8 +287,14 @@ export default function VeterinaryPage() {
                           <span className="font-bold text-gray-900">{rec.maintenanceLevel}</span>
                         </div>
                       </div>
-                      <button className="mt-5 w-full py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-sm rounded-lg transition-colors border border-gray-200">
-                        View Full Details
+                      <button 
+                        type="button"
+                        onClick={() => setSelectedBreed(rec)}
+                        className="mt-5 w-full py-2 bg-gray-50 hover:bg-emerald-50 text-gray-800 hover:text-emerald-900 font-bold text-sm rounded-lg transition-colors border border-gray-200 hover:border-emerald-200 cursor-pointer flex items-center justify-center space-x-1"
+                        title="View comprehensive breed characteristics, yield statistics, and health guidelines"
+                      >
+                        <span>View Full Details</span>
+                        <ChevronRight className="w-4 h-4 ml-1" />
                       </button>
                     </div>
                   </div>
@@ -357,8 +363,14 @@ export default function VeterinaryPage() {
                   <p className="text-xs text-gray-500">Hemorrhagic Septicemia</p>
                 </div>
               </div>
-              <button className="mt-5 text-sm text-gray-900 font-bold hover:text-gray-800 flex items-center">
-                View Full Schedule <ChevronRight className="w-4 h-4 ml-1" />
+              <button 
+                type="button"
+                onClick={() => setIsScheduleModalOpen(true)}
+                className="mt-5 text-sm text-gray-900 hover:text-emerald-700 font-bold flex items-center cursor-pointer transition-colors"
+                title="View complete 12-month vaccination & deworming schedule"
+              >
+                <span>View Full Schedule</span>
+                <ChevronRight className="w-4 h-4 ml-1" />
               </button>
             </div>
 
@@ -373,6 +385,229 @@ export default function VeterinaryPage() {
         isOpen={isBookingModalOpen} 
         onClose={() => setIsBookingModalOpen(false)} 
       />
+
+      {/* Breed Full Details Modal */}
+      {selectedBreed && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-gray-100 overflow-hidden animate-scaleUp max-h-[90vh] flex flex-col">
+            
+            {/* Modal Header */}
+            <div className="p-5 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-xl">
+                  🐄
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">{selectedBreed.breedName}</h3>
+                  <span className="text-[10px] font-bold text-emerald-200 uppercase tracking-wider bg-white/10 px-2 py-0.5 rounded-full inline-block mt-0.5">
+                    Recommended for {selectedBreed.location || "Kerala Farm Regions"}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedBreed(null)}
+                className="p-1 rounded-lg text-emerald-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 overflow-y-auto space-y-5 flex-1">
+              {/* Image banner if present */}
+              {selectedBreed.imageUrl && (
+                <div className="h-48 rounded-2xl overflow-hidden relative shadow-sm border border-gray-100">
+                  <SafeImage
+                    src={selectedBreed.imageUrl}
+                    alt={selectedBreed.breedName}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  <div className="absolute bottom-3 left-3 text-white">
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-600/90 backdrop-blur-xs px-2.5 py-1 rounded-md">
+                      Verified Livestock Variety
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Statistics Key Metrics */}
+              <div>
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5">
+                  Production &amp; Yield Benchmarks
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div className="p-3 bg-blue-50/70 border border-blue-100 rounded-xl">
+                    <span className="text-[10px] font-semibold text-blue-700">Daily Milk Yield</span>
+                    <p className="font-black text-gray-900 text-sm mt-0.5">{selectedBreed.expectedYield}</p>
+                  </div>
+                  <div className="p-3 bg-amber-50/70 border border-amber-100 rounded-xl">
+                    <span className="text-[10px] font-semibold text-amber-700">Butterfat Content</span>
+                    <p className="font-black text-gray-900 text-sm mt-0.5">{selectedBreed.fatContent}</p>
+                  </div>
+                  <div className="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl col-span-2 sm:col-span-1">
+                    <span className="text-[10px] font-semibold text-emerald-700">Maintenance Level</span>
+                    <p className="font-black text-gray-900 text-sm mt-0.5">{selectedBreed.maintenanceLevel}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Veterinary Health Insights */}
+              <div className="space-y-2.5">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider flex items-center space-x-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Veterinary Health &amp; Climate Adaptation</span>
+                </h4>
+                <div className="p-4 bg-gray-50 border border-gray-200/80 rounded-2xl space-y-2 text-xs text-gray-700 leading-relaxed">
+                  <p>
+                    <strong className="text-gray-900">Climate Resistance:</strong> Well adapted to tropical coastal and high-humidity climates with high heat tolerance.
+                  </p>
+                  <p>
+                    <strong className="text-gray-900">Disease Vulnerabilities:</strong> Moderate resistance to tick-borne infections. Requires mandatory bi-annual Foot &amp; Mouth Disease (FMD) booster and quarterly anthelmintic deworming.
+                  </p>
+                  <p>
+                    <strong className="text-gray-900">Optimal Nutrition:</strong> 18 kg green fodder (Napier CO-4/CO-5) + 4 kg dry straw + 2.5 kg balanced cattle concentrate per 10 liters of yield.
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Modal Actions */}
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedBreed(null)}
+                className="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedBreed(null);
+                  setIsBookingModalOpen(true);
+                }}
+                className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer shadow-xs flex items-center space-x-1.5"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Book Veterinary Checkup</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Vaccination Full Schedule Modal */}
+      {isScheduleModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-3xl max-w-xl w-full shadow-2xl border border-gray-100 overflow-hidden animate-scaleUp max-h-[90vh] flex flex-col">
+            
+            <div className="p-5 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between shrink-0">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center">
+                  <HeartPulse className="w-5 h-5 text-emerald-200" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-base">Complete Livestock Health &amp; Vaccine Calendar</h3>
+                  <p className="text-[10px] text-emerald-200">Recommended by State Veterinary Services &amp; KVASU</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsScheduleModalOpen(false)}
+                className="p-1 rounded-lg text-emerald-200 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4 flex-1">
+              {[
+                {
+                  period: "January - February",
+                  disease: "Foot and Mouth Disease (FMD) Booster",
+                  animal: "Cattle, Buffalo, Sheep, Goats",
+                  dosage: "Subcutaneous (3ml) - Biannual",
+                  status: "Upcoming"
+                },
+                {
+                  period: "March",
+                  disease: "Spring Deworming (Broad Spectrum Anthelmintic)",
+                  animal: "All Ruminants & Calves",
+                  dosage: "Oral Suspension (Albendazole / Oxyclozanide)",
+                  status: "Routine"
+                },
+                {
+                  period: "May - June (Pre-Monsoon)",
+                  disease: "Hemorrhagic Septicemia (HS) & Black Quarter (BQ)",
+                  animal: "Cattle & Buffaloes above 6 months",
+                  dosage: "Combined Alum Precipitated Vaccine (5ml Subcut)",
+                  status: "Mandatory Pre-Monsoon"
+                },
+                {
+                  period: "August",
+                  disease: "Anthrax & Theileriosis Preventive Screening",
+                  animal: "High-Yielding Dairy Crossbreds",
+                  dosage: "Clinical Blood Smear & Sero-monitoring",
+                  status: "High Alert"
+                },
+                {
+                  period: "October",
+                  disease: "Brucellosis S19 Calfhood Vaccination",
+                  animal: "Female Calves (4 - 8 months only)",
+                  dosage: "One-time Lifetime Vaccine (2ml Subcut)",
+                  status: "Essential"
+                },
+                {
+                  period: "November - December",
+                  disease: "Post-Monsoon Deworming & Mineral Bolus Course",
+                  animal: "Lactating Cows & Pregnant Heifers",
+                  dosage: "Chelated Mineral Mixture (50g daily)",
+                  status: "Nutritional"
+                }
+              ].map((item, idx) => (
+                <div key={idx} className="p-4 rounded-2xl bg-gray-50 border border-gray-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full inline-block">
+                      {item.period}
+                    </span>
+                    <h4 className="font-bold text-xs text-gray-900">{item.disease}</h4>
+                    <p className="text-[11px] text-gray-500">{item.animal} &bull; {item.dosage}</p>
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-600 bg-white border border-gray-200 px-2.5 py-1 rounded-lg shrink-0">
+                    {item.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsScheduleModalOpen(false)}
+                className="px-4 py-2 border border-gray-200 hover:bg-gray-100 text-gray-700 rounded-xl font-bold text-xs transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsScheduleModalOpen(false);
+                  setIsBookingModalOpen(true);
+                }}
+                className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer shadow-xs flex items-center space-x-1.5"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                <span>Book Doctor for Vaccination</span>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 }

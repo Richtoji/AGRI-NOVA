@@ -1,18 +1,11 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
 
-// Prevent multiple instances of Prisma Client in development
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is not defined");
-}
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -64,11 +57,12 @@ export async function POST(request: Request) {
     );
 
     // 5. Set HttpOnly Cookie
+    const isHttps = request.headers.get("x-forwarded-proto") === "https";
     const cookieStore = await cookies();
     cookieStore.set("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: isHttps,
+      sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
     });

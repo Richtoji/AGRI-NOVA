@@ -367,7 +367,7 @@ export function AdminProductManagement() {
                       <ImageIcon className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
                       <input 
                         type="file" 
-                        accept="image/*" 
+                        accept="image/png, image/jpeg, image/jpg, image/webp" 
                         onChange={handleFileChange} 
                         className="w-full pl-9 pr-3 py-2 text-sm rounded-xl border border-gray-200 focus:outline-none focus:border-gray-900 bg-gray-50 focus:bg-white transition-colors file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-gray-900 file:text-white hover:file:bg-gray-800" 
                       />

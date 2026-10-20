@@ -38,9 +38,12 @@ interface AuthRoleContextType {
   removeFromCart: (id: string) => Promise<void>;
   isCartOpen: boolean;
   toggleCart: () => void;
+  openCart: () => void;
+  closeCart: () => void;
   theme: "dark" | "light";
   toggleTheme: () => void;
   fetchCart: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const AuthRoleContext = createContext<AuthRoleContextType | undefined>(undefined);
@@ -49,11 +52,14 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [currentRole, setCurrentRole] = useState<RoleType>("FARMER");
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   
   const toggleCart = () => setIsCartOpen(!isCartOpen);
+  const openCart = () => setIsCartOpen(true);
+  const closeCart = () => setIsCartOpen(false);
   
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
@@ -139,6 +145,8 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
       } catch (e) {
         // Not logged in or expired
+      } finally {
+        setIsLoading(false);
       }
     };
     fetchSession();
@@ -249,9 +257,12 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         removeFromCart,
         isCartOpen,
         toggleCart,
+        openCart,
+        closeCart,
         theme,
         toggleTheme,
         fetchCart,
+        isLoading,
       }}
     >
       {children}

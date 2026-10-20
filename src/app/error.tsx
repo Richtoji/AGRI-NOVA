@@ -11,10 +11,36 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const isChunkError = Boolean(
+    error?.message && (
+      error.message.includes("Loading chunk") || 
+      error.message.includes("ChunkLoadError") ||
+      error.message.includes("failed to fetch dynamically imported module")
+    )
+  );
+
   useEffect(() => {
     // Log the error to an error reporting service
     console.error("Global Error Boundary caught an error:", error);
-  }, [error]);
+
+    // If chunk loading failed because a new bundle was deployed / recompiled, reload once to fetch new chunks
+    if (isChunkError && typeof window !== "undefined") {
+      const reloaded = sessionStorage.getItem("chunk_error_reloaded");
+      if (!reloaded) {
+        sessionStorage.setItem("chunk_error_reloaded", "true");
+        window.location.reload();
+      }
+    }
+  }, [error, isChunkError]);
+
+  const handleReset = () => {
+    if (isChunkError && typeof window !== "undefined") {
+      sessionStorage.removeItem("chunk_error_reloaded");
+      window.location.reload();
+    } else {
+      reset();
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-light-bg dark:bg-gray-900 p-4">
@@ -31,20 +57,30 @@ export default function GlobalError({
         </div>
         
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-3">
-          Something went wrong
+          {isChunkError ? "App Updated" : "Something went wrong"}
         </h1>
         
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
-          We apologize for the inconvenience. An unexpected error occurred while processing your request. Our technical team has been notified.
+        <p className="text-gray-600 dark:text-gray-400 mb-4">
+          {isChunkError 
+            ? "New updates were deployed. Please refresh the page to load the latest version."
+            : "We apologize for the inconvenience. An unexpected error occurred while processing your request."}
         </p>
+
+        {error?.message && (
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-900 rounded-xl p-3 text-left text-xs text-red-700 dark:text-red-300 mb-6 max-h-40 overflow-auto font-mono">
+            <p className="font-bold mb-1">Error Details:</p>
+            <p className="break-words">{error.message}</p>
+            {error.digest && <p className="text-gray-400 dark:text-gray-500 mt-1">Digest: {error.digest}</p>}
+          </div>
+        )}
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button
-            onClick={() => reset()}
-            className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-green hover:bg-brand-lime text-white rounded-xl font-medium transition-all shadow-md hover:shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-brand-green"
+            onClick={handleReset}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-brand-green hover:bg-brand-lime text-white rounded-xl font-medium transition-all shadow-md hover:shadow-lg focus:ring-2 focus:ring-offset-2 focus:ring-brand-green cursor-pointer"
           >
             <RefreshCcw className="h-5 w-5" />
-            Try again
+            {isChunkError ? "Refresh Page" : "Try again"}
           </button>
           
           <button

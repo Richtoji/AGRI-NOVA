@@ -1,14 +1,11 @@
-import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { NextResponse } from 'next/server';
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
   try {
-    const data = await req.json();
-    const logPath = path.join(process.cwd(), "client-error.log");
-    fs.appendFileSync(logPath, JSON.stringify(data) + "\n");
+    const body = await request.json();
+    console.error('[CLIENT RUNTIME LOG]:', body);
     return NextResponse.json({ success: true });
-  } catch (e) {
-    return NextResponse.json({ success: false });
+  } catch {
+    return NextResponse.json({ success: false }, { status: 400 });
   }
 }

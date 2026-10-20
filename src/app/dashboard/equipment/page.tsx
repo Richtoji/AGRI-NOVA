@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
-import { Tractor, Calendar, IndianRupee, Plus, CheckCircle, XCircle, Pencil, Trash2 } from "lucide-react";
+import { Tractor, Calendar, IndianRupee, Plus, CheckCircle, XCircle, Pencil, Trash2, User } from "lucide-react";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 import { useSearchParams } from "next/navigation";
 
@@ -162,30 +163,51 @@ export default function EquipmentOwnerDashboard() {
           <>
             {/* Header */}
         <div className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
+          <Link 
+            href="/dashboard/profile"
+            className="flex items-center space-x-4 group cursor-pointer hover:opacity-95 transition-all"
+            title="Click to view full profile details"
+          >
             <img
               src={currentUser?.avatarUrl || "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150"}
-              alt={currentUser?.name || "Equipment Owner"}
-              className="w-14 h-14 rounded-full object-cover border border-gray-200 shadow-sm"
+              alt={currentUser?.name || "Kisan Agro Rentals"}
+              className="w-14 h-14 rounded-full object-cover border border-gray-200 shadow-sm group-hover:ring-2 group-hover:ring-emerald-500 transition-all"
             />
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{currentUser?.name}</h1>
+                <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1 group-hover:text-emerald-700 transition-colors">
+                  {currentUser?.name || "Kisan Agro Rentals"}
+                </h1>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 font-semibold border border-amber-100">
                   VERIFIED FLEET OWNER
                 </span>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Kisan Agro Fleet Hub</p>
+              <p className="text-xs text-gray-500 mt-1 flex items-center space-x-1.5">
+                <span>Kisan Agro Fleet Hub</span>
+                <span>•</span>
+                <span className="text-emerald-600 font-semibold group-hover:underline">View Profile Details &rarr;</span>
+              </p>
             </div>
-          </div>
+          </Link>
 
-          <button 
-            onClick={openModalForNew}
-            className="flex items-center space-x-1.5 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm"
-          >
-            <Plus className="w-4 h-4" />
-            <span>List New Machinery</span>
-          </button>
+          <div className="flex items-center space-x-3 w-full sm:w-auto justify-end">
+            <Link
+              href="/dashboard/profile"
+              className="flex items-center space-x-1.5 px-3.5 py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 rounded-lg text-sm font-semibold border border-gray-200 transition-colors"
+              title="View Profile Details"
+            >
+              <User className="w-4 h-4 text-gray-600" />
+              <span>Profile</span>
+            </Link>
+
+            <button 
+              onClick={openModalForNew}
+              className="flex items-center space-x-1.5 px-4 py-2 bg-gray-900 text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>List New Machinery</span>
+            </button>
+          </div>
         </div>
 
         {/* Stats Overview */}

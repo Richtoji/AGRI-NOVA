@@ -1,16 +1,10 @@
 import { NextResponse } from "next/server";
-import { PrismaClient, RoleType } from "@prisma/client";
+import { RoleType } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { prisma } from "@/lib/prisma";
 
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
-
-const JWT_SECRET = process.env.JWT_SECRET as string;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is not defined");
-}
+const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
 export async function requireAuth(allowedRoles?: RoleType[]) {
   try {

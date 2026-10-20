@@ -1,0 +1,7 @@
+Test Case ID,Module,Test Scenario,Precondition,Test Data,Steps,Expected Result,Actual Result,Status,Severity,Priority,Remarks
+SEL-001,Core,Homepage loads,Application running,,Navigate to /,Home page loads,Home page loaded successfully,PASS,High,High,Screenshot captured
+SEL-002,Auth,Navigate to Login,Application running,,Navigate to /auth/login,Login page loads,Login page loaded successfully,PASS,High,High,Screenshot captured
+SEL-003,Marketplace,Navigate to Marketplace,Application running,,Navigate to /marketplace,Marketplace loads,Marketplace loaded successfully,PASS,Medium,Medium,Screenshot captured
+SEL-004,Schemes,Navigate to Schemes,Application running,,Navigate to /schemes,Schemes page loads,Schemes page loaded successfully,PASS,Medium,Low,Screenshot captured
+SEL-005,Veterinary,Navigate to Veterinary,Application running,,Navigate to /veterinary,Veterinary page loads,Veterinary loaded successfully,PASS,Medium,Medium,Screenshot captured
+SEL-006,Equipment,Navigate to Equipment,Application running,,Navigate to /equipment,Equipment page loads,Equipment loaded successfully,PASS,Medium,Medium,Screenshot captured

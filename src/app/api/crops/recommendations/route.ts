@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { getCropKnowledge } from "@/data/cropKnowledge";
+import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -56,41 +55,49 @@ export async function GET(request: Request) {
 
     const recommendations = topCrops.map(cropName => {
       let profile = cropProfiles.find(p => p.name === cropName);
+      const knowledge = getCropKnowledge(cropName);
+
       if (!profile) {
         profile = {
-          id: 'temp',
+          id: `profile_${cropName.toLowerCase().replace(/\s+/g, '_')}`,
           name: cropName,
-          expectedYield: "Varies",
-          growingPeriod: "Varies",
-          waterRequirement: 3,
-          fertilizer: "Standard NPK",
-          pesticide: "Standard",
-          imageUrl: null,
+          category: knowledge.category,
+          scientificName: knowledge.scientificName,
+          description: knowledge.description,
+          climateRequirements: knowledge.climateRequirements,
+          soilRequirements: knowledge.soilRequirements,
+          expectedYield: knowledge.expectedYield,
+          growingPeriod: knowledge.growingPeriod,
+          waterRequirement: knowledge.waterRequirement,
+          fertilizer: knowledge.fertilizer,
+          pesticide: knowledge.pesticide,
+          imageUrl: `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`,
           createdAt: new Date(),
           updatedAt: new Date()
-        };
+        } as any;
       }
       
       const isCashCrop = ["Rubber", "Cardamom", "Coffee", "Tea", "Black Pepper", "Cashew", "Arecanut"].includes(cropName);
       
       let metricLabel = isCashCrop ? "Expected Profit" : "Expected Yield";
-      let metricValue = profile.expectedYield;
+      let metricValue = profile.expectedYield || knowledge.expectedYield;
       let badgeLabel = isCashCrop ? "Maximum Profit" : "Maximum Yield";
       
       if (isCashCrop && !metricValue.includes("Lakh") && !metricValue.includes("₹")) {
-          metricValue = `₹${(Math.random() * 2 + 1).toFixed(1)} - ${(Math.random() * 2 + 3).toFixed(1)} Lakh/ha`;
+        metricValue = `₹1.5 - 3.0 Lakh/ha`;
       }
 
       return {
+        id: profile.id,
         name: cropName,
         badgeLabel,
         metricLabel,
         metricValue,
-        growingPeriod: profile.growingPeriod,
-        waterRequirement: profile.waterRequirement,
-        fertilizer: profile.fertilizer,
-        pesticide: profile.pesticide,
-        image: profile.imageUrl || `/images/crops/${cropName.toLowerCase().replace(" ", "-")}.jpg`,
+        growingPeriod: profile.growingPeriod || knowledge.growingPeriod,
+        waterRequirement: profile.waterRequirement || knowledge.waterRequirement,
+        fertilizer: profile.fertilizer || knowledge.fertilizer,
+        pesticide: profile.pesticide || knowledge.pesticide,
+        image: profile.imageUrl || `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`,
         zoneName: zone.name,
         elevation: elevation
       };

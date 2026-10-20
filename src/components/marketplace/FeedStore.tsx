@@ -14,6 +14,7 @@ export const FeedStore: React.FC<FeedStoreProps> = ({ products = [] }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [addedItem, setAddedItem] = useState<string | null>(null);
+  const [errorToast, setErrorToast] = useState<string | null>(null);
 
   const feedCategories = [
     "Cattle Feed", "Poultry Feed", "Fish Feed", "Goat Feed", "Pig Feed",
@@ -38,12 +39,13 @@ export const FeedStore: React.FC<FeedStoreProps> = ({ products = [] }) => {
   const availableCategories = Array.from(new Set(feeds.map(f => f.category)));
 
   const handleAddToCart = async (id: string) => {
+    setErrorToast(null);
     const result = await addToCart(id, 1);
     if (result.success) {
       setAddedItem(id);
       setTimeout(() => setAddedItem(null), 1500);
     } else {
-      alert(result.error);
+      setErrorToast(result.error || "Failed to add item to cart.");
     }
   };
 
@@ -57,7 +59,12 @@ export const FeedStore: React.FC<FeedStoreProps> = ({ products = [] }) => {
 
   return (
     <div className="space-y-5">
-      
+      {errorToast && (
+        <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs font-bold rounded-xl flex items-center justify-between">
+          <span>{errorToast}</span>
+          <button onClick={() => setErrorToast(null)} className="text-red-400 hover:text-red-600 font-bold ml-2">✕</button>
+        </div>
+      )}
       {/* Catalog */}
       <div className="space-y-5">
         

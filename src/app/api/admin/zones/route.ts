@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import * as jose from 'jose';
 import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = (process.env.JWT_SECRET || 'super_secure_production_ready_secret_12345').trim();
 
 async function isAdmin() {
   if (!JWT_SECRET) return false;

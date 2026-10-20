@@ -48,16 +48,45 @@ export const Sidebar: React.FC = () => {
     { label: "Settings", href: "/dashboard/profile", icon: <Settings className="w-4 h-4" /> },
   ];
 
+  const [adminCultivationBadge, setAdminCultivationBadge] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    if (currentRole !== "ADMIN") return;
+    const fetchBadge = async () => {
+      try {
+        const res = await fetch('/api/admin/cultivation?view=stats');
+        const data = await res.json();
+        if (data.success && data.stats) {
+          const badgeCount = (data.stats.pendingPlanting || 0) + (data.stats.pendingStages || 0);
+          setAdminCultivationBadge(badgeCount);
+        }
+      } catch (e) {}
+    };
+    fetchBadge();
+    const interval = setInterval(fetchBadge, 5000);
+    const handleSync = () => fetchBadge();
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('agri_nova_cultivation_started', handleSync);
+    window.addEventListener('agri_nova_cultivation_updated', handleSync);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('agri_nova_cultivation_started', handleSync);
+      window.removeEventListener('agri_nova_cultivation_updated', handleSync);
+    };
+  }, [currentRole]);
+
   const getMenuItems = () => {
     switch (currentRole) {
       case "FARMER":
         return [
-          { label: "Dashboard", href: "/dashboard/farmer", icon: <Home className="w-4 h-4" /> },
-          { label: "Weather", href: "/dashboard/farmer#weather", icon: <CloudSun className="w-4 h-4" /> },
-          { label: "Crop Recommendation", href: "/dashboard/farmer#crop-recommendations", icon: <Sprout className="w-4 h-4" /> },
+          { label: "Dashboard", href: "/dashboard/farmer?tab=dashboard", icon: <Home className="w-4 h-4" /> },
+          { label: "My Cultivation", href: "/dashboard/farmer?tab=cultivation", icon: <Sprout className="w-4 h-4" /> },
+          { label: "Crop Recommendation", href: "/dashboard/farmer?tab=recommendations", icon: <Sprout className="w-4 h-4" /> },
+          { label: "Weather", href: "/dashboard/farmer?tab=weather", icon: <CloudSun className="w-4 h-4" /> },
           { label: "Equipment Rental", href: "/equipment", icon: <Tractor className="w-4 h-4" /> },
           { label: "Marketplace", href: "/marketplace", icon: <ShoppingBag className="w-4 h-4" /> },
-          { label: "My Products", href: "/dashboard/farmer#my-products", icon: <Store className="w-4 h-4" /> },
+          { label: "My Products", href: "/dashboard/farmer?tab=products", icon: <Store className="w-4 h-4" /> },
           { label: "Veterinary", href: "/veterinary", icon: <PawPrint className="w-4 h-4" /> },
           { label: "Government Schemes", href: "/schemes", icon: <FileText className="w-4 h-4" /> },
           { label: "Profile", href: "/dashboard/profile", icon: <User className="w-4 h-4" /> },
@@ -93,6 +122,7 @@ export const Sidebar: React.FC = () => {
           { label: "Users", href: "/dashboard/admin?tab=users", icon: <User className="w-4 h-4" /> },
           { label: "Products", href: "/dashboard/admin?tab=products", icon: <Store className="w-4 h-4" /> },
           { label: "Stock", href: "/dashboard/admin?tab=stock", icon: <ClipboardList className="w-4 h-4" /> },
+          { label: "Cultivation Reviews", href: "/dashboard/admin?tab=cultivation", icon: <Sprout className="w-4 h-4" />, badge: adminCultivationBadge },
           { label: "Equipment", href: "/equipment", icon: <Tractor className="w-4 h-4" /> },
           { label: "Veterinary", href: "/veterinary", icon: <PawPrint className="w-4 h-4" /> },
           { label: "Government Schemes", href: "/dashboard/admin?tab=schemes", icon: <FileText className="w-4 h-4" /> },
@@ -180,7 +210,14 @@ export const Sidebar: React.FC = () => {
                 className={className}
               >
                 <span className={isActive ? "text-white" : "text-gray-400"}>{item.icon}</span>
-                <span className="truncate">{item.label}</span>
+                <span className="truncate flex-1 text-left">{item.label}</span>
+                {item.badge !== undefined && item.badge > 0 && (
+                  <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                    isActive ? "bg-white text-gray-900" : "bg-emerald-600 text-white"
+                  }`}>
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}

@@ -30,6 +30,7 @@ export const VetPharmacy: React.FC<VetPharmacyProps> = ({ products = [] }) => {
   const [diagnosedDisease, setDiagnosedDisease] = useState("");
   const [aiRecommendation, setAiRecommendation] = useState<string | null>(null);
   const [addedItem, setAddedItem] = useState<string | null>(null);
+  const [cartError, setCartError] = useState<string | null>(null);
 
   const vetCategories = ["Vaccine", "Antibiotic", "Dewormer", "Supplement", "Veterinary Medicine"];
   
@@ -56,6 +57,7 @@ export const VetPharmacy: React.FC<VetPharmacyProps> = ({ products = [] }) => {
   };
 
   const handlePurchase = async (item: MedicineItem) => {
+    setCartError(null);
     if (item.requiresPrescription && !uploadedFile) {
       setRxAlert(true);
       return;
@@ -65,7 +67,7 @@ export const VetPharmacy: React.FC<VetPharmacyProps> = ({ products = [] }) => {
       setAddedItem(item.id);
       setTimeout(() => setAddedItem(null), 2500);
     } else {
-      alert(result.error);
+      setCartError(result.error || "Failed to add to cart.");
     }
   };
 
@@ -110,12 +112,21 @@ export const VetPharmacy: React.FC<VetPharmacyProps> = ({ products = [] }) => {
             </p>
 
             <label className="border border-dashed border-gray-700 hover:border-gray-700/50 rounded-2xl p-6 text-center block cursor-pointer transition-all">
-              <input type="file" onChange={handleUploadPrescription} className="hidden" />
+              <input type="file" accept="image/png, image/jpeg, image/jpg, image/webp" onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  if (!file.type.startsWith("image/")) {
+                    alert("Only image files are allowed.");
+                    return;
+                  }
+                  handleUploadPrescription(e);
+                }
+              }} className="hidden" />
               <FileText className="w-8 h-8 text-gray-500 mx-auto mb-2" />
               <span className="text-gray-300 font-bold block">
                 {uploadedFile ? uploadedFile : "Drag & Drop or Click to Upload"}
               </span>
-              <span className="text-[10px] text-gray-500 block mt-1">Supports PDF, PNG, JPG</span>
+              <span className="text-[10px] text-gray-500 block mt-1">Supports PNG, JPG, WEBP</span>
             </label>
 
             {uploadedFile && (
@@ -179,6 +190,16 @@ export const VetPharmacy: React.FC<VetPharmacyProps> = ({ products = [] }) => {
           <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>Prescription Required: Please upload a valid Veterinary Medical License/Slip on the left panel.</span>
+          </div>
+        )}
+
+        {cartError && (
+          <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{cartError}</span>
+            </div>
+            <button onClick={() => setCartError(null)} className="text-rose-400 hover:text-rose-300 font-bold ml-2">✕</button>
           </div>
         )}
 

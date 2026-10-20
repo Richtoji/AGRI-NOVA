@@ -13,11 +13,7 @@ import {
 import { writeFile } from "fs/promises";
 import path from "path";
 import crypto from "crypto";
-
-// Prevent multiple instances of Prisma Client in development
-const globalForPrisma = global as unknown as { prisma: PrismaClient };
-const prisma = globalForPrisma.prisma || new PrismaClient();
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request) {
   try {
@@ -101,19 +97,8 @@ export async function POST(request: Request) {
     // 4. Handle Avatar
     let avatarUrl = null;
     if (avatarBase64) {
-      try {
-        const matches = avatarBase64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-        if (matches && matches.length === 3) {
-          const buffer = Buffer.from(matches[2], "base64");
-          const uniqueSuffix = crypto.randomBytes(6).toString("hex");
-          const filename = `avatar_${uniqueSuffix}.jpg`;
-          const filePath = path.join(process.cwd(), "public/uploads", filename);
-          await writeFile(filePath, buffer);
-          avatarUrl = `/uploads/${filename}`;
-        }
-      } catch (err) {
-        console.error("Failed to parse and save avatar image", err);
-      }
+      // Direct base64 storage to avoid Next.js static file serving caching issues
+      avatarUrl = avatarBase64;
     }
 
     // 5. Create User

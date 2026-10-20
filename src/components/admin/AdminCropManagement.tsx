@@ -322,9 +322,14 @@ export function AdminCropManagement() {
                   {cropForm.imageUrl && (
                     <img src={cropForm.imageUrl} alt="Preview" className="w-12 h-12 rounded-lg object-cover border border-gray-200" />
                   )}
-                  <input type="file" accept="image/*" onChange={(e) => {
+                  <input type="file" accept="image/png, image/jpeg, image/jpg, image/webp" onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
-                      setCropForm({ ...cropForm, imageUrl: URL.createObjectURL(e.target.files[0]) });
+                      const file = e.target.files[0];
+                      if (!file.type.startsWith("image/")) {
+                        alert("Strict Validation Error: Only image files are allowed.");
+                        return;
+                      }
+                      setCropForm({ ...cropForm, imageUrl: URL.createObjectURL(file) });
                     }
                   }} className="w-full text-xs file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-gray-50 file:text-gray-700 hover:file:bg-gray-100" />
                 </div>

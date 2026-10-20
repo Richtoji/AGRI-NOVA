@@ -1,0 +1,220 @@
+import { NextResponse } from 'next/server';
+
+interface LocationResult {
+  name: string;
+  details: string;
+  latitude: number;
+  longitude: number;
+  city?: string;
+  state?: string;
+  country?: string;
+}
+
+// Reverse Geocode helper
+async function reverseGeocode(latitude: number, longitude: number): Promise<{ name: string; details: string; city: string; state: string; country: string }> {
+  // Strategy 1: BigDataCloud (Fast, reliable, HTTPS, free client reverse geocoding)
+  try {
+    const res = await fetch(
+      `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
+      { signal: AbortSignal.timeout(4000) }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      const city = data.locality || data.city || data.principalSubdivision || 'Local Area';
+      const state = data.principalSubdivision || '';
+      const country = data.countryName || 'India';
+      const name = city;
+      const details = [city, state, country].filter(Boolean).join(', ');
+      if (city && city !== 'Local Area') {
+        return { name, details, city, state, country };
+      }
+    }
+  } catch (e) {
+    // Fall through to Nominatim
+  }
+
+  // Strategy 2: OpenStreetMap Nominatim
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=12&accept-language=en`,
+      {
+        headers: { 'User-Agent': 'Agri-NOVA-Platform/2.0 (contact@agrinova.in)' },
+        signal: AbortSignal.timeout(4000)
+      }
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.address) {
+        const addr = data.address;
+        const city = addr.city || addr.town || addr.village || addr.suburb || addr.district || addr.county || 'Local Area';
+        const state = addr.state || '';
+        const country = addr.country || 'India';
+        const name = city;
+        const details = [city, state, country].filter(Boolean).join(', ');
+        return { name, details, city, state, country };
+      }
+    }
+  } catch (e) {
+    // Fall through
+  }
+
+  return {
+    name: `Lat: ${latitude.toFixed(2)}, Lng: ${longitude.toFixed(2)}`,
+    details: `Coordinates: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+    city: 'Local Area',
+    state: '',
+    country: 'India'
+  };
+}
+
+// IP-based Location Helper
+async function detectLocationByIP(request: Request): Promise<LocationResult> {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIp = request.headers.get('x-real-ip');
+  let clientIp = (forwarded ? forwarded.split(',')[0].trim() : realIp) || '';
+
+  // If local/empty IP, don't pass local IP to public lookup
+  const isLocal = !clientIp || clientIp === '127.0.0.1' || clientIp === '::1' || clientIp.startsWith('192.168.') || clientIp.startsWith('10.');
+  const queryParam = isLocal ? '' : clientIp;
+
+  // Strategy 1: ipwho.is (fast, HTTPS, free tier, returns rich Indian geolocation)
+  try {
+    const res = await fetch(`https://ipwho.is/${queryParam}`, {
+      signal: AbortSignal.timeout(4000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success !== false && data.latitude && data.longitude) {
+        const city = data.city || data.region || 'Kottayam';
+        const state = data.region || 'Kerala';
+        const country = data.country || 'India';
+        return {
+          latitude: Number(data.latitude),
+          longitude: Number(data.longitude),
+          name: city,
+          details: `${city}, ${state}, ${country}`,
+          city,
+          state,
+          country
+        };
+      }
+    }
+  } catch (e) {
+    // Fall through
+  }
+
+  // Strategy 2: freeipapi.com
+  try {
+    const url = queryParam ? `https://freeipapi.com/api/json/${queryParam}` : 'https://freeipapi.com/api/json';
+    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.latitude && data.longitude) {
+        const city = data.cityName || 'Kottayam';
+        const state = data.regionName || 'Kerala';
+        const country = data.countryName || 'India';
+        return {
+          latitude: Number(data.latitude),
+          longitude: Number(data.longitude),
+          name: city,
+          details: `${city}, ${state}, ${country}`,
+          city,
+          state,
+          country
+        };
+      }
+    }
+  } catch (e) {
+    // Fall through
+  }
+
+  // Default Fallback: Kerala Agricultural Central Hub
+  return {
+    latitude: 9.5916,
+    longitude: 76.5222,
+    name: 'Kottayam',
+    details: 'Kottayam, Kerala, India',
+    city: 'Kottayam',
+    state: 'Kerala',
+    country: 'India'
+  };
+}
+
+export async function GET(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const latStr = searchParams.get('latitude') || searchParams.get('lat');
+    const lngStr = searchParams.get('longitude') || searchParams.get('lng');
+    const query = searchParams.get('q') || searchParams.get('search');
+
+    // 1. If searching for a city/location by name
+    if (query && query.trim()) {
+      try {
+        const searchRes = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query.trim())}&format=json&limit=5&accept-language=en`,
+          {
+            headers: { 'User-Agent': 'Agri-NOVA-Platform/2.0 (contact@agrinova.in)' },
+            signal: AbortSignal.timeout(4000)
+          }
+        );
+        if (searchRes.ok) {
+          const results = await searchRes.json();
+          const formatted = (results || []).map((item: any) => ({
+            name: item.display_name.split(',')[0],
+            details: item.display_name,
+            latitude: parseFloat(item.lat),
+            longitude: parseFloat(item.lon)
+          }));
+          return NextResponse.json({ success: true, results: formatted });
+        }
+      } catch (err) {
+        console.error('Location search error:', err);
+      }
+      return NextResponse.json({ success: true, results: [] });
+    }
+
+    // 2. If coordinates are provided, reverse-geocode them
+    if (latStr && lngStr) {
+      const latitude = parseFloat(latStr);
+      const longitude = parseFloat(lngStr);
+      if (!isNaN(latitude) && !isNaN(longitude)) {
+        const geoInfo = await reverseGeocode(latitude, longitude);
+        return NextResponse.json({
+          success: true,
+          location: {
+            latitude,
+            longitude,
+            name: geoInfo.name,
+            details: geoInfo.details,
+            city: geoInfo.city,
+            state: geoInfo.state,
+            country: geoInfo.country
+          }
+        });
+      }
+    }
+
+    // 3. Otherwise, detect location via IP
+    const detected = await detectLocationByIP(request);
+    return NextResponse.json({
+      success: true,
+      location: detected
+    });
+
+  } catch (error) {
+    console.error('Location detection API error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to detect location',
+        location: {
+          latitude: 9.5916,
+          longitude: 76.5222,
+          name: 'Kottayam',
+          details: 'Kottayam, Kerala, India'
+        }
+      },
+      { status: 200 } // Return 200 with fallback so UI never crashes
+    );
+  }
+}

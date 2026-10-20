@@ -1,13 +1,9 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { cookies } from 'next/headers';
 import * as jose from 'jose';
+import { prisma } from '@/lib/prisma';
 
-const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  throw new Error("JWT_SECRET environment variable is not defined");
-}
+const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
 async function getUserId() {
   const token = (await cookies()).get('auth_token')?.value;
@@ -28,6 +24,74 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please log in to checkout.' }, { status: 401 });
     }
 
+    const body = await request.json().catch(() => ({}));
+    const { 
+      recipientName, 
+      phone, 
+      deliveryAddress, 
+      city, 
+      pincode, 
+      paymentMethod = "UPI", 
+      deliverySlot = "Morning (8:00 AM - 12:00 PM)",
+      deliveryNotes = "",
+      agreedToInspection 
+    } = body;
+
+    // Strict Validation 1: Recipient Full Name
+    if (!recipientName || typeof recipientName !== 'string' || recipientName.trim().length < 3 || recipientName.trim().length > 60) {
+      return NextResponse.json({ 
+        error: 'Strict Validation Error: Recipient full name is required and must be between 3 and 60 characters.' 
+      }, { status: 400 });
+    }
+    if (!/^[a-zA-Z\s.]+$/.test(recipientName.trim())) {
+      return NextResponse.json({ 
+        error: 'Strict Validation Error: Recipient full name can only contain alphabetical letters and spaces.' 
+      }, { status: 400 });
+    }
+
+    // Strict Validation 2: Phone Number (10 digits starting with 6-9)
+    if (!phone || typeof phone !== 'string' || !/^[6-9]\d{9}$/.test(phone.trim())) {
+      return NextResponse.json({ 
+        error: 'Strict Validation Error: Please provide a valid 10-digit Indian mobile number (e.g. 9876543210).' 
+      }, { status: 400 });
+    }
+
+    // Strict Validation 3: Delivery Address (min 10, max 200)
+    if (!deliveryAddress || typeof deliveryAddress !== 'string' || deliveryAddress.trim().length < 10 || deliveryAddress.trim().length > 200) {
+      return NextResponse.json({ 
+        error: 'Strict Validation Error: Complete delivery address must be between 10 and 200 characters long.' 
+      }, { status: 400 });
+    }
+
+    // Strict Validation 4: City / District (min 2, max 50)
+    if (!city || typeof city !== 'string' || city.trim().length < 2 || city.trim().length > 50) {
+      return NextResponse.json({ 
+        error: 'Strict Validation Error: Please select or enter a valid delivery district or city.' 
+      }, { status: 400 });
+    }
+
+    // Strict Validation 5: Postal PIN Code (exactly 6 digits)
+    if (!pincode || typeof pincode !== 'string' || !/^\d{6}$/.test(pincode.trim())) {
+      return NextResponse.json({ 
+        error: 'Strict Validation Error: Postal PIN code must be exactly 6 numeric digits.' 
+      }, { status: 400 });
+    }
+
+    // Strict Validation 6: Payment Method
+    const allowedPaymentMethods = ["UPI", "COD", "ESCROW", "NET_BANKING"];
+    if (!paymentMethod || !allowedPaymentMethods.includes(paymentMethod)) {
+      return NextResponse.json({ 
+        error: 'Strict Validation Error: Invalid payment method selected. Must be UPI, COD, ESCROW, or NET_BANKING.' 
+      }, { status: 400 });
+    }
+
+    // Strict Validation 7: Inspection Agreement
+    if (agreedToInspection !== true) {
+      return NextResponse.json({ 
+        error: 'Strict Validation Error: You must agree to inspect produce quality upon delivery.' 
+      }, { status: 400 });
+    }
+
     const cart = await prisma.cart.findUnique({
       where: { buyerId: userId },
       include: {
@@ -38,27 +102,31 @@ export async function POST(request: Request) {
     });
 
     if (!cart || cart.cartItems.length === 0) {
-      return NextResponse.json({ error: 'Your cart is empty.' }, { status: 400 });
+      return NextResponse.json({ error: 'Your cart is empty. Please add items before checking out.' }, { status: 400 });
     }
 
     // Validation pass: Ensure stock is sufficient for all items
     for (const item of cart.cartItems) {
       if (item.quantity > item.product.stockQuantity) {
         return NextResponse.json({ 
-          error: `Insufficient stock for ${item.product.title}. Only ${item.product.stockQuantity} ${item.product.unit} available.` 
+          error: `Insufficient inventory for ${item.product.title}. Only ${item.product.stockQuantity} ${item.product.unit} available in stock.` 
         }, { status: 400 });
       }
     }
 
     // Execute Order creation, Stock reduction, and Cart clearing in a transaction
+    const formattedAddress = `${recipientName.trim()} | Phone: ${phone.trim()} | ${deliveryAddress.trim()}, ${city.trim()} - ${pincode.trim()} | Slot: ${deliverySlot}${deliveryNotes ? ` | Note: ${deliveryNotes.trim()}` : ''}`;
+
+    let createdOrderId = "";
+
     await prisma.$transaction(async (tx) => {
       let totalAmount = 0;
-      let pickupLocation = "Multiple Locations"; // Fallback
+      let pickupLocation = "Kerala Farm Gate";
       
       const orderItemsData = cart.cartItems.map(item => {
         const itemTotal = item.quantity * item.product.price;
         totalAmount += itemTotal;
-        if (item.product.location) pickupLocation = item.product.location; // Just pick the location of one item for simplicity
+        if (item.product.location) pickupLocation = item.product.location;
         return {
           productId: item.productId,
           quantity: item.quantity,
@@ -66,22 +134,25 @@ export async function POST(request: Request) {
         };
       });
 
-      // Add a standard delivery fee (e.g. 50 as used in UI)
+      // Standard delivery charge
       totalAmount += 50;
 
-      // 1. Create the Order
+      // 1. Create the Order with validated buyer data
       const order = await tx.order.create({
         data: {
           buyerId: userId,
           totalAmount: totalAmount,
-          deliveryAddress: "Buyer Default Address", // In a real app this would come from request
+          paymentMethod: paymentMethod,
+          deliveryAddress: formattedAddress,
           orderItems: {
             create: orderItemsData
           }
         }
       });
 
-      // 2. Reduce Stock
+      createdOrderId = order.id;
+
+      // 2. Reduce Stock with validation
       for (const item of cart.cartItems) {
         await tx.product.update({
           where: { id: item.productId },
@@ -98,7 +169,7 @@ export async function POST(request: Request) {
         where: { cartId: cart.id }
       });
 
-      // 4. Create Delivery Task
+      // 4. Create Delivery Task with validated destination
       const driver = await tx.user.findFirst({
         where: { role: 'DELIVERY_PARTNER' }
       });
@@ -109,14 +180,22 @@ export async function POST(request: Request) {
             orderId: order.id,
             driverId: driver.id,
             pickupLocation: pickupLocation,
-            deliveryLocation: "Buyer Default Address", // In a real app, buyer's selected address
-            earnings: 50, // Static fee payout
+            deliveryLocation: formattedAddress,
+            earnings: 50,
           }
         });
       }
     });
 
-    return NextResponse.json({ success: true, message: 'Order placed successfully!' });
+    return NextResponse.json({ 
+      success: true, 
+      orderId: createdOrderId,
+      recipientName: recipientName.trim(),
+      phone: phone.trim(),
+      deliveryAddress: formattedAddress,
+      paymentMethod,
+      message: 'Order placed and validated successfully!' 
+    });
   } catch (error) {
     console.error('Checkout failed:', error);
     return NextResponse.json({ error: 'Checkout failed. Please try again.' }, { status: 500 });

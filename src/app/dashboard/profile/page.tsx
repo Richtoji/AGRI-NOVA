@@ -67,11 +67,15 @@ export default function ProfilePage() {
                 Edit
                 <input
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
+                  accept="image/png, image/jpeg, image/jpg, image/webp"
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      if (!file.type.startsWith("image/")) {
+                        alert("Strict Validation Error: Only image files are allowed.");
+                        return;
+                      }
                       const reader = new FileReader();
                       reader.onloadend = () => {
                         setAvatarBase64(reader.result as string);
