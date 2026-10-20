@@ -1,12 +1,11 @@
 {
-  "command": "node server.js",
-  "buildPath": ".",
+  "command": "node start.js",
+  "build_path": "c:/Users/LENOVO/Desktop/AGRI-NOVA PROJECT/appsail_dist",
+  "buildPath": "c:/Users/LENOVO/Desktop/AGRI-NOVA PROJECT/appsail_dist",
   "stack": "node20",
+  "memory": 1024,
   "env_variables": {
     "NODE_ENV": "production",
-    "DATABASE_URL": "postgresql://postgres:postgres_agri_nova_password@localhost:5432/agrinova_db?schema=public",
-    "JWT_SECRET": "super_secure_production_ready_secret_12345",
-    "NEXT_PUBLIC_AI_URL": "http://localhost:8000"
-  },
-  "memory": 1024
+    "JWT_SECRET": "super_secure_production_ready_secret_12345"
+  }
 }

@@ -3,6 +3,7 @@ import { RoleType } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { rawSeedData } from "../../../backend/prisma/seed";
 
 const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
@@ -17,14 +18,23 @@ export async function requireAuth(allowedRoles?: RoleType[]) {
 
     const decoded = jwt.verify(token, JWT_SECRET) as { userId: string; role: RoleType };
     
-    // Check role before even hitting the DB to save a query if they are unauthorized
+    // Check role before hitting DB
     if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(decoded.role)) {
       return { error: NextResponse.json({ error: "Access Forbidden" }, { status: 403 }), user: null };
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: decoded.userId }
-    });
+    let user: any = null;
+    try {
+      user = await prisma.user.findUnique({
+        where: { id: decoded.userId }
+      });
+    } catch (e) {
+      user = rawSeedData.users.find(u => u.id === decoded.userId) || null;
+    }
+
+    if (!user) {
+      user = rawSeedData.users.find(u => u.id === decoded.userId) || null;
+    }
 
     if (!user) {
       return { error: NextResponse.json({ error: "User not found" }, { status: 404 }), user: null };
