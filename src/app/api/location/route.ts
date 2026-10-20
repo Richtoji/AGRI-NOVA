@@ -83,14 +83,74 @@ async function reverseGeocode(latitude: number, longitude: number): Promise<{ na
   };
 }
 
-// Baseline Agricultural Location Helper: Kottayam, Kerala
+// IP-based Location Helper supporting local & reverse proxy client headers
 async function detectLocationByIP(request: Request): Promise<LocationResult> {
+  const forwarded = request.headers.get('x-forwarded-for');
+  const realIp = request.headers.get('x-real-ip') || request.headers.get('x-client-ip') || request.headers.get('x-catalyst-client-ip') || request.headers.get('cf-connecting-ip');
+  let clientIp = (forwarded ? forwarded.split(',')[0].trim() : realIp) || '';
+
+  // If local/empty IP, don't pass local IP to public lookup
+  const isLocal = !clientIp || clientIp === '127.0.0.1' || clientIp === '::1' || clientIp.startsWith('192.168.') || clientIp.startsWith('10.') || clientIp.startsWith('172.');
+  const queryParam = isLocal ? '' : clientIp;
+
+  // Strategy 1: ipwho.is (fast, HTTPS, free tier, returns accurate Indian city & coordinates)
+  try {
+    const res = await fetch(`https://ipwho.is/${queryParam}`, {
+      signal: AbortSignal.timeout(4000)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.success !== false && data.latitude && data.longitude) {
+        const city = data.city || data.region || 'Local Area';
+        const state = data.region || 'Kerala';
+        const country = data.country || 'India';
+        return {
+          latitude: Number(data.latitude),
+          longitude: Number(data.longitude),
+          name: city,
+          details: `${city}, ${state}, ${country}`,
+          city,
+          state,
+          country
+        };
+      }
+    }
+  } catch (e) {
+    // Fall through
+  }
+
+  // Strategy 2: freeipapi.com
+  try {
+    const url = queryParam ? `https://freeipapi.com/api/json/${queryParam}` : 'https://freeipapi.com/api/json';
+    const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.latitude && data.longitude) {
+        const city = data.cityName || 'Local Area';
+        const state = data.regionName || 'Kerala';
+        const country = data.countryName || 'India';
+        return {
+          latitude: Number(data.latitude),
+          longitude: Number(data.longitude),
+          name: city,
+          details: `${city}, ${state}, ${country}`,
+          city,
+          state,
+          country
+        };
+      }
+    }
+  } catch (e) {
+    // Fall through
+  }
+
+  // Baseline Fallback: Central Kerala
   return {
-    latitude: 9.5916,
-    longitude: 76.5222,
-    name: 'Kottayam',
-    details: 'Kottayam, Kerala, India',
-    city: 'Kottayam',
+    latitude: 10.5167,
+    longitude: 76.2167,
+    name: 'Thrissur',
+    details: 'Thrissur, Kerala, India',
+    city: 'Thrissur',
     state: 'Kerala',
     country: 'India'
   };
