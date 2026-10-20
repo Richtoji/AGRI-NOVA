@@ -49,6 +49,7 @@ interface SharedLocationState {
   accuracy: number | null;
   isOtherLocation: boolean;
   isPinnedByUser: boolean;
+  detectionPhase: 'detecting' | 'radius3km' | 'wholeMap';
 }
 
 const PINNED_FARM_KEY = 'agrinova_user_pinned_farm';
@@ -72,6 +73,7 @@ let globalState: SharedLocationState = {
   accuracy: null,
   isOtherLocation: false,
   isPinnedByUser: true,
+  detectionPhase: 'wholeMap',
 };
 
 const listeners = new Set<(state: SharedLocationState) => void>();
@@ -157,12 +159,13 @@ async function reverseGeocodeCoordinates(lat: number, lng: number): Promise<stri
   return `Farm Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
 }
 
-// Master detection and initialization
-async function initializeLocationService(force = false) {
+// Master detection and initialization - runs automatically without fail
+async function detectLiveLocation(force = false) {
   if (isDetectionActive && !force) return;
   isDetectionActive = true;
+  updateGlobalState({ isDetecting: true, error: null });
 
-  // 1. First check if user previously pinned their verified farm location
+  // 1. First check if user previously pinned a verified farm location in localStorage
   let savedLocation = DEFAULT_FARM;
   if (typeof window !== 'undefined') {
     try {
@@ -173,91 +176,166 @@ async function initializeLocationService(force = false) {
           savedLocation = {
             lat: Number(pinned.lat),
             lng: Number(pinned.lng),
-            name: pinned.name || 'Kottayam, Kerala'
+            name: pinned.name || DEFAULT_FARM.name
           };
         }
       }
     } catch (e) {}
   }
 
-  // Set the guaranteed baseline location immediately so UI is never stuck
+  // Ensure baseline location is active immediately so user never waits with blank UI
   updateGlobalState({
     coordinates: { lat: savedLocation.lat, lng: savedLocation.lng },
     detectedCoordinates: { lat: savedLocation.lat, lng: savedLocation.lng },
     detectedLocationName: savedLocation.name,
     isPinnedByUser: true,
     isOtherLocation: false,
-    isDetecting: force,
+    detectionPhase: 'radius3km',
   });
 
   fetchWeatherForCoordinates(savedLocation.lat, savedLocation.lng, savedLocation.name);
 
-  // If not forced detection, keep the saved verified farm location
-  if (!force) {
-    isDetectionActive = false;
-    return;
-  }
-
-  // If user clicked "Detect", check browser GPS
+  // If browser geolocation is not supported, attempt IP fallback immediately
   if (typeof window === 'undefined' || !navigator || !navigator.geolocation) {
+    await attemptIpLocationFallback(savedLocation);
     isDetectionActive = false;
-    updateGlobalState({ isDetecting: false });
+    updateGlobalState({ isDetecting: false, loading: false });
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      const { latitude, longitude, accuracy } = position.coords;
-      const accMeters = Math.round(accuracy);
-
-      updateGlobalState({
-        permissionState: 'granted',
-        accuracy: accMeters,
+  // Tier 1: High-Accuracy GPS (Hardware satellites / Mobile GPS)
+  const runHighAccuracyGps = () => {
+    return new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 9000,
+        maximumAge: force ? 0 : 30000,
       });
+    });
+  };
 
-      // Only accept if accuracy is within reasonable farm GPS bounds (< 3000m)
-      // On desktop broadband without hardware GPS, accuracy is 25,000m-50,000m (ISP center).
-      // We do NOT override the user's farm if it's just a coarse ISP estimate!
-      if (accMeters <= 3000) {
-        const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+  // Tier 2: Low-Accuracy Wi-Fi / Cell tower triangulation (Desktop / Laptop)
+  const runLowAccuracyGps = () => {
+    return new Promise<GeolocationPosition>((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: false,
+        timeout: 6000,
+        maximumAge: 60000,
+      });
+    });
+  };
 
-        try {
-          localStorage.setItem(PINNED_FARM_KEY, JSON.stringify({ lat: latitude, lng: longitude, name: placeName }));
-        } catch (e) {}
+  try {
+    let position: GeolocationPosition;
+    try {
+      position = await runHighAccuracyGps();
+    } catch (highErr: any) {
+      if (highErr?.code === 1) {
+        // Permission denied by user
+        updateGlobalState({ permissionState: 'denied', isDetecting: false, loading: false });
+        isDetectionActive = false;
+        return;
+      }
+      // High accuracy timed out or unavailable; try low-accuracy fallback
+      console.warn("High-precision GPS timed out or unavailable, trying network geolocation...", highErr?.message);
+      position = await runLowAccuracyGps();
+    }
+
+    const { latitude, longitude, accuracy } = position.coords;
+    const accMeters = Math.round(accuracy);
+
+    updateGlobalState({
+      permissionState: 'granted',
+      accuracy: accMeters,
+    });
+
+    // Reverse geocode to get exact town, village, or district name
+    const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+
+    try {
+      localStorage.setItem(PINNED_FARM_KEY, JSON.stringify({
+        lat: latitude,
+        lng: longitude,
+        name: placeName,
+        accuracy: accMeters
+      }));
+    } catch (e) {}
+
+    updateGlobalState({
+      coordinates: { lat: latitude, lng: longitude },
+      detectedCoordinates: { lat: latitude, lng: longitude },
+      detectedLocationName: placeName,
+      isOtherLocation: false,
+      isPinnedByUser: true,
+      isDetecting: false,
+      loading: false,
+      detectionPhase: 'radius3km',
+      error: null,
+    });
+
+    fetchWeatherForCoordinates(latitude, longitude, placeName);
+    isDetectionActive = false;
+  } catch (geoError: any) {
+    console.warn("Browser GPS failed. Executing automatic network IP fallback...", geoError);
+    if (geoError?.code === 1) {
+      updateGlobalState({ permissionState: 'denied' });
+    }
+    await attemptIpLocationFallback(savedLocation);
+    isDetectionActive = false;
+  }
+}
+
+// Tier 3: Network IP Geolocation Fallback
+async function attemptIpLocationFallback(fallbackAnchor = DEFAULT_FARM) {
+  try {
+    // Try BigDataCloud Client IP Reverse Geocode
+    const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client', {
+      signal: AbortSignal.timeout(4500)
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.latitude && data.longitude) {
+        const lat = Number(data.latitude);
+        const lng = Number(data.longitude);
+        const locality = data.locality || data.city || data.principalSubdivision || 'Local Area';
+        const state = data.principalSubdivision || 'Kerala';
+        const placeName = locality !== state ? `${locality}, ${state}` : locality;
 
         updateGlobalState({
-          detectedCoordinates: { lat: latitude, lng: longitude },
+          coordinates: { lat, lng },
+          detectedCoordinates: { lat, lng },
           detectedLocationName: placeName,
-          coordinates: { lat: latitude, lng: longitude },
           isOtherLocation: false,
           isPinnedByUser: true,
           isDetecting: false,
           loading: false,
+          accuracy: 5000,
+          detectionPhase: 'radius3km',
+          error: null,
         });
 
-        fetchWeatherForCoordinates(latitude, longitude, placeName);
-      } else {
-        // Coarse estimate detected; inform user but keep their verified farm intact
-        console.warn(`Browser GPS returned coarse accuracy (±${accMeters}m). Keeping farm location.`);
-        updateGlobalState({ isDetecting: false, loading: false });
+        fetchWeatherForCoordinates(lat, lng, placeName);
+        return;
       }
-
-      isDetectionActive = false;
-    },
-    (geoError) => {
-      console.warn("Geolocation error code:", geoError.code, geoError.message);
-      if (geoError.code === geoError.PERMISSION_DENIED) {
-        updateGlobalState({ permissionState: 'denied' });
-      }
-      isDetectionActive = false;
-      updateGlobalState({ isDetecting: false, loading: false });
-    },
-    {
-      enableHighAccuracy: true,
-      timeout: 6000,
-      maximumAge: 30000,
     }
-  );
+  } catch (e) {
+    console.warn("Client IP lookup failed:", e);
+  }
+
+  // Tier 4: Guaranteed Anchor (Kottayam, Kerala)
+  updateGlobalState({
+    coordinates: { lat: fallbackAnchor.lat, lng: fallbackAnchor.lng },
+    detectedCoordinates: { lat: fallbackAnchor.lat, lng: fallbackAnchor.lng },
+    detectedLocationName: fallbackAnchor.name,
+    isOtherLocation: false,
+    isPinnedByUser: true,
+    isDetecting: false,
+    loading: false,
+    detectionPhase: 'radius3km',
+    error: null,
+  });
+
+  fetchWeatherForCoordinates(fallbackAnchor.lat, fallbackAnchor.lng, fallbackAnchor.name);
 }
 
 export function useLocationWeather() {
@@ -269,8 +347,8 @@ export function useLocationWeather() {
     };
     listeners.add(listener);
 
-    // Initial check on mount
-    initializeLocationService(false);
+    // Automatically trigger live high-precision detection on mount
+    detectLiveLocation(false);
 
     return () => {
       listeners.delete(listener);
@@ -296,6 +374,7 @@ export function useLocationWeather() {
       isPinnedByUser: true,
       loading: true,
       isDetecting: false,
+      detectionPhase: 'radius3km',
     });
 
     fetchWeatherForCoordinates(lat, lng, resolvedName);
@@ -322,6 +401,7 @@ export function useLocationWeather() {
       isOtherLocation: isOther,
       isPinnedByUser: true,
       loading: true,
+      detectionPhase: 'radius3km',
     });
 
     fetchWeatherForCoordinates(lat, lng, resolvedName);
@@ -334,6 +414,7 @@ export function useLocationWeather() {
         coordinates: { ...globalState.detectedCoordinates },
         isOtherLocation: false,
         loading: true,
+        detectionPhase: 'radius3km',
       });
 
       fetchWeatherForCoordinates(
@@ -342,13 +423,13 @@ export function useLocationWeather() {
         globalState.detectedLocationName || undefined
       );
     } else {
-      initializeLocationService(true);
+      detectLiveLocation(true);
     }
   }, []);
 
   // Force re-detect GPS location
   const refresh = useCallback(() => {
-    initializeLocationService(true);
+    detectLiveLocation(true);
   }, []);
 
   return {
@@ -363,6 +444,7 @@ export function useLocationWeather() {
     accuracy: state.accuracy,
     isOtherLocation: state.isOtherLocation,
     isPinnedByUser: state.isPinnedByUser,
+    detectionPhase: state.detectionPhase,
     refresh,
     resetToDetected,
     setLocationManually,

@@ -831,7 +831,11 @@ function FarmerDashboardContent() {
                   <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center space-x-2">
                       <div className="font-bold text-sm text-gray-900">Farm Location</div>
-                      {isPinnedByUser ? (
+                      {isDetecting ? (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center">
+                          <Compass className="w-2.5 h-2.5 mr-1 animate-spin text-emerald-600" /> Detecting Farm GPS...
+                        </span>
+                      ) : isPinnedByUser ? (
                         <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center">
                           <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-700" /> Farm Pinned
                         </span>
@@ -839,7 +843,7 @@ function FarmerDashboardContent() {
                         <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
                           Selected Place
                         </span>
-                      ) : !isDetecting && coordinates ? (
+                      ) : coordinates ? (
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" /> Live GPS
                         </span>
@@ -962,6 +966,7 @@ function FarmerDashboardContent() {
                            isDetectedLocation={!isOtherLocation}
                            onLocationSelect={setLocationManually}
                            onResetToDetected={resetToDetected}
+                           onPinLocation={pinFarmLocation}
                          />
                        </div>
                     ) : (
@@ -1577,6 +1582,7 @@ function FarmerDashboardContent() {
                         isDetectedLocation={!isOtherLocation}
                         onLocationSelect={setLocationManually}
                         onResetToDetected={resetToDetected}
+                        onPinLocation={pinFarmLocation}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Loading map...</div>
