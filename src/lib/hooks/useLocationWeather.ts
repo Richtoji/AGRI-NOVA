@@ -52,20 +52,26 @@ interface SharedLocationState {
 }
 
 const PINNED_FARM_KEY = 'agrinova_user_pinned_farm';
-const DETECTED_LOCATION_KEY = 'agrinova_detected_location';
+
+// Primary Agricultural Default: Kottayam, Kerala
+export const DEFAULT_FARM = {
+  lat: 9.5916,
+  lng: 76.5222,
+  name: 'Kottayam, Kerala',
+};
 
 let globalState: SharedLocationState = {
-  coordinates: null,
-  detectedCoordinates: null,
-  detectedLocationName: null,
+  coordinates: { lat: DEFAULT_FARM.lat, lng: DEFAULT_FARM.lng },
+  detectedCoordinates: { lat: DEFAULT_FARM.lat, lng: DEFAULT_FARM.lng },
+  detectedLocationName: DEFAULT_FARM.name,
   weatherData: null,
-  loading: true,
-  isDetecting: true,
+  loading: false,
+  isDetecting: false,
   error: null,
   permissionState: 'prompt',
   accuracy: null,
   isOtherLocation: false,
-  isPinnedByUser: false,
+  isPinnedByUser: true,
 };
 
 const listeners = new Set<(state: SharedLocationState) => void>();
@@ -85,28 +91,28 @@ let isDetectionActive = false;
 function generateSafeFallbackWeather(lat: number, lng: number, placeName?: string): WeatherData {
   return {
     location: {
-      name: placeName || 'Agricultural Zone',
-      details: `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`
+      name: placeName || 'Kottayam, Kerala',
+      details: `Kottayam Agricultural District, Kerala, India`
     },
     current: {
-      temperature: 28,
-      feelsLike: 30,
-      humidity: 76,
-      windSpeed: 11,
+      temperature: 29,
+      feelsLike: 31,
+      humidity: 74,
+      windSpeed: 10,
       precipitation: 0,
       condition: 'Partly Cloudy',
       type: 'partly',
       rainProbability: 20
     },
     forecast: [
-      { day: 'Today', date: new Date().toISOString(), hi: 31, lo: 24, pop: 20, type: 'partly', condition: 'Partly Cloudy' },
-      { day: 'Tomorrow', date: new Date(Date.now() + 86400000).toISOString(), hi: 30, lo: 23, pop: 35, type: 'cloud', condition: 'Overcast' },
-      { day: 'Day 3', date: new Date(Date.now() + 172800000).toISOString(), hi: 29, lo: 23, pop: 60, type: 'rain', condition: 'Moderate Rain' }
+      { day: 'Today', date: new Date().toISOString(), hi: 32, lo: 24, pop: 20, type: 'partly', condition: 'Partly Cloudy' },
+      { day: 'Tomorrow', date: new Date(Date.now() + 86400000).toISOString(), hi: 31, lo: 23, pop: 35, type: 'cloud', condition: 'Overcast' },
+      { day: 'Day 3', date: new Date(Date.now() + 172800000).toISOString(), hi: 30, lo: 23, pop: 50, type: 'rain', condition: 'Scattered Showers' }
     ],
     warning: null,
     advisory: {
       type: 'GOOD',
-      text: 'Optimal weather conditions for active field operations and irrigation.'
+      text: 'Optimal weather conditions for farm cultivation, irrigation, and field operations.'
     }
   };
 }
@@ -145,26 +151,10 @@ async function reverseGeocodeCoordinates(lat: number, lng: number): Promise<stri
       }
     }
   } catch (e) {
-    console.warn("Reverse geocode via server failed, trying client reverse geocode");
+    console.warn("Reverse geocode failed, using default name");
   }
 
-  // Client-side direct reverse geocoding fallback
-  try {
-    const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
-    if (res.ok) {
-      const data = await res.json();
-      const locality = (data.locality || '').trim();
-      const city = (data.city || data.principalSubdivision || '').trim();
-      if (locality && city && locality.toLowerCase() !== city.toLowerCase()) {
-        return `${locality}, ${city}`;
-      }
-      return locality || city || 'Local Farm Area';
-    }
-  } catch (e) {
-    // Fall through
-  }
-
-  return `Farm Zone (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
+  return `Farm Location (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
 }
 
 // Master detection and initialization
@@ -172,88 +162,49 @@ async function initializeLocationService(force = false) {
   if (isDetectionActive && !force) return;
   isDetectionActive = true;
 
-  updateGlobalState({
-    isDetecting: true,
-    loading: true,
-    error: null,
-  });
-
-  // 1. Check if the user previously pinned their verified farm location
-  if (!force && typeof window !== 'undefined') {
+  // 1. First check if user previously pinned their verified farm location
+  let savedLocation = DEFAULT_FARM;
+  if (typeof window !== 'undefined') {
     try {
       const pinnedStr = localStorage.getItem(PINNED_FARM_KEY);
       if (pinnedStr) {
         const pinned = JSON.parse(pinnedStr);
         if (pinned.lat && pinned.lng) {
-          updateGlobalState({
-            detectedCoordinates: { lat: pinned.lat, lng: pinned.lng },
-            detectedLocationName: pinned.name || 'My Farm Location',
-            coordinates: { lat: pinned.lat, lng: pinned.lng },
-            isOtherLocation: false,
-            isPinnedByUser: true,
-            isDetecting: false,
-            loading: false,
-            accuracy: null,
-          });
-          isDetectionActive = false;
-          fetchWeatherForCoordinates(pinned.lat, pinned.lng, pinned.name);
-          return;
+          savedLocation = {
+            lat: Number(pinned.lat),
+            lng: Number(pinned.lng),
+            name: pinned.name || 'Kottayam, Kerala'
+          };
         }
       }
     } catch (e) {}
   }
 
-  const applyResolvedLocation = (lat: number, lng: number, placeName: string, accuracy: number | null, isPinned = false) => {
-    try {
-      if (isPinned) {
-        localStorage.setItem(PINNED_FARM_KEY, JSON.stringify({ lat, lng, name: placeName }));
-      }
-      localStorage.setItem(DETECTED_LOCATION_KEY, JSON.stringify({ lat, lng, name: placeName }));
-    } catch (e) {}
+  // Set the guaranteed baseline location immediately so UI is never stuck
+  updateGlobalState({
+    coordinates: { lat: savedLocation.lat, lng: savedLocation.lng },
+    detectedCoordinates: { lat: savedLocation.lat, lng: savedLocation.lng },
+    detectedLocationName: savedLocation.name,
+    isPinnedByUser: true,
+    isOtherLocation: false,
+    isDetecting: force,
+  });
 
-    updateGlobalState({
-      detectedCoordinates: { lat, lng },
-      detectedLocationName: placeName,
-      coordinates: { lat, lng },
-      isOtherLocation: false,
-      isPinnedByUser: isPinned,
-      isDetecting: false,
-      loading: false,
-      accuracy,
-    });
+  fetchWeatherForCoordinates(savedLocation.lat, savedLocation.lng, savedLocation.name);
 
+  // If not forced detection, keep the saved verified farm location
+  if (!force) {
     isDetectionActive = false;
-    fetchWeatherForCoordinates(lat, lng, placeName);
-  };
-
-  const executeFallback = async () => {
-    // Try client-side direct IP lookup
-    try {
-      const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client', {
-        signal: AbortSignal.timeout(4000)
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && data.latitude && data.longitude) {
-          const locality = (data.locality || '').trim();
-          const city = (data.city || data.principalSubdivision || '').trim();
-          const placeName = locality && city && locality !== city ? `${locality}, ${city}` : (locality || city || 'Local Farm Area');
-          applyResolvedLocation(Number(data.latitude), Number(data.longitude), placeName, null, false);
-          return;
-        }
-      }
-    } catch (e) {}
-
-    // Default Central Agricultural Hub
-    applyResolvedLocation(9.5916, 76.5222, 'Kottayam, Kerala', null, false);
-  };
-
-  if (typeof window === 'undefined' || !navigator || !navigator.geolocation) {
-    executeFallback();
     return;
   }
 
-  // Request browser GPS
+  // If user clicked "Detect", check browser GPS
+  if (typeof window === 'undefined' || !navigator || !navigator.geolocation) {
+    isDetectionActive = false;
+    updateGlobalState({ isDetecting: false });
+    return;
+  }
+
   navigator.geolocation.getCurrentPosition(
     async (position) => {
       const { latitude, longitude, accuracy } = position.coords;
@@ -264,15 +215,42 @@ async function initializeLocationService(force = false) {
         accuracy: accMeters,
       });
 
-      const placeName = await reverseGeocodeCoordinates(latitude, longitude);
-      applyResolvedLocation(latitude, longitude, placeName, accMeters, false);
+      // Only accept if accuracy is within reasonable farm GPS bounds (< 3000m)
+      // On desktop broadband without hardware GPS, accuracy is 25,000m-50,000m (ISP center).
+      // We do NOT override the user's farm if it's just a coarse ISP estimate!
+      if (accMeters <= 3000) {
+        const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+
+        try {
+          localStorage.setItem(PINNED_FARM_KEY, JSON.stringify({ lat: latitude, lng: longitude, name: placeName }));
+        } catch (e) {}
+
+        updateGlobalState({
+          detectedCoordinates: { lat: latitude, lng: longitude },
+          detectedLocationName: placeName,
+          coordinates: { lat: latitude, lng: longitude },
+          isOtherLocation: false,
+          isPinnedByUser: true,
+          isDetecting: false,
+          loading: false,
+        });
+
+        fetchWeatherForCoordinates(latitude, longitude, placeName);
+      } else {
+        // Coarse estimate detected; inform user but keep their verified farm intact
+        console.warn(`Browser GPS returned coarse accuracy (±${accMeters}m). Keeping farm location.`);
+        updateGlobalState({ isDetecting: false, loading: false });
+      }
+
+      isDetectionActive = false;
     },
     (geoError) => {
-      console.warn("Geolocation error:", geoError.code, geoError.message);
+      console.warn("Geolocation error code:", geoError.code, geoError.message);
       if (geoError.code === geoError.PERMISSION_DENIED) {
         updateGlobalState({ permissionState: 'denied' });
       }
-      executeFallback();
+      isDetectionActive = false;
+      updateGlobalState({ isDetecting: false, loading: false });
     },
     {
       enableHighAccuracy: true,
@@ -291,18 +269,15 @@ export function useLocationWeather() {
     };
     listeners.add(listener);
 
-    if (!globalState.detectedCoordinates && !isDetectionActive) {
-      initializeLocationService();
-    } else if (globalState.detectedCoordinates && !state.coordinates) {
-      setState({ ...globalState });
-    }
+    // Initial check on mount
+    initializeLocationService(false);
 
     return () => {
       listeners.delete(listener);
     };
   }, []);
 
-  // Set farm location permanently (pins it so coarse IP can never overwrite it)
+  // Set and pin farm location permanently
   const pinFarmLocation = useCallback(async (lat: number, lng: number, name?: string) => {
     let resolvedName = name;
     if (!resolvedName) {
@@ -338,7 +313,6 @@ export function useLocationWeather() {
         Math.abs(lng - globalState.detectedCoordinates.lng) > 0.0005
       : true;
 
-    // Pin this location so user's choice is saved and persists
     try {
       localStorage.setItem(PINNED_FARM_KEY, JSON.stringify({ lat, lng, name: resolvedName }));
     } catch (e) {}
