@@ -1,5 +1,5 @@
 import { rawSeedData } from "../../../backend/prisma/seed";
-import { KERALA_AGRO_CLIMATIC_ZONES, CROP_PROFILES } from "@/data/agroClimaticZones";
+import { KERALA_AGRO_CLIMATIC_ZONES, CROP_PROFILES, CROP_PROFILES_ARRAY } from "@/data/agroClimaticZones";
 import { getCropKnowledge } from "@/data/cropKnowledge";
 
 export interface CartItemRecord {
@@ -981,6 +981,6 @@ export const inMemoryStore = {
   },
 
   getCropProfiles() {
-    return CROP_PROFILES;
+    return CROP_PROFILES_ARRAY;
   }
 };

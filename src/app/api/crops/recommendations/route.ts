@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCropKnowledge } from "@/data/cropKnowledge";
 import { prisma } from "@/lib/prisma";
-import { KERALA_AGRO_CLIMATIC_ZONES, CROP_PROFILES } from "@/data/agroClimaticZones";
+import { KERALA_AGRO_CLIMATIC_ZONES, CROP_PROFILES, CROP_PROFILES_ARRAY } from "@/data/agroClimaticZones";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -63,7 +63,7 @@ export async function GET(request: Request) {
         where: { name: { in: topCrops } }
       });
     } catch (e) {
-      cropProfiles = CROP_PROFILES.filter((p: any) => topCrops.includes(p.name));
+      cropProfiles = CROP_PROFILES_ARRAY.filter((p: any) => topCrops.includes(p.name));
     }
 
     const recommendations = topCrops.map((cropName: string) => {

@@ -31,7 +31,16 @@ export async function GET(request: Request) {
   } catch (error) {
     console.warn("DB admin crops fetch failed, using fallback:", error);
   }
-  return NextResponse.json({ crops: inMemoryStore.getCropProfiles() });
+  const fallback = inMemoryStore.getCropProfiles();
+  const list = Array.isArray(fallback)
+    ? fallback
+    : Object.entries(fallback || {}).map(([name, data]: [string, any], idx) => ({
+        id: `crop-${idx + 1}`,
+        name,
+        ...data,
+        imageUrl: data?.imageUrl || `/images/crops/${name.toLowerCase().replace(/\s+/g, '-')}.jpg`
+      }));
+  return NextResponse.json({ crops: list });
 }
 
 export async function POST(request: Request) {

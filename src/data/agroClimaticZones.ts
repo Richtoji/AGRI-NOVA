@@ -246,3 +246,10 @@ export const CROP_PROFILES: Record<string, any> = {
   "Cabbage": { expectedYield: "40 - 50 Ton/ha", growingPeriod: "3 - 4 Months", waterRequirement: 3, fertilizer: "NPK 150-50-50", pesticide: "Bt formulation" },
   "Vegetables": { expectedYield: "Varies greatly", growingPeriod: "2 - 4 Months", waterRequirement: 3, fertilizer: "Organic compost", pesticide: "Neem oil" }
 };
+
+export const CROP_PROFILES_ARRAY = Object.entries(CROP_PROFILES).map(([name, data], idx) => ({
+  id: `crop-${idx + 1}`,
+  name,
+  ...data,
+  imageUrl: `/images/crops/${name.toLowerCase().replace(/\s+/g, '-')}.jpg`
+}));
