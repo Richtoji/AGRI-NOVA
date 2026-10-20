@@ -152,10 +152,10 @@ async function reverseGeocodeCoordinates(lat: number, lng: number): Promise<stri
 
 // Network/IP location fallback (queries client-side direct ipwho.is, then server /api/location)
 async function fetchNetworkLocation(): Promise<{ lat: number; lng: number; name: string } | null> {
-  // Strategy 1: Direct client-side ipwho.is (bypasses any proxy/server routing)
+  // Strategy 1: Direct client-side ipwho.is
   try {
     const directRes = await fetch('https://ipwho.is/', {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(4500),
     });
     if (directRes.ok) {
       const data = await directRes.json();
@@ -168,14 +168,12 @@ async function fetchNetworkLocation(): Promise<{ lat: number; lng: number; name:
         };
       }
     }
-  } catch (e) {
-    // Fall through to server endpoint
-  }
+  } catch (e) {}
 
-  // Strategy 2: Server /api/location (extracts x-forwarded-for client IP on Catalyst AppSail)
+  // Strategy 2: Server /api/location (reads x-forwarded-for client IP on Catalyst AppSail)
   try {
     const serverRes = await fetch('/api/location', {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(4500),
     });
     if (serverRes.ok) {
       const data = await serverRes.json();
@@ -188,14 +186,12 @@ async function fetchNetworkLocation(): Promise<{ lat: number; lng: number; name:
         };
       }
     }
-  } catch (e) {
-    // Fall through
-  }
+  } catch (e) {}
 
   // Strategy 3: BigDataCloud client lookup
   try {
     const bdcRes = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client', {
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(4500),
     });
     if (bdcRes.ok) {
       const data = await bdcRes.json();
@@ -219,18 +215,19 @@ async function detectLocationService(force = false) {
   isDetectingProcess = true;
   updateGlobalState({ isDetecting: true, error: null });
 
-  // 1. If not forced, check localStorage cache
+  // 1. If user previously MANUALLY pinned their farm, honor it
   if (!force && typeof window !== 'undefined') {
     try {
       const cached = localStorage.getItem(STORAGE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed.lat && parsed.lng) {
+        // Only skip live GPS if the user explicitly pinned it manually
+        if (parsed.pinned && parsed.lat && parsed.lng) {
           updateGlobalState({
             coordinates: { lat: Number(parsed.lat), lng: Number(parsed.lng) },
             detectedCoordinates: { lat: Number(parsed.lat), lng: Number(parsed.lng) },
             detectedLocationName: parsed.name || 'Farm Location',
-            isPinnedByUser: !!parsed.pinned,
+            isPinnedByUser: true,
             isOtherLocation: false,
             isDetecting: false,
             loading: false,
@@ -243,68 +240,65 @@ async function detectLocationService(force = false) {
     } catch (e) {}
   }
 
-  // 2. Browser GPS Detection with fast fallback
+  // 2. Perform Live Browser Geolocation (Precision GPS / Wi-Fi trilateration)
   if (typeof window !== 'undefined' && navigator && navigator.geolocation) {
-    let hasResolved = false;
-
-    // Fallback timer (3.5s) in case browser GPS hangs or is slow
-    const fallbackTimer = setTimeout(async () => {
-      if (!hasResolved) {
-        hasResolved = true;
-        const netLoc = await fetchNetworkLocation();
-        if (netLoc) {
-          applyLocation(netLoc.lat, netLoc.lng, netLoc.name, false);
-        }
-      }
-    }, 3500);
-
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        if (hasResolved) return;
-        hasResolved = true;
-        clearTimeout(fallbackTimer);
-
-        const { latitude, longitude, accuracy } = pos.coords;
-        const placeName = await reverseGeocodeCoordinates(latitude, longitude);
-
-        applyLocation(latitude, longitude, placeName, false, Math.round(accuracy));
-        updateGlobalState({ permissionState: 'granted' });
-        isDetectingProcess = false;
-      },
-      async (geoError) => {
-        if (hasResolved) return;
-        hasResolved = true;
-        clearTimeout(fallbackTimer);
-
-        updateGlobalState({
-          permissionState: geoError.code === geoError.PERMISSION_DENIED ? 'denied' : 'prompt',
+    try {
+      // Step A: Attempt High-Accuracy GPS (full 10-second window, no premature cutoff)
+      const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: force ? 0 : 30000,
         });
+      });
 
-        // Network fallback
-        const netLoc = await fetchNetworkLocation();
-        if (netLoc) {
-          applyLocation(netLoc.lat, netLoc.lng, netLoc.name, false);
-        } else {
-          // Reliable default if completely offline
-          applyLocation(10.5167, 76.2167, 'Thrissur, Kerala', false);
+      const { latitude, longitude, accuracy } = pos.coords;
+      const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+
+      applyLocation(latitude, longitude, placeName, false, Math.round(accuracy));
+      updateGlobalState({ permissionState: 'granted' });
+      isDetectingProcess = false;
+      return;
+    } catch (highErr: any) {
+      console.warn('High-accuracy GPS attempt failed or timed out:', highErr?.message);
+
+      if (highErr?.code === 1) {
+        // PERMISSION_DENIED
+        updateGlobalState({ permissionState: 'denied' });
+      } else {
+        // Step B: Low-accuracy fallback (Windows Location Service fast fix)
+        try {
+          const lowPos = await new Promise<GeolocationPosition>((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject, {
+              enableHighAccuracy: false,
+              timeout: 6000,
+              maximumAge: 60000,
+            });
+          });
+
+          const { latitude, longitude, accuracy } = lowPos.coords;
+          const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+
+          applyLocation(latitude, longitude, placeName, false, Math.round(accuracy));
+          updateGlobalState({ permissionState: 'granted' });
+          isDetectingProcess = false;
+          return;
+        } catch (lowErr) {
+          console.warn('Low-accuracy GPS also failed:', lowErr);
         }
-        isDetectingProcess = false;
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 4000,
-        maximumAge: force ? 0 : 60000,
       }
-    );
-  } else {
-    const netLoc = await fetchNetworkLocation();
-    if (netLoc) {
-      applyLocation(netLoc.lat, netLoc.lng, netLoc.name, false);
-    } else {
-      applyLocation(10.5167, 76.2167, 'Thrissur, Kerala', false);
     }
-    isDetectingProcess = false;
   }
+
+  // 3. Network IP Fallback (Only when browser GPS is denied, unsupported, or completely unavailable)
+  const netLoc = await fetchNetworkLocation();
+  if (netLoc) {
+    applyLocation(netLoc.lat, netLoc.lng, netLoc.name, false, 25000);
+  } else {
+    // Ultimate fallback if completely offline
+    applyLocation(9.5916, 76.5222, 'Kottayam, Kerala', false, null);
+  }
+  isDetectingProcess = false;
 }
 
 function applyLocation(lat: number, lng: number, name: string, isManual = false, accuracy: number | null = null) {
@@ -347,7 +341,7 @@ export function useLocationWeather() {
     };
     listeners.add(listener);
 
-    // Initial check on mount
+    // Initial check on mount: always attempts real live detection
     detectLocationService(false);
 
     return () => {
