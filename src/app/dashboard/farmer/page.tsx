@@ -98,9 +98,11 @@ function FarmerDashboardContent() {
     permissionState,
     accuracy,
     isOtherLocation,
+    isPinnedByUser,
     refresh,
     resetToDetected,
-    setLocationManually
+    setLocationManually,
+    pinFarmLocation
   } = useLocationWeather();
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -120,7 +122,7 @@ function FarmerDashboardContent() {
       
       if (data && data.results && data.results.length > 0) {
         const item = data.results[0];
-        setLocationManually(Number(item.latitude), Number(item.longitude), item.name);
+        pinFarmLocation(Number(item.latitude), Number(item.longitude), item.name);
         setSearchQuery("");
       } else {
         setSearchError("Location not found. Try entering a district or city (e.g. Palakkad, Wayanad, Kottayam).");
@@ -829,16 +831,19 @@ function FarmerDashboardContent() {
                   <div className="flex justify-between items-center mb-3">
                     <div className="flex items-center space-x-2">
                       <div className="font-bold text-sm text-gray-900">Farm Location</div>
-                      {isOtherLocation && (
+                      {isPinnedByUser ? (
+                        <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2 py-0.5 rounded-full flex items-center">
+                          <CheckCircle2 className="w-2.5 h-2.5 mr-1 text-emerald-700" /> Farm Pinned
+                        </span>
+                      ) : isOtherLocation ? (
                         <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
                           Selected Place
                         </span>
-                      )}
-                      {!isOtherLocation && coordinates && !isDetecting && (
+                      ) : !isDetecting && coordinates ? (
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" /> Live GPS
                         </span>
-                      )}
+                      ) : null}
                     </div>
 
                     <div className="flex items-center space-x-2">
@@ -914,7 +919,7 @@ function FarmerDashboardContent() {
                       <button
                         key={district.name}
                         type="button"
-                        onClick={() => setLocationManually(district.lat, district.lng, district.name)}
+                        onClick={() => pinFarmLocation(district.lat, district.lng, district.name)}
                         className={`px-2.5 py-0.5 rounded-full font-semibold transition-colors shrink-0 cursor-pointer ${
                           weatherData?.location?.name?.toLowerCase().includes(district.name.toLowerCase())
                             ? "bg-emerald-600 text-white shadow-xs"

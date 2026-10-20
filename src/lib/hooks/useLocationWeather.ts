@@ -48,9 +48,11 @@ interface SharedLocationState {
   permissionState: 'prompt' | 'granted' | 'denied';
   accuracy: number | null;
   isOtherLocation: boolean;
+  isPinnedByUser: boolean;
 }
 
-const STORAGE_KEY = 'agrinova_farm_location';
+const PINNED_FARM_KEY = 'agrinova_user_pinned_farm';
+const DETECTED_LOCATION_KEY = 'agrinova_detected_location';
 
 let globalState: SharedLocationState = {
   coordinates: null,
@@ -63,6 +65,7 @@ let globalState: SharedLocationState = {
   permissionState: 'prompt',
   accuracy: null,
   isOtherLocation: false,
+  isPinnedByUser: false,
 };
 
 const listeners = new Set<(state: SharedLocationState) => void>();
@@ -164,58 +167,8 @@ async function reverseGeocodeCoordinates(lat: number, lng: number): Promise<stri
   return `Farm Zone (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
 }
 
-// Client-side IP location resolution directly from user's device/browser
-async function detectLocationViaClientIP(): Promise<{ lat: number; lng: number; name: string } | null> {
-  try {
-    // Strategy 1: BigDataCloud client API (runs directly from user's browser, returns user's local city/town)
-    const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client', {
-      signal: AbortSignal.timeout(4000)
-    });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.latitude && data.longitude) {
-        const locality = (data.locality || '').trim();
-        const city = (data.city || data.principalSubdivision || '').trim();
-        const state = (data.principalSubdivision || 'Kerala').trim();
-        let name = locality;
-        if (city && city.toLowerCase() !== locality.toLowerCase()) {
-          name = locality ? `${locality}, ${city}` : city;
-        } else if (!name) {
-          name = city || state || 'Local Farm Area';
-        }
-        return {
-          lat: Number(data.latitude),
-          lng: Number(data.longitude),
-          name: name || 'Local Farm Area'
-        };
-      }
-    }
-  } catch (e) {
-    // Fall through
-  }
-
-  try {
-    // Strategy 2: Server IP detection
-    const res = await fetch('/api/location');
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.location) {
-        return {
-          lat: Number(data.location.latitude),
-          lng: Number(data.location.longitude),
-          name: data.location.name || 'Local Farm Area'
-        };
-      }
-    }
-  } catch (e) {
-    // Fall through
-  }
-
-  return null;
-}
-
-// Master detection function
-function executeLiveLocationDetection(force = false) {
+// Master detection and initialization
+async function initializeLocationService(force = false) {
   if (isDetectionActive && !force) return;
   isDetectionActive = true;
 
@@ -225,16 +178,45 @@ function executeLiveLocationDetection(force = false) {
     error: null,
   });
 
-  const onLocationResolved = (lat: number, lng: number, placeName: string, accuracy: number | null, isOther = false) => {
+  // 1. Check if the user previously pinned their verified farm location
+  if (!force && typeof window !== 'undefined') {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ lat, lng, name: placeName }));
+      const pinnedStr = localStorage.getItem(PINNED_FARM_KEY);
+      if (pinnedStr) {
+        const pinned = JSON.parse(pinnedStr);
+        if (pinned.lat && pinned.lng) {
+          updateGlobalState({
+            detectedCoordinates: { lat: pinned.lat, lng: pinned.lng },
+            detectedLocationName: pinned.name || 'My Farm Location',
+            coordinates: { lat: pinned.lat, lng: pinned.lng },
+            isOtherLocation: false,
+            isPinnedByUser: true,
+            isDetecting: false,
+            loading: false,
+            accuracy: null,
+          });
+          isDetectionActive = false;
+          fetchWeatherForCoordinates(pinned.lat, pinned.lng, pinned.name);
+          return;
+        }
+      }
+    } catch (e) {}
+  }
+
+  const applyResolvedLocation = (lat: number, lng: number, placeName: string, accuracy: number | null, isPinned = false) => {
+    try {
+      if (isPinned) {
+        localStorage.setItem(PINNED_FARM_KEY, JSON.stringify({ lat, lng, name: placeName }));
+      }
+      localStorage.setItem(DETECTED_LOCATION_KEY, JSON.stringify({ lat, lng, name: placeName }));
     } catch (e) {}
 
     updateGlobalState({
       detectedCoordinates: { lat, lng },
       detectedLocationName: placeName,
       coordinates: { lat, lng },
-      isOtherLocation: isOther,
+      isOtherLocation: false,
+      isPinnedByUser: isPinned,
       isDetecting: false,
       loading: false,
       accuracy,
@@ -244,52 +226,34 @@ function executeLiveLocationDetection(force = false) {
     fetchWeatherForCoordinates(lat, lng, placeName);
   };
 
-  const handleFallback = async () => {
-    // 1. Check if user previously saved a custom farm location
+  const executeFallback = async () => {
+    // Try client-side direct IP lookup
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.lat && parsed.lng) {
-          onLocationResolved(parsed.lat, parsed.lng, parsed.name || 'Saved Farm Area', null, false);
+      const res = await fetch('https://api.bigdatacloud.net/data/reverse-geocode-client', {
+        signal: AbortSignal.timeout(4000)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.latitude && data.longitude) {
+          const locality = (data.locality || '').trim();
+          const city = (data.city || data.principalSubdivision || '').trim();
+          const placeName = locality && city && locality !== city ? `${locality}, ${city}` : (locality || city || 'Local Farm Area');
+          applyResolvedLocation(Number(data.latitude), Number(data.longitude), placeName, null, false);
           return;
         }
       }
     } catch (e) {}
 
-    // 2. Query client-side IP location
-    const clientLoc = await detectLocationViaClientIP();
-    if (clientLoc) {
-      onLocationResolved(clientLoc.lat, clientLoc.lng, clientLoc.name, null, false);
-      return;
-    }
-
-    // 3. Ultimate agricultural fallback (Central Agricultural Hub)
-    onLocationResolved(9.5916, 76.5222, 'Kottayam, Kerala', null, false);
+    // Default Central Agricultural Hub
+    applyResolvedLocation(9.5916, 76.5222, 'Kottayam, Kerala', null, false);
   };
 
   if (typeof window === 'undefined' || !navigator || !navigator.geolocation) {
-    handleFallback();
+    executeFallback();
     return;
   }
 
-  // Check browser permission status if supported
-  if (navigator.permissions && navigator.permissions.query) {
-    navigator.permissions.query({ name: 'geolocation' as PermissionName })
-      .then((perm) => {
-        if (perm.state === 'denied') {
-          updateGlobalState({ permissionState: 'denied' });
-          handleFallback();
-          return;
-        }
-        if (perm.state === 'granted') {
-          updateGlobalState({ permissionState: 'granted' });
-        }
-      })
-      .catch(() => {});
-  }
-
-  // Request browser geolocation with balanced timeout
+  // Request browser GPS
   navigator.geolocation.getCurrentPosition(
     async (position) => {
       const { latitude, longitude, accuracy } = position.coords;
@@ -301,37 +265,18 @@ function executeLiveLocationDetection(force = false) {
       });
 
       const placeName = await reverseGeocodeCoordinates(latitude, longitude);
-      onLocationResolved(latitude, longitude, placeName, accMeters, false);
+      applyResolvedLocation(latitude, longitude, placeName, accMeters, false);
     },
     (geoError) => {
-      console.warn("Browser geolocation returned error code:", geoError.code, geoError.message);
-
+      console.warn("Geolocation error:", geoError.code, geoError.message);
       if (geoError.code === geoError.PERMISSION_DENIED) {
         updateGlobalState({ permissionState: 'denied' });
-        handleFallback();
-        return;
       }
-
-      // If high accuracy timed out or is unavailable (e.g. desktop on LAN), try coarse Wi-Fi/cellular
-      navigator.geolocation.getCurrentPosition(
-        async (coarsePos) => {
-          const { latitude, longitude, accuracy } = coarsePos.coords;
-          const placeName = await reverseGeocodeCoordinates(latitude, longitude);
-          onLocationResolved(latitude, longitude, placeName, Math.round(accuracy), false);
-        },
-        () => {
-          handleFallback();
-        },
-        {
-          enableHighAccuracy: false,
-          timeout: 4000,
-          maximumAge: 60000,
-        }
-      );
+      executeFallback();
     },
     {
       enableHighAccuracy: true,
-      timeout: 6000, // 6s gives enough time for hardware GPS without stalling the user
+      timeout: 6000,
       maximumAge: 30000,
     }
   );
@@ -346,9 +291,8 @@ export function useLocationWeather() {
     };
     listeners.add(listener);
 
-    // Initial detection on mount
     if (!globalState.detectedCoordinates && !isDetectionActive) {
-      executeLiveLocationDetection();
+      initializeLocationService();
     } else if (globalState.detectedCoordinates && !state.coordinates) {
       setState({ ...globalState });
     }
@@ -358,7 +302,31 @@ export function useLocationWeather() {
     };
   }, []);
 
-  // Switch to another selected location on the map
+  // Set farm location permanently (pins it so coarse IP can never overwrite it)
+  const pinFarmLocation = useCallback(async (lat: number, lng: number, name?: string) => {
+    let resolvedName = name;
+    if (!resolvedName) {
+      resolvedName = await reverseGeocodeCoordinates(lat, lng);
+    }
+
+    try {
+      localStorage.setItem(PINNED_FARM_KEY, JSON.stringify({ lat, lng, name: resolvedName }));
+    } catch (e) {}
+
+    updateGlobalState({
+      coordinates: { lat, lng },
+      detectedCoordinates: { lat, lng },
+      detectedLocationName: resolvedName,
+      isOtherLocation: false,
+      isPinnedByUser: true,
+      loading: true,
+      isDetecting: false,
+    });
+
+    fetchWeatherForCoordinates(lat, lng, resolvedName);
+  }, []);
+
+  // Switch to another location temporarily
   const setLocationManually = useCallback(async (lat: number, lng: number, name?: string) => {
     let resolvedName = name;
     if (!resolvedName) {
@@ -370,31 +338,24 @@ export function useLocationWeather() {
         Math.abs(lng - globalState.detectedCoordinates.lng) > 0.0005
       : true;
 
-    // Save user's selected location so it persists
+    // Pin this location so user's choice is saved and persists
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ lat, lng, name: resolvedName }));
+      localStorage.setItem(PINNED_FARM_KEY, JSON.stringify({ lat, lng, name: resolvedName }));
     } catch (e) {}
 
     updateGlobalState({
       coordinates: { lat, lng },
       isOtherLocation: isOther,
+      isPinnedByUser: true,
       loading: true,
     });
 
     fetchWeatherForCoordinates(lat, lng, resolvedName);
   }, []);
 
-  // Reset the map and telemetry back to the detected GPS location
+  // Reset back to detected/pinned farm location
   const resetToDetected = useCallback(() => {
     if (globalState.detectedCoordinates) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({
-          lat: globalState.detectedCoordinates.lat,
-          lng: globalState.detectedCoordinates.lng,
-          name: globalState.detectedLocationName || ''
-        }));
-      } catch (e) {}
-
       updateGlobalState({
         coordinates: { ...globalState.detectedCoordinates },
         isOtherLocation: false,
@@ -407,13 +368,13 @@ export function useLocationWeather() {
         globalState.detectedLocationName || undefined
       );
     } else {
-      executeLiveLocationDetection(true);
+      initializeLocationService(true);
     }
   }, []);
 
   // Force re-detect GPS location
   const refresh = useCallback(() => {
-    executeLiveLocationDetection(true);
+    initializeLocationService(true);
   }, []);
 
   return {
@@ -427,8 +388,10 @@ export function useLocationWeather() {
     permissionState: state.permissionState,
     accuracy: state.accuracy,
     isOtherLocation: state.isOtherLocation,
+    isPinnedByUser: state.isPinnedByUser,
     refresh,
     resetToDetected,
     setLocationManually,
+    pinFarmLocation,
   };
 }
