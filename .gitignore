@@ -34,3 +34,6 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache/
+
+# catalyst
+appsail_dist/
