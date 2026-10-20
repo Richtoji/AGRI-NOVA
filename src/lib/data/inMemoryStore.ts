@@ -213,6 +213,70 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
         phone: "+91 98765 43210",
         avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
       }
+    },
+    {
+      id: "bk-02",
+      equipmentId: "eq-02",
+      farmerId: "u-farmer-02",
+      startDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 5 * 86400000).toISOString().split('T')[0],
+      totalCost: 9600,
+      status: "PENDING",
+      equipment: {
+        id: "eq-02",
+        ownerId: "u-equipment-01",
+        name: "Kubota Multi-Row Paddy Harvester & Thresher",
+        category: "Harvesters",
+        dailyRate: 4800,
+        hourlyRate: 650,
+        locationName: "Kottayam, Kerala",
+        imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600",
+        available: true
+      },
+      farmer: {
+        id: "u-farmer-02",
+        name: "Suresh Pillai",
+        phone: "+91 94471 23456",
+        avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+      },
+      renter: {
+        id: "u-farmer-02",
+        name: "Suresh Pillai",
+        phone: "+91 94471 23456",
+        avatarUrl: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150"
+      }
+    },
+    {
+      id: "bk-03",
+      equipmentId: "eq-04",
+      farmerId: "u-farmer-03",
+      startDate: new Date(Date.now() - 2 * 86400000).toISOString().split('T')[0],
+      endDate: new Date(Date.now() - 1 * 86400000).toISOString().split('T')[0],
+      totalCost: 3500,
+      status: "COMPLETED",
+      equipment: {
+        id: "eq-04",
+        ownerId: "u-equipment-01",
+        name: "DJI Agras T40 Smart Aerial Spraying Drone",
+        category: "Drones",
+        dailyRate: 3500,
+        hourlyRate: 800,
+        locationName: "Idukki, Kerala",
+        imageUrl: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=600",
+        available: true
+      },
+      farmer: {
+        id: "u-farmer-03",
+        name: "Devika Menon",
+        phone: "+91 97455 88990",
+        avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150"
+      },
+      renter: {
+        id: "u-farmer-03",
+        name: "Devika Menon",
+        phone: "+91 97455 88990",
+        avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150"
+      }
     }
   ] as EquipmentBookingRecord[],
   schemes: [
@@ -266,6 +330,26 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
       notes: "Animal: Dairy Cow (Vechur breed)\nSymptoms: Mild mastitis symptoms and decreased lactation volume.",
       status: "SCHEDULED",
       farmer: { id: "u-farmer-01", name: "Rajesh Kumar" },
+      vet: { id: "u-vet-01", name: "Dr. Ananya Sharma, DVM" }
+    },
+    {
+      id: "vet-02",
+      vetId: "u-vet-01",
+      farmerId: "u-farmer-02",
+      scheduledAt: new Date(Date.now() + 1 * 86400000).toISOString(),
+      notes: "Animal: Murrah Buffalo\nSymptoms: Annual FMD vaccination and routine reproductive ultrasound screening.",
+      status: "SCHEDULED",
+      farmer: { id: "u-farmer-02", name: "Suresh Pillai" },
+      vet: { id: "u-vet-01", name: "Dr. Ananya Sharma, DVM" }
+    },
+    {
+      id: "vet-03",
+      vetId: "u-vet-01",
+      farmerId: "u-farmer-03",
+      scheduledAt: new Date(Date.now() - 3 * 86400000).toISOString(),
+      notes: "Animal: Malabari Goat Herd\nSymptoms: Deworming consultation and kids nutritional assessment.",
+      status: "COMPLETED",
+      farmer: { id: "u-farmer-03", name: "Devika Menon" },
       vet: { id: "u-vet-01", name: "Dr. Ananya Sharma, DVM" }
     }
   ] as VetConsultationRecord[],
