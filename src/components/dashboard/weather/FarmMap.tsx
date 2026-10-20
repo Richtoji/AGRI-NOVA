@@ -1,53 +1,42 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { Maximize, Minimize, RotateCcw } from 'lucide-react';
 
-// Custom modern SVG markers using L.divIcon to avoid broken asset paths
-const createFarmDetectedIcon = () => {
+// Custom clean SVG markers without external asset dependencies or unconstrained animations
+const createFarmIcon = () => {
   return L.divIcon({
-    className: 'custom-farm-marker',
+    className: 'custom-farm-icon-marker',
     html: `
-      <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-        <div style="position: absolute; width: 36px; height: 36px; border-radius: 50%; background: rgba(16, 185, 129, 0.35); animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></div>
-        <div style="width: 28px; height: 28px; border-radius: 50%; background: #059669; border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-size: 14px;">
+      <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
+        <div style="width: 28px; height: 28px; border-radius: 50%; background: #059669; border: 2.5px solid #ffffff; box-shadow: 0 3px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; user-select: none;">
           🌱
         </div>
       </div>
     `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
   });
 };
 
-const createSelectedLocationIcon = () => {
+const createSelectedIcon = () => {
   return L.divIcon({
-    className: 'custom-selected-marker',
+    className: 'custom-selected-icon-marker',
     html: `
-      <div style="position: relative; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">
-        <div style="width: 30px; height: 30px; border-radius: 50%; background: #2563eb; border: 2.5px solid #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-size: 15px;">
+      <div style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; pointer-events: auto;">
+        <div style="width: 28px; height: 28px; border-radius: 50%; background: #2563eb; border: 2.5px solid #ffffff; box-shadow: 0 3px 8px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; font-size: 14px; user-select: none;">
           📍
         </div>
       </div>
     `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 18],
-    popupAnchor: [0, -18],
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -16],
   });
-};
-
-// FIX FOR NEXT.JS FAST REFRESH: Clear Leaflet's container cache safely
-const originalInit = (L.Map.prototype as any).initialize;
-(L.Map.prototype as any).initialize = function(id: any, options: any) {
-  const el = typeof id === 'string' ? document.getElementById(id) : id;
-  if (el && el._leaflet_id) {
-    el._leaflet_id = null;
-  }
-  originalInit.call(this, id, options);
 };
 
 interface FarmMapProps {
@@ -60,15 +49,23 @@ interface FarmMapProps {
   onResetToDetected?: () => void;
 }
 
-// Smoothly animates camera to new coordinates when user picks another location or resets
+// MapUpdater strictly checks for coordinate displacement (>10m) before updating view
+// to completely prevent camera float oscillation and map shaking
 function MapUpdater({ lat, lng }: { lat: number; lng: number }) {
   const map = useMap();
+  const prevRef = useRef<{ lat: number; lng: number }>({ lat, lng });
+
   useEffect(() => {
-    map.flyTo([lat, lng], 14, {
-      duration: 1.2,
-      easeLinearity: 0.25
-    });
+    const dLat = Math.abs(prevRef.current.lat - lat);
+    const dLng = Math.abs(prevRef.current.lng - lng);
+
+    // Only update view when coordinates have genuinely changed (not on every re-render)
+    if (dLat > 0.0001 || dLng > 0.0001) {
+      prevRef.current = { lat, lng };
+      map.setView([lat, lng], map.getZoom(), { animate: true });
+    }
   }, [lat, lng, map]);
+
   return null;
 }
 
@@ -90,12 +87,11 @@ export default function FarmMap({
   onLocationSelect,
   onResetToDetected
 }: FarmMapProps) {
-  const position: [number, number] = [latitude, longitude];
   const containerRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const farmIcon = React.useMemo(() => createFarmDetectedIcon(), []);
-  const selectedIcon = React.useMemo(() => createSelectedLocationIcon(), []);
+  const farmIcon = useMemo(() => createFarmIcon(), []);
+  const selectedIcon = useMemo(() => createSelectedIcon(), []);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
@@ -116,78 +112,90 @@ export default function FarmMap({
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full h-full rounded-xl overflow-hidden relative z-0 bg-gray-100 group">
-      <div className="w-full h-full relative z-0">
-        <MapContainer 
-          center={position} 
-          zoom={14} 
-          scrollWheelZoom={true} 
-          style={{ height: '100%', width: '100%', minHeight: '130px' }}
-          attributionControl={false}
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+    <div ref={containerRef} className="w-full h-full rounded-xl overflow-hidden relative z-0 bg-gray-100 group isolate">
+      <style>{`
+        .custom-farm-icon-marker, .custom-selected-icon-marker {
+          background: transparent !important;
+          border: none !important;
+        }
+        .leaflet-container {
+          width: 100% !important;
+          height: 100% !important;
+          font-family: inherit;
+        }
+      `}</style>
 
-          {/* Active Location Marker */}
+      <MapContainer 
+        center={[latitude, longitude]} 
+        zoom={14} 
+        scrollWheelZoom={true} 
+        style={{ height: '100%', width: '100%' }}
+        attributionControl={false}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+
+        {/* Active Location Marker */}
+        <Marker
+          position={[latitude, longitude]}
+          icon={isDetectedLocation ? farmIcon : selectedIcon}
+        >
+          <Popup>
+            <div className="text-center font-bold text-gray-900 text-xs p-1">
+              {isDetectedLocation ? "🌱 Detected Farm Location" : "📍 Selected Location"} <br/>
+              <span className="text-[11px] font-medium text-gray-600 block mt-1">{locationName}</span>
+              <span className="text-[9px] text-gray-400 block mt-0.5">
+                {latitude.toFixed(4)}, {longitude.toFixed(4)}
+              </span>
+              {!isDetectedLocation && onResetToDetected && (
+                <button
+                  type="button"
+                  onClick={onResetToDetected}
+                  className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md border border-emerald-200 cursor-pointer w-full"
+                >
+                  ↺ Reset to Detected Farm
+                </button>
+              )}
+            </div>
+          </Popup>
+        </Marker>
+
+        {/* If viewing another location, also show the user's detected farm location as a reference */}
+        {!isDetectedLocation && detectedCoordinates && (
           <Marker
-            position={position}
-            icon={isDetectedLocation ? farmIcon : selectedIcon}
+            position={[detectedCoordinates.lat, detectedCoordinates.lng]}
+            icon={farmIcon}
           >
             <Popup>
               <div className="text-center font-bold text-gray-900 text-xs p-1">
-                {isDetectedLocation ? "🌱 Detected Farm Location" : "📍 Selected Location"} <br/>
-                <span className="text-[11px] font-medium text-gray-600 block mt-1">{locationName}</span>
-                <span className="text-[9px] text-gray-400 block mt-0.5">
-                  {latitude.toFixed(4)}, {longitude.toFixed(4)}
+                🌱 Your Detected Farm GPS <br/>
+                <span className="text-[10px] text-gray-500 block mt-0.5">
+                  {detectedCoordinates.lat.toFixed(4)}, {detectedCoordinates.lng.toFixed(4)}
                 </span>
-                {!isDetectedLocation && onResetToDetected && (
+                {onResetToDetected && (
                   <button
+                    type="button"
                     onClick={onResetToDetected}
-                    className="mt-2 text-[10px] font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-md border border-emerald-200 cursor-pointer w-full"
+                    className="mt-2 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded-md cursor-pointer w-full"
                   >
-                    ↺ Reset to Detected Farm
+                    Return to Farm Location
                   </button>
                 )}
               </div>
             </Popup>
           </Marker>
+        )}
 
-          {/* If viewing another location, also show the user's detected farm location as a reference */}
-          {!isDetectedLocation && detectedCoordinates && (
-            <Marker
-              position={[detectedCoordinates.lat, detectedCoordinates.lng]}
-              icon={farmIcon}
-            >
-              <Popup>
-                <div className="text-center font-bold text-gray-900 text-xs p-1">
-                  🌱 Your Detected Farm GPS <br/>
-                  <span className="text-[10px] text-gray-500 block mt-0.5">
-                    {detectedCoordinates.lat.toFixed(4)}, {detectedCoordinates.lng.toFixed(4)}
-                  </span>
-                  {onResetToDetected && (
-                    <button
-                      onClick={onResetToDetected}
-                      className="mt-2 text-[10px] font-bold text-white bg-emerald-600 hover:bg-emerald-700 px-2 py-1 rounded-md cursor-pointer w-full"
-                    >
-                      Return to Farm Location
-                    </button>
-                  )}
-                </div>
-              </Popup>
-            </Marker>
-          )}
-
-          <MapUpdater lat={latitude} lng={longitude} />
-          {onLocationSelect && <MapClickHandler onLocationSelect={onLocationSelect} />}
-        </MapContainer>
-      </div>
+        <MapUpdater lat={latitude} lng={longitude} />
+        {onLocationSelect && <MapClickHandler onLocationSelect={onLocationSelect} />}
+      </MapContainer>
 
       {/* Floating Status & Reset Control Bar on Map */}
       <div className="absolute top-2 left-2 z-[1000] flex flex-wrap items-center gap-1.5 pointer-events-auto">
         {isDetectedLocation ? (
-          <div className="bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-sm text-[10px] font-bold text-emerald-700 border border-emerald-200/80 flex items-center">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse mr-1.5 shrink-0" />
+          <div className="bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full shadow-sm text-[10px] font-bold text-emerald-700 border border-emerald-200 flex items-center">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 shrink-0" />
             <span className="truncate max-w-[150px]">Live Farm GPS</span>
           </div>
         ) : (

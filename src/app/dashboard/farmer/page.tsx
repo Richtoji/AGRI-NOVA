@@ -888,24 +888,34 @@ function FarmerDashboardContent() {
                   </form>
 
                   {/* QUICK DISTRICT SELECTOR */}
+                  {permissionState === 'denied' && (
+                    <div className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg mb-2 flex items-center justify-between">
+                      <span>⚠️ Browser GPS blocked. Click your farm district below:</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none text-[10px]">
                     <span className="text-gray-400 font-semibold shrink-0">Districts:</span>
                     {[
                       { name: "Kottayam", lat: 9.5916, lng: 76.5222 },
+                      { name: "Ernakulam", lat: 9.9816, lng: 76.2999 },
+                      { name: "Thrissur", lat: 10.5276, lng: 76.2144 },
                       { name: "Palakkad", lat: 10.7867, lng: 76.6548 },
                       { name: "Wayanad", lat: 11.6050, lng: 76.0830 },
                       { name: "Idukki", lat: 9.8494, lng: 76.9744 },
-                      { name: "Ernakulam", lat: 9.9816, lng: 76.2999 },
-                      { name: "Thrissur", lat: 10.5276, lng: 76.2144 },
                       { name: "Alappuzha", lat: 9.4981, lng: 76.3388 },
                       { name: "Kozhikode", lat: 11.2588, lng: 75.7804 },
+                      { name: "Malappuram", lat: 11.0735, lng: 76.0740 },
+                      { name: "Kannur", lat: 11.8745, lng: 75.3704 },
+                      { name: "Kasaragod", lat: 12.5102, lng: 74.9852 },
+                      { name: "Thiruvananthapuram", lat: 8.5241, lng: 76.9366 },
+                      { name: "Kollam", lat: 8.8932, lng: 76.6141 },
+                      { name: "Pathanamthitta", lat: 9.2648, lng: 76.7870 },
                     ].map(district => (
                       <button
                         key={district.name}
                         type="button"
-                        disabled={isDetecting && !coordinates}
                         onClick={() => setLocationManually(district.lat, district.lng, district.name)}
-                        className={`px-2 py-0.5 rounded-full font-semibold transition-colors shrink-0 cursor-pointer disabled:opacity-50 ${
+                        className={`px-2.5 py-0.5 rounded-full font-semibold transition-colors shrink-0 cursor-pointer ${
                           weatherData?.location?.name?.toLowerCase().includes(district.name.toLowerCase())
                             ? "bg-emerald-600 text-white shadow-xs"
                             : "bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 text-gray-600"
@@ -917,9 +927,9 @@ function FarmerDashboardContent() {
                   </div>
                   
                   {/* Map Area */}
-                  <div className="flex-1 bg-[#eef0f3] rounded-xl relative overflow-hidden flex items-center justify-center mb-3" style={{minHeight: '130px'}}>
+                  <div className="w-full h-[220px] bg-gray-100 rounded-xl relative overflow-hidden mb-3 isolate shrink-0">
                     {(isDetecting || loading) && !coordinates ? (
-                       <div className="w-full h-full min-h-[130px] flex flex-col items-center justify-center p-3 text-center bg-gradient-to-b from-gray-50 to-emerald-50/20">
+                       <div className="w-full h-full flex flex-col items-center justify-center p-3 text-center bg-gradient-to-b from-gray-50 to-emerald-50/20">
                          <div className="relative mb-2">
                            <div className="w-8 h-8 rounded-full bg-emerald-500/20 animate-ping absolute inset-0" />
                            <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center relative shadow-sm">
@@ -934,7 +944,7 @@ function FarmerDashboardContent() {
                          </div>
                        </div>
                     ) : error && !coordinates ? (
-                       <div className="text-xs text-red-500 font-medium px-4 text-center">
+                       <div className="text-xs text-red-500 font-medium px-4 text-center flex items-center justify-center h-full">
                          {error}
                        </div>
                     ) : coordinates ? (
@@ -950,7 +960,7 @@ function FarmerDashboardContent() {
                          />
                        </div>
                     ) : (
-                      <div className="text-xs text-gray-500 font-medium text-center px-4">
+                      <div className="text-xs text-gray-500 font-medium text-center px-4 flex items-center justify-center h-full">
                          Location unavailable
                       </div>
                     )}
@@ -1539,7 +1549,7 @@ function FarmerDashboardContent() {
                     </div>
                   </form>
 
-                  <div className="flex-1 rounded-2xl overflow-hidden bg-gray-100 relative min-h-[250px]">
+                  <div className="w-full h-[360px] rounded-2xl overflow-hidden bg-gray-100 relative isolate shrink-0">
                     {(isDetecting || loading) && !coordinates ? (
                       <div className="w-full h-full min-h-[250px] flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-gray-50 to-emerald-50/20">
                         <div className="relative mb-3">
