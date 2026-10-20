@@ -5,8 +5,8 @@ import { KERALA_AGRO_CLIMATIC_ZONES, CROP_PROFILES } from "@/data/agroClimaticZo
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const latStr = searchParams.get("latitude");
-  const lngStr = searchParams.get("longitude");
+  const latStr = searchParams.get("latitude") || searchParams.get("lat");
+  const lngStr = searchParams.get("longitude") || searchParams.get("lon") || searchParams.get("lng");
 
   if (!latStr || !lngStr) {
     return NextResponse.json({ error: "Missing latitude or longitude" }, { status: 400 });

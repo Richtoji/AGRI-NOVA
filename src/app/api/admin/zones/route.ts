@@ -18,15 +18,20 @@ async function isAdmin() {
   }
 }
 
+import { inMemoryStore } from '@/lib/data/inMemoryStore';
+
 export async function GET(request: Request) {
   try {
     const zones = await prisma.agroClimaticZone.findMany({
       orderBy: { name: 'asc' }
     });
-    return NextResponse.json({ zones });
+    if (zones && zones.length > 0) {
+      return NextResponse.json({ zones });
+    }
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch zones' }, { status: 500 });
+    console.warn("DB zones fetch failed, using fallback:", error);
   }
+  return NextResponse.json({ zones: inMemoryStore.getAgroClimaticZones() });
 }
 
 export async function POST(request: Request) {

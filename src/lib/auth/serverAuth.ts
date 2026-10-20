@@ -3,7 +3,7 @@ import { RoleType } from "@prisma/client";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
-import { rawSeedData } from "../../../backend/prisma/seed";
+import { inMemoryStore } from "@/lib/data/inMemoryStore";
 
 const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
@@ -29,11 +29,11 @@ export async function requireAuth(allowedRoles?: RoleType[]) {
         where: { id: decoded.userId }
       });
     } catch (e) {
-      user = rawSeedData.users.find(u => u.id === decoded.userId) || null;
+      user = inMemoryStore.getUserById(decoded.userId);
     }
 
     if (!user) {
-      user = rawSeedData.users.find(u => u.id === decoded.userId) || null;
+      user = inMemoryStore.getUserById(decoded.userId);
     }
 
     if (!user) {

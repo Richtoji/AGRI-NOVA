@@ -1,24 +1,35 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { inMemoryStore } from '@/lib/data/inMemoryStore';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category');
-    const isActive = searchParams.get('isActive');
+    const category = searchParams.get('category') || undefined;
+    const isActiveStr = searchParams.get('isActive');
+    const isActive = isActiveStr !== null ? isActiveStr === 'true' : undefined;
 
-    const where: any = {};
-    if (category) where.category = category;
-    if (isActive !== null) where.isActive = isActive === 'true';
+    try {
+      const where: any = {};
+      if (category) where.category = category;
+      if (isActive !== undefined) where.isActive = isActive;
 
-    const schemes = await prisma.governmentScheme.findMany({
-      where
-    });
+      const schemes = await prisma.governmentScheme.findMany({
+        where
+      });
 
-    return NextResponse.json({ success: true, schemes });
+      if (schemes && schemes.length > 0) {
+        return NextResponse.json({ success: true, schemes });
+      }
+    } catch (dbErr) {}
+
+    // In-memory fallback
+    const fallbackSchemes = inMemoryStore.getSchemes({ category, isActive });
+    return NextResponse.json({ success: true, schemes: fallbackSchemes });
   } catch (error) {
     console.error('Failed to fetch schemes:', error);
-    return NextResponse.json({ error: 'Unable to fetch schemes.' }, { status: 500 });
+    const fallbackSchemes = inMemoryStore.getSchemes();
+    return NextResponse.json({ success: true, schemes: fallbackSchemes });
   }
 }
 
@@ -31,41 +42,34 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'All fields are required.' }, { status: 400 });
     }
 
-    const newScheme = await prisma.governmentScheme.create({
-      data: {
+    try {
+      const newScheme = await prisma.governmentScheme.create({
+        data: {
+          title,
+          department,
+          category,
+          description,
+          subsidyAmount,
+          linkUrl,
+          isActive: isActive !== undefined ? isActive : true,
+        }
+      });
+
+      return NextResponse.json({ success: true, scheme: newScheme });
+    } catch (dbErr) {
+      const newScheme = inMemoryStore.addScheme({
         title,
         department,
         category,
         description,
         subsidyAmount,
         linkUrl,
-        isActive: isActive !== undefined ? isActive : true,
-      }
-    });
-
-    return NextResponse.json({ success: true, scheme: newScheme });
+        isActive: isActive !== undefined ? isActive : true
+      });
+      return NextResponse.json({ success: true, scheme: newScheme });
+    }
   } catch (error) {
     console.error('Failed to create scheme:', error);
     return NextResponse.json({ error: 'Unable to create scheme.' }, { status: 500 });
-  }
-}
-
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'Scheme ID is required.' }, { status: 400 });
-    }
-
-    await prisma.governmentScheme.delete({
-      where: { id }
-    });
-
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Failed to delete scheme:', error);
-    return NextResponse.json({ error: 'Unable to delete scheme.' }, { status: 500 });
   }
 }

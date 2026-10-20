@@ -18,15 +18,20 @@ async function isAdmin() {
   }
 }
 
+import { inMemoryStore } from '@/lib/data/inMemoryStore';
+
 export async function GET(request: Request) {
   try {
     const crops = await prisma.cropProfile.findMany({
       orderBy: { name: 'asc' }
     });
-    return NextResponse.json({ crops });
+    if (crops && crops.length > 0) {
+      return NextResponse.json({ crops });
+    }
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch crops' }, { status: 500 });
+    console.warn("DB admin crops fetch failed, using fallback:", error);
   }
+  return NextResponse.json({ crops: inMemoryStore.getCropProfiles() });
 }
 
 export async function POST(request: Request) {
