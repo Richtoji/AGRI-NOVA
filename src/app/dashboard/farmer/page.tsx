@@ -902,6 +902,11 @@ function FarmerDashboardContent() {
                       <span>⚠️ Browser GPS blocked. Click your farm district below:</span>
                     </div>
                   )}
+                  {error && (
+                    <div className="text-[10px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg mb-2 flex items-center justify-between">
+                      <span>ℹ️ {error}</span>
+                    </div>
+                  )}
                   <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none text-[10px]">
                     <span className="text-gray-400 font-semibold shrink-0">Districts:</span>
                     {[
