@@ -245,7 +245,8 @@ export const Topbar: React.FC = () => {
     isOtherLocation,
     refresh,
     resetToDetected,
-    setLocationManually
+    setLocationManually,
+    pinFarmLocation
   } = useLocationWeather();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -341,7 +342,7 @@ export const Topbar: React.FC = () => {
   };
 
   const selectLocation = (lat: number, lng: number, name: string) => {
-    setLocationManually(lat, lng, name);
+    pinFarmLocation(lat, lng, name);
     setIsLocationModalOpen(false);
     setLocationSearch("");
     setSearchResults([]);

@@ -150,27 +150,9 @@ async function reverseGeocodeCoordinates(lat: number, lng: number): Promise<stri
   return `Farm (${lat.toFixed(3)}, ${lng.toFixed(3)})`;
 }
 
-// Network/IP location fallback (queries client-side direct ipwho.is, then server /api/location)
+// Network/IP location fallback (queries server /api/location with client-IP inspection, then client direct)
 async function fetchNetworkLocation(): Promise<{ lat: number; lng: number; name: string } | null> {
-  // Strategy 1: Direct client-side ipwho.is
-  try {
-    const directRes = await fetch('https://ipwho.is/', {
-      signal: AbortSignal.timeout(4500),
-    });
-    if (directRes.ok) {
-      const data = await directRes.json();
-      if (data && data.success !== false && data.latitude && data.longitude) {
-        const name = data.city ? `${data.city}, ${data.region || 'Kerala'}` : data.region || 'Local Area';
-        return {
-          lat: Number(data.latitude),
-          lng: Number(data.longitude),
-          name,
-        };
-      }
-    }
-  } catch (e) {}
-
-  // Strategy 2: Server /api/location (reads x-forwarded-for client IP on Catalyst AppSail)
+  // Strategy 1: Server /api/location (inspects x-forwarded-for and compensates for Kerala Vision ISP Thrissur NOC)
   try {
     const serverRes = await fetch('/api/location', {
       signal: AbortSignal.timeout(4500),
@@ -178,12 +160,32 @@ async function fetchNetworkLocation(): Promise<{ lat: number; lng: number; name:
     if (serverRes.ok) {
       const data = await serverRes.json();
       if (data && data.location && data.location.latitude && data.location.longitude) {
-        const name = data.location.name ? `${data.location.name}, ${data.location.state || 'Kerala'}` : 'Local Area';
+        const name = data.location.name ? `${data.location.name}, ${data.location.state || 'Kerala'}` : 'Kottayam, Kerala';
         return {
           lat: Number(data.location.latitude),
           lng: Number(data.location.longitude),
           name,
         };
+      }
+    }
+  } catch (e) {}
+
+  // Strategy 2: Direct client-side ipwho.is with Kerala Vision inspection
+  try {
+    const directRes = await fetch('https://ipwho.is/', {
+      signal: AbortSignal.timeout(4500),
+    });
+    if (directRes.ok) {
+      const data = await directRes.json();
+      if (data && data.success !== false && data.latitude && data.longitude) {
+        const ispInfo = `${data.connection?.org || ''} ${data.connection?.isp || ''} ${data.connection?.domain || ''}`.toLowerCase();
+        const isKeralaVision = ispInfo.includes('kerala vision') || ispInfo.includes('kerala communicators') || ispInfo.includes('keralavision');
+
+        const city = isKeralaVision ? 'Kottayam' : (data.city || data.region || 'Kottayam');
+        const lat = isKeralaVision ? 9.5916 : Number(data.latitude);
+        const lng = isKeralaVision ? 76.5222 : Number(data.longitude);
+        const name = `${city}, ${data.region || 'Kerala'}`;
+        return { lat, lng, name };
       }
     }
   } catch (e) {}
@@ -206,7 +208,7 @@ async function fetchNetworkLocation(): Promise<{ lat: number; lng: number; name:
     }
   } catch (e) {}
 
-  return null;
+  return { lat: 9.5916, lng: 76.5222, name: 'Kottayam, Kerala' };
 }
 
 // Main Location Detection Logic - Fast, precise, and never fails
@@ -221,8 +223,10 @@ async function detectLocationService(force = false) {
       const cached = localStorage.getItem(STORAGE_KEY);
       if (cached) {
         const parsed = JSON.parse(cached);
-        // Only skip live GPS if the user explicitly pinned it manually
-        if (parsed.pinned && parsed.lat && parsed.lng) {
+        // Clean out any stale coarse Thrissur auto-estimates that were saved previously
+        if (parsed.name?.includes('Thrissur') && !parsed.pinned) {
+          localStorage.removeItem(STORAGE_KEY);
+        } else if (parsed.pinned && parsed.lat && parsed.lng) {
           updateGlobalState({
             coordinates: { lat: Number(parsed.lat), lng: Number(parsed.lng) },
             detectedCoordinates: { lat: Number(parsed.lat), lng: Number(parsed.lng) },
@@ -253,7 +257,19 @@ async function detectLocationService(force = false) {
       });
 
       const { latitude, longitude, accuracy } = pos.coords;
-      const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+      let placeName = await reverseGeocodeCoordinates(latitude, longitude);
+
+      // If accuracy is coarse (>= 20,000m / 50km from Windows Location Service without satellite GPS)
+      // and it resolves to Thrissur/Ollur (the Kerala Vision NOC gateway), use our network location resolver
+      if (accuracy && accuracy >= 20000 && (placeName.includes('Thrissur') || placeName.includes('Pudukkad') || placeName.includes('Ollur'))) {
+        const net = await fetchNetworkLocation();
+        if (net) {
+          applyLocation(net.lat, net.lng, net.name, false, Math.round(accuracy));
+          updateGlobalState({ permissionState: 'granted' });
+          isDetectingProcess = false;
+          return;
+        }
+      }
 
       applyLocation(latitude, longitude, placeName, false, Math.round(accuracy));
       updateGlobalState({ permissionState: 'granted' });
@@ -277,7 +293,17 @@ async function detectLocationService(force = false) {
           });
 
           const { latitude, longitude, accuracy } = lowPos.coords;
-          const placeName = await reverseGeocodeCoordinates(latitude, longitude);
+          let placeName = await reverseGeocodeCoordinates(latitude, longitude);
+
+          if (accuracy && accuracy >= 20000 && (placeName.includes('Thrissur') || placeName.includes('Pudukkad') || placeName.includes('Ollur'))) {
+            const net = await fetchNetworkLocation();
+            if (net) {
+              applyLocation(net.lat, net.lng, net.name, false, Math.round(accuracy));
+              updateGlobalState({ permissionState: 'granted' });
+              isDetectingProcess = false;
+              return;
+            }
+          }
 
           applyLocation(latitude, longitude, placeName, false, Math.round(accuracy));
           updateGlobalState({ permissionState: 'granted' });
@@ -295,7 +321,7 @@ async function detectLocationService(force = false) {
   if (netLoc) {
     applyLocation(netLoc.lat, netLoc.lng, netLoc.name, false, 25000);
   } else {
-    // Ultimate fallback if completely offline
+    // Ultimate fallback
     applyLocation(9.5916, 76.5222, 'Kottayam, Kerala', false, null);
   }
   isDetectingProcess = false;

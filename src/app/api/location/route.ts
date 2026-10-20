@@ -101,12 +101,18 @@ async function detectLocationByIP(request: Request): Promise<LocationResult> {
     if (res.ok) {
       const data = await res.json();
       if (data && data.success !== false && data.latitude && data.longitude) {
-        const city = data.city || data.region || 'Local Area';
+        const ispInfo = `${data.connection?.org || ''} ${data.connection?.isp || ''} ${data.connection?.domain || ''}`.toLowerCase();
+        // Kerala Vision assigns subscriber IPs to its Thrissur gateway, but users are throughout Kerala (principally Central/South Kerala Kottayam hub)
+        const isKeralaVision = ispInfo.includes('kerala vision') || ispInfo.includes('kerala communicators') || ispInfo.includes('keralavision');
+
+        const city = isKeralaVision ? 'Kottayam' : (data.city || data.region || 'Kottayam');
+        const lat = isKeralaVision ? 9.5916 : Number(data.latitude);
+        const lng = isKeralaVision ? 76.5222 : Number(data.longitude);
         const state = data.region || 'Kerala';
         const country = data.country || 'India';
         return {
-          latitude: Number(data.latitude),
-          longitude: Number(data.longitude),
+          latitude: lat,
+          longitude: lng,
           name: city,
           details: `${city}, ${state}, ${country}`,
           city,
@@ -126,7 +132,7 @@ async function detectLocationByIP(request: Request): Promise<LocationResult> {
     if (res.ok) {
       const data = await res.json();
       if (data && data.latitude && data.longitude) {
-        const city = data.cityName || 'Local Area';
+        const city = data.cityName || 'Kottayam';
         const state = data.regionName || 'Kerala';
         const country = data.countryName || 'India';
         return {
@@ -144,13 +150,13 @@ async function detectLocationByIP(request: Request): Promise<LocationResult> {
     // Fall through
   }
 
-  // Baseline Fallback: Central Kerala
+  // Baseline Fallback: Central Agricultural Hub (Kottayam, Kerala)
   return {
-    latitude: 10.5167,
-    longitude: 76.2167,
-    name: 'Thrissur',
-    details: 'Thrissur, Kerala, India',
-    city: 'Thrissur',
+    latitude: 9.5916,
+    longitude: 76.5222,
+    name: 'Kottayam',
+    details: 'Kottayam, Kerala, India',
+    city: 'Kottayam',
     state: 'Kerala',
     country: 'India'
   };
@@ -167,7 +173,7 @@ export async function GET(request: Request) {
     if (query && query.trim()) {
       try {
         const searchRes = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query.trim())}&format=json&limit=5&accept-language=en`,
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query.trim())}&format=json&limit=5&countrycodes=in&accept-language=en`,
           {
             headers: { 'User-Agent': 'Agri-NOVA-Platform/2.0 (contact@agrinova.in)' },
             signal: AbortSignal.timeout(4000)
