@@ -511,16 +511,19 @@ function FarmerDashboardContent() {
                   }
                 }}
                 className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-black flex items-center space-x-1.5 transition-colors cursor-pointer"
+                title="Plant AI recommended crop for your farm region"
               >
                 <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
-                <span>+ Plant Crop</span>
+                <span>Plant Recommended Crop</span>
               </button>
 
               <button
+                type="button"
                 onClick={() => setIsPlantAnyOpen(true)}
                 className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                title="Select and plant any crop from the platform database"
               >
-                Search Any Crop
+                Plant Any Crop
               </button>
             </div>
           </div>
