@@ -78,6 +78,13 @@ export interface EquipmentBookingRecord {
     id: string;
     name: string;
     phone: string;
+    avatarUrl?: string;
+  };
+  renter?: {
+    id: string;
+    name: string;
+    phone: string;
+    avatarUrl?: string;
   };
 }
 
@@ -197,7 +204,14 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
       farmer: {
         id: "u-farmer-01",
         name: "Rajesh Kumar",
-        phone: "+91 98765 43210"
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+      },
+      renter: {
+        id: "u-farmer-01",
+        name: "Rajesh Kumar",
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
       }
     }
   ] as EquipmentBookingRecord[],
@@ -660,7 +674,14 @@ export const inMemoryStore = {
       farmer: {
         id: bookingData.farmerId,
         name: "Rajesh Kumar",
-        phone: "+91 98765 43210"
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+      },
+      renter: {
+        id: bookingData.farmerId,
+        name: "Rajesh Kumar",
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
       }
     };
     globalStore.equipmentBookings.unshift(booking);
@@ -675,7 +696,21 @@ export const inMemoryStore = {
     if (farmerId) {
       list = list.filter(b => b.farmerId === farmerId);
     }
-    return list;
+    return list.map(b => ({
+      ...b,
+      renter: b.renter || b.farmer || {
+        id: b.farmerId,
+        name: "Rajesh Kumar",
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+      },
+      farmer: b.farmer || b.renter || {
+        id: b.farmerId,
+        name: "Rajesh Kumar",
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+      }
+    }));
   },
 
   updateEquipmentBookingStatus(bookingId: string, status: "APPROVED" | "REJECTED") {

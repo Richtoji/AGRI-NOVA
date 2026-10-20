@@ -53,7 +53,20 @@ export async function GET(request: Request) {
       });
 
       if (rentals && rentals.length > 0) {
-        return NextResponse.json({ rentals });
+        const sanitized = rentals.map((r: any) => ({
+          ...r,
+          renter: r.renter || {
+            name: "Rajesh Kumar",
+            phone: "+91 98765 43210",
+            avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+          },
+          farmer: r.renter || {
+            name: "Rajesh Kumar",
+            phone: "+91 98765 43210",
+            avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+          }
+        }));
+        return NextResponse.json({ rentals: sanitized });
       }
     } catch (dbErr) {}
 

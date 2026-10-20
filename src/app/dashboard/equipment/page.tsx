@@ -302,62 +302,75 @@ export default function EquipmentOwnerDashboard() {
             <div className="text-sm text-gray-500">No rental requests found.</div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {rentals.map((rental) => (
-                <div key={rental.id} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center space-x-3 mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <img 
-                      src={rental.renter.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(rental.renter.name)}&background=f3f4f6&color=111827`} 
-                      alt="Avatar" 
-                      className="w-10 h-10 rounded-full object-cover border border-gray-200" 
-                    />
-                      <div>
-                        <h4 className="font-bold text-gray-900 text-sm">{rental.renter.name}</h4>
-                        <p className="text-xs text-gray-500">{rental.renter.phone}</p>
+              {rentals.map((rental) => {
+                const renter = rental?.renter || rental?.farmer || { name: "Farmer Client", phone: "+91 98765 43210", avatarUrl: "" };
+                const renterName = renter.name || "Farmer Client";
+                const renterPhone = renter.phone || "+91 98765 43210";
+                const renterAvatar = renter.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(renterName)}&background=f3f4f6&color=111827`;
+                const equipmentName = rental?.equipment?.name || "Agricultural Machinery";
+                const startDate = rental?.startDate ? new Date(rental.startDate).getTime() : Date.now();
+                const endDate = rental?.endDate ? new Date(rental.endDate).getTime() : (Date.now() + 86400000);
+                const durationDays = Math.max(1, Math.ceil((endDate - startDate) / (1000 * 3600 * 24)));
+                const totalCost = rental?.totalCost || 0;
+                const status = rental?.status || "PENDING";
+
+                return (
+                  <div key={rental.id || Math.random()} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center space-x-3 mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <img 
+                          src={renterAvatar} 
+                          alt="Avatar" 
+                          className="w-10 h-10 rounded-full object-cover border border-gray-200" 
+                        />
+                        <div>
+                          <h4 className="font-bold text-gray-900 text-sm">{renterName}</h4>
+                          <p className="text-xs text-gray-500">{renterPhone}</p>
+                        </div>
+                      </div>
+                      <span className={`px-2.5 py-1 text-[10px] font-bold rounded-md ${status === 'PENDING' ? 'bg-amber-100 text-amber-700' : status === 'ACTIVE' || status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}>
+                        {status}
+                      </span>
+                    </div>
+                    
+                    <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-2 mb-4 border border-gray-100">
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Equipment</span>
+                        <span className="font-semibold text-gray-900">{equipmentName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Duration</span>
+                        <span className="font-semibold text-gray-900">
+                          {durationDays} Days
+                        </span>
+                      </div>
+                      <div className="flex justify-between border-t border-gray-200 pt-2">
+                        <span className="text-gray-900 font-bold">Total Estimate</span>
+                        <span className="font-black text-gray-900 text-lg flex items-center">
+                          <IndianRupee className="w-4 h-4 mr-0.5" />{totalCost}
+                        </span>
                       </div>
                     </div>
-                    <span className={`px-2.5 py-1 text-[10px] font-bold rounded-md ${rental.status === 'PENDING' ? 'bg-amber-100 text-amber-700' : rental.status === 'ACTIVE' || rental.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-700'}`}>
-                      {rental.status}
-                    </span>
-                  </div>
-                  
-                  <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-2 mb-4 border border-gray-100">
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Equipment</span>
-                      <span className="font-semibold text-gray-900">{rental.equipment.name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Duration</span>
-                      <span className="font-semibold text-gray-900">
-                        {Math.ceil((new Date(rental.endDate).getTime() - new Date(rental.startDate).getTime()) / (1000 * 3600 * 24))} Days
-                      </span>
-                    </div>
-                    <div className="flex justify-between border-t border-gray-200 pt-2">
-                      <span className="text-gray-900 font-bold">Total Estimate</span>
-                      <span className="font-black text-gray-900 text-lg flex items-center">
-                        <IndianRupee className="w-4 h-4 mr-0.5" />{rental.totalCost}
-                      </span>
-                    </div>
-                  </div>
 
-                  {rental.status === 'PENDING' && (
-                    <div className="flex space-x-2">
-                      <button 
-                        onClick={() => handleUpdateRentalStatus(rental.id, 'APPROVED')}
-                        className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
-                      >
-                        <CheckCircle className="w-4 h-4 mr-1.5" /> Accept Request
-                      </button>
-                      <button 
-                        onClick={() => handleUpdateRentalStatus(rental.id, 'REJECTED')}
-                        className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
-                      >
-                        <XCircle className="w-4 h-4 mr-1.5" /> Decline
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    {status === 'PENDING' && (
+                      <div className="flex space-x-2">
+                        <button 
+                          onClick={() => handleUpdateRentalStatus(rental.id, 'APPROVED')}
+                          className="flex-1 bg-gray-900 hover:bg-gray-800 text-white py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
+                        >
+                          <CheckCircle className="w-4 h-4 mr-1.5" /> Accept Request
+                        </button>
+                        <button 
+                          onClick={() => handleUpdateRentalStatus(rental.id, 'REJECTED')}
+                          className="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 py-2 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
+                        >
+                          <XCircle className="w-4 h-4 mr-1.5" /> Decline
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

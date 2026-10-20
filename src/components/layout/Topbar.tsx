@@ -359,14 +359,14 @@ export const Topbar: React.FC = () => {
   const isMatchingRole = currentUser && (currentUser.role === effectiveRole || (!pathname?.includes('/dashboard/') && currentUser.role === currentRole));
   const activeUser = isMatchingRole ? currentUser : fallbackUser;
 
-  const displayUserName = activeUser.name;
-  const displayEmail = activeUser.email;
-  const displayPhone = activeUser.phone;
-  const displayAvatar = activeUser.avatarUrl || defaultAvatar;
+  const displayUserName = activeUser?.name || "User";
+  const displayEmail = activeUser?.email || "";
+  const displayPhone = activeUser?.phone || "";
+  const displayAvatar = activeUser?.avatarUrl || defaultAvatar;
   const displayLocation = weatherData?.location?.name || "Changanacheri, Kerala";
   const displayTemp = weatherData?.current?.temperature;
-  const displayKyc = activeUser.kycStatus || "VERIFIED";
-  const displayId = activeUser.id;
+  const displayKyc = activeUser?.kycStatus || "VERIFIED";
+  const displayId = activeUser?.id || "";
 
   const roleLabel = effectiveRole
     ? effectiveRole.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())

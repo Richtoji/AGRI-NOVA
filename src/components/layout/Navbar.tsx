@@ -157,12 +157,12 @@ export const Navbar: React.FC = () => {
               {/* User Avatar */}
               <div className="hidden lg:flex items-center space-x-2 pl-2 border-l border-gray-200 shrink-0">
                 <img
-                  src={currentUser.avatarUrl}
-                  alt={currentUser.name}
+                  src={currentUser.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || "User")}&background=f3f4f6&color=111827`}
+                  alt={currentUser.name || "User"}
                   className="w-8 h-8 rounded-full object-cover border border-gray-100 shrink-0"
                 />
                 <div className="flex flex-col text-xs leading-tight whitespace-nowrap">
-                  <span className="font-semibold text-gray-900 truncate max-w-[120px]">{currentUser.name}</span>
+                  <span className="font-semibold text-gray-900 truncate max-w-[120px]">{currentUser.name || "User"}</span>
                   <span className="text-[10px] text-gray-900 font-bold uppercase">{currentRole}</span>
                 </div>
               </div>

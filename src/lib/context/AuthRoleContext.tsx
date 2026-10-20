@@ -138,10 +138,17 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const res = await fetch("/api/auth/me");
         if (res.ok) {
           const data = await res.json();
-          setCurrentUser(data.user);
-          setCurrentRole(data.user.role as RoleType);
-          setIsLoggedIn(true);
-          await fetchCart();
+          if (data && data.user) {
+            setCurrentUser(data.user);
+            if (data.user.role) {
+              setCurrentRole(data.user.role as RoleType);
+            }
+            setIsLoggedIn(true);
+            await fetchCart();
+          } else {
+            setCurrentUser(null);
+            setIsLoggedIn(false);
+          }
         }
       } catch (e) {
         // Not logged in or expired
