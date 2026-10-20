@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import { validatePasswords } from "@/lib/validation";
+import { validatePasswords, validatePhoneWithDetails, validateDob } from "@/lib/validation";
 import { inMemoryStore } from "@/lib/data/inMemoryStore";
 
 export async function POST(request: Request) {
@@ -9,14 +9,21 @@ export async function POST(request: Request) {
     const body = await request.json().catch(() => ({}));
     const { phone, dob, newPassword, confirmPassword } = body;
 
-    if (!phone || !dob || !newPassword || !confirmPassword) {
-      return NextResponse.json({ error: "All fields are required." }, { status: 400 });
+    // Strict Phone Validation
+    const phoneVal = validatePhoneWithDetails(phone || "");
+    if (!phoneVal.isValid) {
+      return NextResponse.json({ error: phoneVal.error }, { status: 400 });
+    }
+    const cleanPhone = phoneVal.cleanPhone || phone.trim().replace(/[\s-()]/g, "");
+
+    // Strict DOB Validation
+    const dobVal = validateDob(dob || "");
+    if (!dobVal.isValid) {
+      return NextResponse.json({ error: dobVal.error }, { status: 400 });
     }
 
-    const cleanPhone = phone.trim().replace(/[\s-()]/g, "");
-
-    // 1. Validate New Password
-    const pwdVal = validatePasswords(newPassword, confirmPassword);
+    // Strict Passwords Validation
+    const pwdVal = validatePasswords(newPassword || "", confirmPassword || "");
     if (!pwdVal.isValid) {
       return NextResponse.json({ error: pwdVal.error }, { status: 400 });
     }

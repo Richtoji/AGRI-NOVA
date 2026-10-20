@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { inMemoryStore } from "@/lib/data/inMemoryStore";
+import { validateEmailWithDetails } from "@/lib/validation";
 
 const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
@@ -13,9 +14,17 @@ export async function POST(request: Request) {
     const rawEmail = body.email || body.identifier;
     const { password, role } = body;
 
-    if (!rawEmail || !password) {
+    const emailVal = validateEmailWithDetails(rawEmail || "");
+    if (!emailVal.isValid) {
       return NextResponse.json(
-        { error: "Email and password are required." },
+        { error: emailVal.error },
+        { status: 400 }
+      );
+    }
+
+    if (!password || typeof password !== "string" || password.trim().length === 0) {
+      return NextResponse.json(
+        { error: "Password is required and cannot be empty or whitespace." },
         { status: 400 }
       );
     }
@@ -54,11 +63,11 @@ export async function POST(request: Request) {
 
     // 3. Verify Password
     let isValidPassword = false;
-    if (user.passwordHash) {
+    if (user.passwordHash && user.passwordHash.trim().length > 0) {
       isValidPassword = await bcrypt.compare(password, user.passwordHash);
-    }
-    if (!isValidPassword && password === "password123") {
-      isValidPassword = true;
+    } else {
+      // Default initial password before user sets custom password
+      isValidPassword = password === "password123";
     }
 
     if (!isValidPassword) {

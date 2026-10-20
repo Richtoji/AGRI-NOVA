@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     }
 
     const normalizedEmail = email.trim().toLowerCase();
-    const cleanPhone = phone.trim().replace(/[\s-()]/g, "");
+    const cleanPhone = phoneVal.cleanPhone || phone.trim().replace(/[\s-()]/g, "");
 
     // 2. Database Checks & Creation with In-Memory Fallback
     try {

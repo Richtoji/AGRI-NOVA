@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth/serverAuth";
 import { prisma } from "@/lib/prisma";
 import { inMemoryStore } from "@/lib/data/inMemoryStore";
+import { validateFullName, validateEmailWithDetails, validatePhoneWithDetails } from "@/lib/validation";
 
 export async function GET() {
   try {
@@ -42,6 +43,30 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const { name, email, phone, avatarBase64 } = body;
 
+    // Strict profile input validation
+    if (name) {
+      const nameVal = validateFullName(name);
+      if (!nameVal.isValid) {
+        return NextResponse.json({ error: nameVal.error }, { status: 400 });
+      }
+    }
+
+    if (email) {
+      const emailVal = validateEmailWithDetails(email);
+      if (!emailVal.isValid) {
+        return NextResponse.json({ error: emailVal.error }, { status: 400 });
+      }
+    }
+
+    let sanitizedPhone = phone;
+    if (phone) {
+      const phoneVal = validatePhoneWithDetails(phone);
+      if (!phoneVal.isValid) {
+        return NextResponse.json({ error: phoneVal.error }, { status: 400 });
+      }
+      sanitizedPhone = phoneVal.cleanPhone;
+    }
+
     let avatarUrl = avatarBase64 || user.avatarUrl;
 
     try {
@@ -55,7 +80,7 @@ export async function PUT(request: Request) {
         data: {
           name: name ? name.trim() : user.name,
           email: email ? email.trim().toLowerCase() : user.email,
-          phone: phone ? phone.trim().replace(/\D/g, "") : user.phone,
+          phone: sanitizedPhone !== undefined ? sanitizedPhone : user.phone,
           ...(avatarUrl && { avatarUrl }),
         }
       });
@@ -77,7 +102,7 @@ export async function PUT(request: Request) {
       const updated = inMemoryStore.updateUserProfile(user.id, {
         name: name ? name.trim() : user.name,
         email: email ? email.trim().toLowerCase() : user.email,
-        phone: phone ? phone.trim().replace(/\D/g, "") : user.phone,
+        phone: sanitizedPhone !== undefined ? sanitizedPhone : user.phone,
         ...(avatarUrl && { avatarUrl })
       });
 
