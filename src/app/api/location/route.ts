@@ -12,46 +12,62 @@ interface LocationResult {
 
 // Reverse Geocode helper
 async function reverseGeocode(latitude: number, longitude: number): Promise<{ name: string; details: string; city: string; state: string; country: string }> {
-  // Strategy 1: BigDataCloud (Fast, reliable, HTTPS, free client reverse geocoding)
+  // Strategy 1: BigDataCloud (Fast, reliable, HTTPS, rich locality & administrative hierarchy)
   try {
     const res = await fetch(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`,
-      { signal: AbortSignal.timeout(4000) }
+      { signal: AbortSignal.timeout(4500) }
     );
     if (res.ok) {
       const data = await res.json();
-      const city = data.locality || data.city || data.principalSubdivision || 'Local Area';
-      const state = data.principalSubdivision || '';
-      const country = data.countryName || 'India';
-      const name = city;
-      const details = [city, state, country].filter(Boolean).join(', ');
-      if (city && city !== 'Local Area') {
-        return { name, details, city, state, country };
+      const locality = (data.locality || '').trim();
+      const city = (data.city || data.principalSubdivision || '').trim();
+      const state = (data.principalSubdivision || 'Kerala').trim();
+      const country = (data.countryName || 'India').trim();
+
+      let name = locality;
+      if (city && city.toLowerCase() !== locality.toLowerCase()) {
+        name = locality ? `${locality}, ${city}` : city;
+      } else if (!name) {
+        name = city || state || 'Local Area';
+      }
+
+      const details = [locality, city !== locality ? city : '', state, country].filter(Boolean).join(', ');
+      if (name && name !== 'Local Area') {
+        return { name, details, city: city || locality, state, country };
       }
     }
   } catch (e) {
     // Fall through to Nominatim
   }
 
-  // Strategy 2: OpenStreetMap Nominatim
+  // Strategy 2: OpenStreetMap Nominatim with zoom=18 for farm/village-level precision
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=12&accept-language=en`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1&accept-language=en`,
       {
         headers: { 'User-Agent': 'Agri-NOVA-Platform/2.0 (contact@agrinova.in)' },
-        signal: AbortSignal.timeout(4000)
+        signal: AbortSignal.timeout(4500)
       }
     );
     if (res.ok) {
       const data = await res.json();
       if (data && data.address) {
         const addr = data.address;
-        const city = addr.city || addr.town || addr.village || addr.suburb || addr.district || addr.county || 'Local Area';
-        const state = addr.state || '';
+        const local = addr.village || addr.suburb || addr.neighbourhood || addr.hamlet || addr.town || addr.isolated_dwelling || addr.city_district;
+        const district = addr.county || addr.district || addr.state_district || addr.city;
+        const state = addr.state || 'Kerala';
         const country = addr.country || 'India';
-        const name = city;
-        const details = [city, state, country].filter(Boolean).join(', ');
-        return { name, details, city, state, country };
+
+        let name = local;
+        if (district && district.toLowerCase() !== (local || '').toLowerCase()) {
+          name = local ? `${local}, ${district}` : district;
+        } else if (!name) {
+          name = district || state || 'Local Area';
+        }
+
+        const details = data.display_name || [local, district, state, country].filter(Boolean).join(', ');
+        return { name, details, city: district || local || 'Local Area', state, country };
       }
     }
   } catch (e) {
@@ -59,7 +75,7 @@ async function reverseGeocode(latitude: number, longitude: number): Promise<{ na
   }
 
   return {
-    name: `Lat: ${latitude.toFixed(2)}, Lng: ${longitude.toFixed(2)}`,
+    name: `Lat: ${latitude.toFixed(4)}, Lng: ${longitude.toFixed(4)}`,
     details: `Coordinates: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
     city: 'Local Area',
     state: '',

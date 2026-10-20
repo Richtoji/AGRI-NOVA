@@ -54,7 +54,9 @@ import {
   ArrowUpRight,
   Trash2,
   Sparkles,
-  ExternalLink
+  ExternalLink,
+  RotateCcw,
+  Compass
 } from "lucide-react";
 
 // Dynamically import the map to avoid SSR issues with Leaflet
@@ -85,7 +87,21 @@ function FarmerDashboardContent() {
     else setGreeting("Good Evening");
   }, []);
   
-  const { coordinates, weatherData, loading, error, permissionState, refresh, setLocationManually } = useLocationWeather();
+  const {
+    coordinates,
+    detectedCoordinates,
+    detectedLocationName,
+    weatherData,
+    loading,
+    isDetecting,
+    error,
+    permissionState,
+    accuracy,
+    isOtherLocation,
+    refresh,
+    resetToDetected,
+    setLocationManually
+  } = useLocationWeather();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
@@ -811,13 +827,39 @@ function FarmerDashboardContent() {
                 {/* FARM LOCATION CARD */}
                 <div className="col-span-12 lg:col-span-4 bg-white border border-gray-100 rounded-2xl p-5 flex flex-col relative isolate" style={{minHeight: '230px'}}>
                   <div className="flex justify-between items-center mb-3">
-                    <div className="font-bold text-sm text-gray-900">Farm Location</div>
-                    <button 
-                      onClick={refresh}
-                      className="text-[11px] font-bold text-gray-500 flex items-center hover:text-gray-900 transition-colors cursor-pointer"
-                    >
-                      <RefreshCw className={`w-3 h-3 mr-1 ${loading ? 'animate-spin' : ''}`} /> Detect Location
-                    </button>
+                    <div className="flex items-center space-x-2">
+                      <div className="font-bold text-sm text-gray-900">Farm Location</div>
+                      {isOtherLocation && (
+                        <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">
+                          Selected Place
+                        </span>
+                      )}
+                      {!isOtherLocation && coordinates && !isDetecting && (
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse" /> Live GPS
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      {isOtherLocation && (
+                        <button
+                          type="button"
+                          onClick={resetToDetected}
+                          className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full flex items-center transition-colors cursor-pointer"
+                          title="Reset to detected farm GPS location"
+                        >
+                          <RotateCcw className="w-2.5 h-2.5 mr-1" /> Reset to Farm
+                        </button>
+                      )}
+                      <button 
+                        onClick={refresh}
+                        className="text-[11px] font-bold text-gray-500 flex items-center hover:text-gray-900 transition-colors cursor-pointer"
+                        title="Re-detect live GPS location"
+                      >
+                        <RefreshCw className={`w-3 h-3 mr-1 ${loading || isDetecting ? 'animate-spin text-emerald-600' : ''}`} /> Detect
+                      </button>
+                    </div>
                   </div>
 
                   {/* SEARCH BAR */}
@@ -830,12 +872,13 @@ function FarmerDashboardContent() {
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Search location manually..."
-                        className="block w-full pl-8 pr-16 py-1.5 text-xs text-gray-900 bg-gray-50 border border-gray-200 rounded-lg focus:ring-green-500 focus:border-green-500 transition-colors"
+                        placeholder="Search location to view on map..."
+                        disabled={isDetecting && !coordinates}
+                        className="block w-full pl-8 pr-16 py-1.5 text-xs text-gray-900 bg-gray-50 border border-gray-200 rounded-lg focus:ring-green-500 focus:border-green-500 transition-colors disabled:opacity-50"
                       />
                       <button
                         type="submit"
-                        disabled={isSearching || !searchQuery.trim()}
+                        disabled={isSearching || !searchQuery.trim() || (isDetecting && !coordinates)}
                         className="absolute inset-y-0 right-0 px-3 flex items-center bg-green-500 hover:bg-green-600 text-white text-[10px] font-bold rounded-r-lg transition-colors disabled:opacity-50 cursor-pointer"
                       >
                         {isSearching ? '...' : 'Search'}
@@ -860,8 +903,9 @@ function FarmerDashboardContent() {
                       <button
                         key={district.name}
                         type="button"
+                        disabled={isDetecting && !coordinates}
                         onClick={() => setLocationManually(district.lat, district.lng, district.name)}
-                        className={`px-2 py-0.5 rounded-full font-semibold transition-colors shrink-0 cursor-pointer ${
+                        className={`px-2 py-0.5 rounded-full font-semibold transition-colors shrink-0 cursor-pointer disabled:opacity-50 ${
                           weatherData?.location?.name?.toLowerCase().includes(district.name.toLowerCase())
                             ? "bg-emerald-600 text-white shadow-xs"
                             : "bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 text-gray-600"
@@ -874,10 +918,20 @@ function FarmerDashboardContent() {
                   
                   {/* Map Area */}
                   <div className="flex-1 bg-[#eef0f3] rounded-xl relative overflow-hidden flex items-center justify-center mb-3" style={{minHeight: '130px'}}>
-                    {loading && !coordinates ? (
-                       <div className="text-xs text-gray-500 font-medium flex flex-col items-center">
-                         <RefreshCw className="w-5 h-5 mb-2 animate-spin text-gray-400" />
-                         Detecting your location...
+                    {(isDetecting || loading) && !coordinates ? (
+                       <div className="w-full h-full min-h-[130px] flex flex-col items-center justify-center p-3 text-center bg-gradient-to-b from-gray-50 to-emerald-50/20">
+                         <div className="relative mb-2">
+                           <div className="w-8 h-8 rounded-full bg-emerald-500/20 animate-ping absolute inset-0" />
+                           <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center relative shadow-sm">
+                             <Compass className="w-4 h-4 animate-spin" style={{ animationDuration: '3s' }} />
+                           </div>
+                         </div>
+                         <div className="text-xs text-gray-800 font-bold">
+                           Acquiring Farm GPS Location...
+                         </div>
+                         <div className="text-[10px] text-gray-500 mt-0.5">
+                           Fetching high-precision satellite telemetry
+                         </div>
                        </div>
                     ) : error && !coordinates ? (
                        <div className="text-xs text-red-500 font-medium px-4 text-center">
@@ -889,13 +943,11 @@ function FarmerDashboardContent() {
                            latitude={coordinates.lat} 
                            longitude={coordinates.lng} 
                            locationName={weatherData?.location?.name || "Locating area..."}
+                           detectedCoordinates={detectedCoordinates}
+                           isDetectedLocation={!isOtherLocation}
                            onLocationSelect={setLocationManually}
+                           onResetToDetected={resetToDetected}
                          />
-                         <div className="absolute bottom-2 left-0 right-0 flex justify-center pointer-events-none z-[1000]">
-                           <div className="bg-white/90 backdrop-blur-xs px-3 py-1 rounded-full shadow-xs text-[10px] font-bold text-gray-600 border border-gray-200">
-                             Click map to change location
-                           </div>
-                         </div>
                        </div>
                     ) : (
                       <div className="text-xs text-gray-500 font-medium text-center px-4">
@@ -909,17 +961,18 @@ function FarmerDashboardContent() {
                       {weatherData ? (
                         <>
                           <div className="flex items-center space-x-1.5 text-xs font-semibold text-gray-900">
-                            <MapPin className="w-3.5 h-3.5 text-gray-700" />
+                            <MapPin className={`w-3.5 h-3.5 ${isOtherLocation ? 'text-blue-600' : 'text-emerald-700'}`} />
                             <span className="truncate max-w-[200px]">{weatherData.location.details}</span>
                           </div>
                           <span className="text-[9px] text-gray-400 mt-0.5 ml-5">
-                            Lat: {coordinates?.lat.toFixed(4)}, Lng: {coordinates?.lng.toFixed(4)}
+                            {isOtherLocation ? 'Selected Place' : 'Farm GPS'}: {coordinates?.lat.toFixed(4)}, {coordinates?.lng.toFixed(4)}
+                            {accuracy && !isOtherLocation ? ` (±${accuracy}m)` : ''}
                           </span>
                         </>
                       ) : (
                         <div className="flex items-center space-x-1.5 text-xs font-semibold text-gray-400">
                           <MapPin className="w-3.5 h-3.5" />
-                          <span>{loading ? 'Locating...' : 'Location Unknown'}</span>
+                          <span>{loading || isDetecting ? 'Locating...' : 'Location Unknown'}</span>
                         </div>
                       )}
                     </div>
@@ -1425,15 +1478,44 @@ function FarmerDashboardContent() {
                 <div className="col-span-12 lg:col-span-7 bg-white border border-gray-100 rounded-3xl p-6 shadow-xs flex flex-col" style={{minHeight: '400px'}}>
                   <div className="flex justify-between items-center mb-4">
                     <div>
-                      <h2 className="text-xl font-black text-gray-900">Farm Location &amp; Satellite Map</h2>
-                      <p className="text-xs text-gray-500">Click anywhere on the map to pin your field coordinates</p>
+                      <div className="flex items-center space-x-2">
+                        <h2 className="text-xl font-black text-gray-900">Farm Location &amp; Satellite Map</h2>
+                        {isOtherLocation && (
+                          <span className="text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-0.5 rounded-full">
+                            Other Location Selected
+                          </span>
+                        )}
+                        {!isOtherLocation && coordinates && !isDetecting && (
+                          <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse" /> Live Farm GPS Active
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {isOtherLocation
+                          ? "Currently viewing selected location on map. Click 'Reset to Farm GPS' to return to your field."
+                          : "Centered on your detected field GPS. Click anywhere on the map to inspect other farm locations."}
+                      </p>
                     </div>
-                    <button 
-                      onClick={refresh}
-                      className="text-xs font-bold text-emerald-700 flex items-center hover:underline cursor-pointer"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading ? 'animate-spin' : ''}`} /> Detect Live Location
-                    </button>
+
+                    <div className="flex items-center space-x-2 shrink-0">
+                      {isOtherLocation && (
+                        <button
+                          type="button"
+                          onClick={resetToDetected}
+                          className="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-xl flex items-center transition-colors cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset to Farm GPS
+                        </button>
+                      )}
+                      <button 
+                        onClick={refresh}
+                        className="text-xs font-bold text-emerald-700 flex items-center hover:underline cursor-pointer"
+                        title="Re-detect live GPS location"
+                      >
+                        <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loading || isDetecting ? 'animate-spin' : ''}`} /> Detect Live Location
+                      </button>
+                    </div>
                   </div>
 
                   <form onSubmit={handleSearch} className="mb-4">
@@ -1444,12 +1526,13 @@ function FarmerDashboardContent() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search district, village, or coordinates..."
-                        className="w-full pl-9 pr-24 py-2 text-xs text-gray-900 bg-gray-50 border border-gray-200 rounded-xl"
+                        disabled={isDetecting && !coordinates}
+                        className="w-full pl-9 pr-24 py-2 text-xs text-gray-900 bg-gray-50 border border-gray-200 rounded-xl disabled:opacity-50"
                       />
                       <button
                         type="submit"
-                        disabled={isSearching || !searchQuery.trim()}
-                        className="absolute right-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg cursor-pointer"
+                        disabled={isSearching || !searchQuery.trim() || (isDetecting && !coordinates)}
+                        className="absolute right-1.5 px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg cursor-pointer disabled:opacity-50"
                       >
                         {isSearching ? '...' : 'Search'}
                       </button>
@@ -1457,12 +1540,28 @@ function FarmerDashboardContent() {
                   </form>
 
                   <div className="flex-1 rounded-2xl overflow-hidden bg-gray-100 relative min-h-[250px]">
-                    {coordinates ? (
+                    {(isDetecting || loading) && !coordinates ? (
+                      <div className="w-full h-full min-h-[250px] flex flex-col items-center justify-center p-8 text-center bg-gradient-to-b from-gray-50 to-emerald-50/20">
+                        <div className="relative mb-3">
+                          <div className="w-12 h-12 rounded-full bg-emerald-500/20 animate-ping absolute inset-0" />
+                          <div className="w-12 h-12 rounded-full bg-emerald-600 text-white flex items-center justify-center relative shadow-md">
+                            <Compass className="w-6 h-6 animate-spin" style={{ animationDuration: '3s' }} />
+                          </div>
+                        </div>
+                        <p className="text-sm font-bold text-gray-900">Acquiring High-Precision Farm GPS...</p>
+                        <p className="text-xs text-gray-500 mt-1 max-w-sm">
+                          Loading detected field coordinates first. Once detected, you can inspect other locations anywhere on the map.
+                        </p>
+                      </div>
+                    ) : coordinates ? (
                       <FarmMap 
                         latitude={coordinates.lat} 
                         longitude={coordinates.lng} 
                         locationName={weatherData?.location?.name || "Farm Area"}
+                        detectedCoordinates={detectedCoordinates}
+                        isDetectedLocation={!isOtherLocation}
                         onLocationSelect={setLocationManually}
+                        onResetToDetected={resetToDetected}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">Loading map...</div>

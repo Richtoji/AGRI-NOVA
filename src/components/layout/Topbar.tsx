@@ -44,7 +44,8 @@ import {
   AlertTriangle,
   ArrowRight,
   Leaf,
-  Trash2
+  Trash2,
+  RotateCcw
 } from "lucide-react";
 import { useAuthRole, RoleType } from "@/lib/context/AuthRoleContext";
 import { useLocationWeather } from "@/lib/hooks/useLocationWeather";
@@ -234,7 +235,18 @@ const SEARCH_SUGGESTIONS = [
 export const Topbar: React.FC = () => {
   const router = useRouter();
   const { currentUser, currentRole, toggleCart, cartItems, logout } = useAuthRole();
-  const { coordinates, weatherData, loading, refresh, setLocationManually } = useLocationWeather();
+  const {
+    coordinates,
+    detectedCoordinates,
+    detectedLocationName,
+    weatherData,
+    loading,
+    isDetecting,
+    isOtherLocation,
+    refresh,
+    resetToDetected,
+    setLocationManually
+  } = useLocationWeather();
   const [searchQuery, setSearchQuery] = useState("");
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
@@ -363,7 +375,7 @@ export const Topbar: React.FC = () => {
   const displayEmail = activeUser?.email || "";
   const displayPhone = activeUser?.phone || "";
   const displayAvatar = activeUser?.avatarUrl || defaultAvatar;
-  const displayLocation = weatherData?.location?.name || "Changanacheri, Kerala";
+  const displayLocation = weatherData?.location?.name || (isDetecting ? "Detecting GPS..." : "Farm Location");
   const displayTemp = weatherData?.current?.temperature;
   const displayKyc = activeUser?.kycStatus || "VERIFIED";
   const displayId = activeUser?.id || "";
@@ -550,11 +562,16 @@ export const Topbar: React.FC = () => {
             className="hidden md:flex items-center space-x-1.5 px-3 py-1.5 bg-gray-50 hover:bg-gray-100/80 rounded-full border border-gray-200 transition-all cursor-pointer group shadow-2xs"
             title="Click to detect or change your location"
           >
-            <MapPin className={`w-3.5 h-3.5 ${loading ? "text-blue-500 animate-pulse" : "text-emerald-600"} group-hover:scale-110 transition-transform`} />
+            <MapPin className={`w-3.5 h-3.5 ${isDetecting ? "text-emerald-500 animate-spin" : isOtherLocation ? "text-blue-600" : "text-emerald-600"} group-hover:scale-110 transition-transform`} />
             <span className="text-xs font-semibold text-gray-800 max-w-[140px] truncate">
-              {loading ? "Detecting..." : displayLocation}
+              {isDetecting ? "Detecting GPS..." : displayLocation}
             </span>
-            {displayTemp !== undefined && (
+            {isOtherLocation && (
+              <span className="text-[9px] font-bold text-blue-600 bg-blue-50 px-1 rounded-sm">
+                Selected
+              </span>
+            )}
+            {displayTemp !== undefined && !isDetecting && (
               <span className="text-[11px] font-bold text-gray-500 border-l border-gray-200 pl-1.5 ml-0.5">
                 {displayTemp}°C
               </span>
@@ -1022,17 +1039,39 @@ export const Topbar: React.FC = () => {
             {/* Modal Content */}
             <div className="p-5 space-y-4 text-xs">
               
+              {/* Reset to Detected Farm GPS if an other location is selected */}
+              {isOtherLocation && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetToDetected();
+                    setIsLocationModalOpen(false);
+                  }}
+                  className="w-full p-3 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 text-emerald-800 rounded-2xl font-bold flex items-center justify-between transition-all cursor-pointer"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RotateCcw className="w-4 h-4 text-emerald-700" />
+                    <span>Reset to Detected Farm GPS</span>
+                  </div>
+                  {detectedLocationName && (
+                    <span className="text-[10px] bg-emerald-200 text-emerald-900 px-2 py-0.5 rounded-full font-bold truncate max-w-[140px]">
+                      {detectedLocationName}
+                    </span>
+                  )}
+                </button>
+              )}
+
               {/* GPS Auto-Detect Button */}
               <button
                 onClick={handleAutoDetect}
                 className="w-full p-3.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-2xl font-bold flex items-center justify-between shadow-xs transition-all cursor-pointer"
               >
                 <div className="flex items-center space-x-2.5">
-                  <Compass className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-                  <span>Detect My Current GPS Location</span>
+                  <Compass className={`w-4 h-4 ${isDetecting || loading ? "animate-spin" : ""}`} />
+                  <span>{isDetecting ? "Acquiring Farm GPS..." : "Detect Live Farm GPS Location"}</span>
                 </div>
                 <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold">
-                  Accurate
+                  High-Precision
                 </span>
               </button>
 
