@@ -37,3 +37,4 @@ __pycache__/
 
 # catalyst
 appsail_dist/
+catalyst-debug.log

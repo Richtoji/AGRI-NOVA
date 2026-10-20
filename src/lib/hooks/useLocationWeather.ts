@@ -68,6 +68,11 @@ export function useLocationWeather() {
         data.location.name = customName;
       }
       setWeatherData(data);
+
+      // Auto-cache the resolved place name
+      if (data.location?.name && (!customName || customName === 'Local Farm Area')) {
+        saveCachedLocation(lat, lng, data.location.name);
+      }
     } catch (err: any) {
       setError(err.message || 'Unable to load real-time weather.');
       // Provide a safe fallback weather dataset so UI never renders broken cards
@@ -110,7 +115,7 @@ export function useLocationWeather() {
         if (data && data.location) {
           const lat = Number(data.location.latitude);
           const lng = Number(data.location.longitude);
-          const name = data.location.name || 'Local Farm';
+          const name = data.location.name || 'Kottayam, Kerala';
           saveCachedLocation(lat, lng, name);
           setCoordinates({ lat, lng });
           fetchWeather(lat, lng, name);
@@ -151,13 +156,27 @@ export function useLocationWeather() {
       }
     }
 
-    if (!navigator || !navigator.geolocation) {
+    if (typeof window === 'undefined' || !navigator || !navigator.geolocation) {
       fallbackToServerIPLocation();
       return;
     }
 
+    // Fast-fail geolocation with fallback so desktop users are never stalled
+    let hasReturned = false;
+
+    const timer = setTimeout(() => {
+      if (!hasReturned) {
+        hasReturned = true;
+        fallbackToServerIPLocation();
+      }
+    }, 3500);
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (hasReturned) return;
+        hasReturned = true;
+        clearTimeout(timer);
+
         setPermissionState('granted');
         const { latitude, longitude } = position.coords;
         setCoordinates({ lat: latitude, lng: longitude });
@@ -176,6 +195,10 @@ export function useLocationWeather() {
           });
       },
       (geoError) => {
+        if (hasReturned) return;
+        hasReturned = true;
+        clearTimeout(timer);
+
         if (geoError.code === geoError.PERMISSION_DENIED) {
           setPermissionState('denied');
         }
@@ -183,9 +206,9 @@ export function useLocationWeather() {
         fallbackToServerIPLocation();
       },
       {
-        enableHighAccuracy: true,
-        timeout: 7000,
-        maximumAge: 60000 // 1 minute max age
+        enableHighAccuracy: false,
+        timeout: 3000,
+        maximumAge: 120000
       }
     );
   }, []);
@@ -193,7 +216,22 @@ export function useLocationWeather() {
   const setLocationManually = useCallback((lat: number, lng: number, name?: string) => {
     saveCachedLocation(lat, lng, name);
     setCoordinates({ lat, lng });
-    fetchWeather(lat, lng, name);
+
+    if (!name) {
+      // Reverse geocode clicked coordinates
+      fetch(`/api/location?lat=${lat}&lng=${lng}`)
+        .then(res => res.json())
+        .then(geo => {
+          const foundName = geo?.location?.name || 'Local Farm Area';
+          saveCachedLocation(lat, lng, foundName);
+          fetchWeather(lat, lng, foundName);
+        })
+        .catch(() => {
+          fetchWeather(lat, lng);
+        });
+    } else {
+      fetchWeather(lat, lng, name);
+    }
   }, []);
 
   useEffect(() => {

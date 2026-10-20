@@ -99,17 +99,18 @@ function FarmerDashboardContent() {
     setSearchError("");
     
     try {
-      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=1`);
+      const res = await fetch(`/api/location?search=${encodeURIComponent(searchQuery.trim())}`);
       const data = await res.json();
       
-      if (data && data.length > 0) {
-        setLocationManually(Number(data[0].lat), Number(data[0].lon));
+      if (data && data.results && data.results.length > 0) {
+        const item = data.results[0];
+        setLocationManually(Number(item.latitude), Number(item.longitude), item.name);
         setSearchQuery("");
       } else {
-        setSearchError("Location not found.");
+        setSearchError("Location not found. Try entering a district or city (e.g. Palakkad, Wayanad, Kottayam).");
       }
     } catch (err) {
-      setSearchError("Search failed.");
+      setSearchError("Location search failed. Please try again.");
     } finally {
       setIsSearching(false);
     }
@@ -839,6 +840,34 @@ function FarmerDashboardContent() {
                     </div>
                     {searchError && <p className="text-[9px] text-red-500 mt-1 pl-1 font-medium">{searchError}</p>}
                   </form>
+
+                  {/* QUICK DISTRICT SELECTOR */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none text-[10px]">
+                    <span className="text-gray-400 font-semibold shrink-0">Districts:</span>
+                    {[
+                      { name: "Kottayam", lat: 9.5916, lng: 76.5222 },
+                      { name: "Palakkad", lat: 10.7867, lng: 76.6548 },
+                      { name: "Wayanad", lat: 11.6050, lng: 76.0830 },
+                      { name: "Idukki", lat: 9.8494, lng: 76.9744 },
+                      { name: "Ernakulam", lat: 9.9816, lng: 76.2999 },
+                      { name: "Thrissur", lat: 10.5276, lng: 76.2144 },
+                      { name: "Alappuzha", lat: 9.4981, lng: 76.3388 },
+                      { name: "Kozhikode", lat: 11.2588, lng: 75.7804 },
+                    ].map(district => (
+                      <button
+                        key={district.name}
+                        type="button"
+                        onClick={() => setLocationManually(district.lat, district.lng, district.name)}
+                        className={`px-2 py-0.5 rounded-full font-semibold transition-colors shrink-0 cursor-pointer ${
+                          weatherData?.location?.name?.toLowerCase().includes(district.name.toLowerCase())
+                            ? "bg-emerald-600 text-white shadow-xs"
+                            : "bg-gray-100 hover:bg-emerald-50 hover:text-emerald-700 text-gray-600"
+                        }`}
+                      >
+                        {district.name}
+                      </button>
+                    ))}
+                  </div>
                   
                   {/* Map Area */}
                   <div className="flex-1 bg-[#eef0f3] rounded-xl relative overflow-hidden flex items-center justify-center mb-3" style={{minHeight: '130px'}}>

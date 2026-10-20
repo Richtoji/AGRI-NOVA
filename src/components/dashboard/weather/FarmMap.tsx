@@ -73,7 +73,7 @@ export default function FarmMap({ latitude, longitude, locationName, onLocationS
 
   return (
     <div ref={containerRef} className="w-full h-full rounded-xl overflow-hidden relative z-0 bg-white group">
-      <div key={Math.random()} className="w-full h-full relative z-0">
+      <div key={`farm-map-${latitude.toFixed(2)}-${longitude.toFixed(2)}`} className="w-full h-full relative z-0">
         <MapContainer 
           center={position} 
           zoom={14} 
