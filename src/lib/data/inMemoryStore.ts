@@ -404,22 +404,126 @@ for (const s of seedSync) {
   }
 }
 
-// Initialize farmer cultivation if empty
+// Initialize farmer cultivations if empty
 if (!globalStore.cultivations.has("u-farmer-01") || globalStore.cultivations.get("u-farmer-01").length === 0) {
+  const tomatoKnowledge = getCropKnowledge("Tomato");
   const coconutKnowledge = getCropKnowledge("Coconut");
+
+  const tomatoStages = [
+    { id: "st-tomato-01", stageOrder: 1, stageName: "Seed Sowing & Sapling Planting", duration: "Day 1-10", description: "Transplant healthy seedlings into prepared beds with organic compost.", instructions: "Maintain soil moisture and verify initial planting within 72 hours.", isCompleted: false },
+    { id: "st-tomato-02", stageOrder: 2, stageName: "Vegetative Growth & Staking", duration: "Day 11-30", description: "Install bamboo stakes and perform side shoot pruning.", instructions: "Apply neem oil preventative spray against leaf miners.", isCompleted: false },
+    { id: "st-tomato-03", stageOrder: 3, stageName: "Flowering & Fruit Setting", duration: "Day 31-55", description: "Flowering phase requiring consistent drip irrigation.", instructions: "Apply balanced micronutrient spray.", isCompleted: false },
+    { id: "st-tomato-04", stageOrder: 4, stageName: "Fruit Maturation & Harvesting", duration: "Day 56-80", description: "Harvest firm red tomatoes during early morning.", instructions: "Sort by size and crate immediately.", isCompleted: false }
+  ];
+
+  const coconutStages = [
+    { id: "st-01", stageOrder: 1, stageName: "Pit Preparation & Planting", duration: "Day 1-14", description: "Dig pits of 1m x 1m x 1m size and plant certified seedling.", instructions: "Fill with topsoil and compost up to 60cm.", isCompleted: true },
+    { id: "st-02", stageOrder: 2, stageName: "Early Vegetative Establishment", duration: "Months 1-12", description: "Establish root system and crown fronds.", instructions: "Provide shade in summer and regular bi-weekly watering.", isCompleted: false },
+    { id: "st-03", stageOrder: 3, stageName: "Crown Development & Trunking", duration: "Years 2-4", description: "Trunk formation and nutrient application.", instructions: "Apply balanced NPK + organic manure twice annually.", isCompleted: false },
+    { id: "st-04", stageOrder: 4, stageName: "Flowering & Nut Bearing", duration: "Year 5 onwards", description: "Active yield and bunch formation.", instructions: "Regular bunch inspection and prophylactic pest control.", isCompleted: false }
+  ];
+
   globalStore.cultivations.set("u-farmer-01", [
     {
-      id: "cult-farmer-01",
+      id: "cult-tomato-01",
+      farmerId: "u-farmer-01",
+      cropProfileId: "profile_tomato",
+      cropName: "Tomato",
+      region: "Palakkad Agricultural Belt",
+      startDate: new Date(Date.now() - 36 * 3600 * 1000).toISOString(), // 36h ago -> active 72h window
+      status: "PLANTING_PENDING",
+      currentStageId: "st-tomato-01",
+      currentStage: "Stage 1: Seed Sowing & Sapling Planting",
+      currentStageNumber: 1,
+      totalStages: 4,
+      progress: 10,
+      weeklyPhotoStatus: "NOT DUE",
+      healthStatus: "EXCELLENT",
+      createdAt: new Date(Date.now() - 36 * 3600 * 1000).toISOString(),
+      updatedAt: new Date(Date.now() - 30 * 3600 * 1000).toISOString(),
+      farmer: {
+        id: "u-farmer-01",
+        name: "Rajesh Kumar",
+        email: "farmer@agri-nova.com",
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+      },
+      cropProfile: {
+        id: "profile_tomato",
+        name: "Tomato",
+        category: tomatoKnowledge.category || "VEGETABLE",
+        expectedYield: tomatoKnowledge.expectedYield || "25-30 Tons / Hectare",
+        growingPeriod: tomatoKnowledge.growingPeriod || "75-90 Days",
+        waterRequirement: 3.5,
+        imageUrl: "/images/crops/tomato.jpg",
+        cultivationGuide: {
+          id: "guide-tomato",
+          landPreparation: tomatoKnowledge.landPreparation,
+          seedInformation: tomatoKnowledge.seedInformation,
+          spacing: tomatoKnowledge.spacing,
+          plantingMethod: tomatoKnowledge.plantingMethod,
+          harvesting: tomatoKnowledge.harvesting,
+          postHarvest: tomatoKnowledge.postHarvest,
+          cultivationStages: tomatoStages,
+          wateringSchedules: [
+            { id: "ws-tom-1", frequency: "Every 2 days", method: "Drip Irrigation", waterAmount: "2-3 Litres / plant" }
+          ],
+          manureFertilizers: [
+            { id: "mf-tom-1", name: "Vermicompost & Neem Cake", dosage: "500g / pit", applicationTime: "Basal dressing" }
+          ],
+          pestDiseases: [
+            { id: "pd-tom-1", name: "Early Blight & Whitefly", symptoms: "Spotted foliage, leaf curling", treatment: "Spray 2% Neem oil emulsion" }
+          ]
+        }
+      },
+      stageSubmissions: [
+        {
+          id: "sub-tomato-01",
+          cultivationId: "cult-tomato-01",
+          stageId: "st-tomato-01",
+          stageName: "Seed Sowing & Sapling Planting",
+          imageUrl: "https://images.unsplash.com/photo-1592841200221-a6898f307baa?w=800",
+          farmerNotes: "Transplanted 450 hybrid tomato saplings. Drip line connected and soil well aerated.",
+          status: "PENDING REVIEW",
+          submittedAt: new Date(Date.now() - 30 * 3600 * 1000).toISOString(),
+          stage: {
+            id: "st-tomato-01",
+            stageOrder: 1,
+            stageName: "Seed Sowing & Sapling Planting",
+            description: "Transplant healthy seedlings into prepared beds with organic compost."
+          }
+        }
+      ],
+      weeklyPhotos: [],
+      activities: [
+        { id: "act-t1", activityName: "72-Hour Planting Evidence Submitted", activityType: "PLANTING", scheduledDate: new Date(Date.now() - 36 * 3600 * 1000).toISOString(), isCompleted: true },
+        { id: "act-t2", activityName: "Stage 2: Staking & Top Dressing", activityType: "STAGE_TRANSITION", scheduledDate: new Date(Date.now() + 10 * 86400000).toISOString(), isCompleted: false }
+      ]
+    },
+    {
+      id: "cult-coconut-01",
       farmerId: "u-farmer-01",
       cropProfileId: "profile_coconut",
       cropName: "Coconut",
-      region: "Southern Coastal Plain",
-      startDate: new Date(Date.now() - 3 * 86400000).toISOString(),
-      status: "IN_PROGRESS",
-      currentStage: "Stage 1: Planting & Seedling Establishment",
-      currentStageNumber: 1,
+      region: "Kottayam Green Belt",
+      startDate: new Date(Date.now() - 14 * 86400000).toISOString(),
+      status: "ACTIVE",
+      currentStageId: "st-02",
+      currentStage: "Stage 2: Early Vegetative Establishment",
+      currentStageNumber: 2,
       totalStages: 4,
+      progress: 35,
+      weeklyPhotoStatus: "NOT DUE",
       healthStatus: "EXCELLENT",
+      createdAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+      updatedAt: new Date(Date.now() - 7 * 86400000).toISOString(),
+      farmer: {
+        id: "u-farmer-01",
+        name: "Rajesh Kumar",
+        email: "farmer@agri-nova.com",
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+      },
       cropProfile: {
         id: "profile_coconut",
         name: "Coconut",
@@ -433,12 +537,7 @@ if (!globalStore.cultivations.has("u-farmer-01") || globalStore.cultivations.get
           landPreparation: coconutKnowledge.landPreparation,
           seedInformation: coconutKnowledge.seedInformation,
           spacing: coconutKnowledge.spacing,
-          cultivationStages: [
-            { id: "st-01", stageOrder: 1, name: "Pit Preparation & Planting", duration: "Day 1-14", instructions: "Dig pits of 1m x 1m x 1m size. Fill with topsoil and compost up to 60cm before planting seedling.", isCompleted: false },
-            { id: "st-02", stageOrder: 2, name: "Early Vegetative Establishment", duration: "Months 1-12", instructions: "Provide shade in summer and regular bi-weekly watering during dry months.", isCompleted: false },
-            { id: "st-03", stageOrder: 3, name: "Crown Development & Trunking", duration: "Years 2-4", instructions: "Apply balanced NPK + organic manure twice annually before and after monsoon.", isCompleted: false },
-            { id: "st-04", stageOrder: 4, name: "Flowering & Nut Bearing", duration: "Year 5 onwards", instructions: "Regular bunch inspection and prophylactic pest control against rhinoceros beetle.", isCompleted: false }
-          ],
+          cultivationStages: coconutStages,
           wateringSchedules: [
             { id: "ws-01", frequency: "Every 3-4 days in dry summer", method: "Basin or Drip Irrigation", waterAmount: "40-50 Litres/palm" }
           ],
@@ -454,19 +553,21 @@ if (!globalStore.cultivations.has("u-farmer-01") || globalStore.cultivations.get
       stageSubmissions: [
         {
           id: "sub-01",
+          cultivationId: "cult-coconut-01",
           stageId: "st-01",
           stageName: "Pit Preparation & Planting",
           imageUrl: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600",
-          farmerNotes: "Initial pit preparation photograph submitted upon supervised cultivation enrollment.",
+          farmerNotes: "Initial pit preparation photograph verified and approved.",
           status: "APPROVED",
-          submittedAt: new Date(Date.now() - 2 * 86400000).toISOString()
+          submittedAt: new Date(Date.now() - 13 * 86400000).toISOString(),
+          adminComment: "Planting approved by Administrator. Stage 2 unlocked.",
+          stage: { id: "st-01", stageOrder: 1, stageName: "Pit Preparation & Planting", description: "Dig pits of 1m x 1m x 1m size and plant certified seedling." }
         }
       ],
       weeklyPhotos: [],
       activities: [
-        { id: "act-01", title: "Planting Pit Verification", scheduledDate: new Date(Date.now() - 2 * 86400000).toISOString(), isCompleted: true },
-        { id: "act-02", title: "Week 1 Basin Irrigation", scheduledDate: new Date(Date.now() + 86400000).toISOString(), isCompleted: false },
-        { id: "act-03", title: "Organic Manure Application", scheduledDate: new Date(Date.now() + 7 * 86400000).toISOString(), isCompleted: false }
+        { id: "act-01", activityName: "Planting Pit Verification", scheduledDate: new Date(Date.now() - 13 * 86400000).toISOString(), isCompleted: true },
+        { id: "act-02", activityName: "Week 1 Basin Irrigation", scheduledDate: new Date(Date.now() + 86400000).toISOString(), isCompleted: false }
       ]
     }
   ]);
@@ -739,7 +840,7 @@ export const inMemoryStore = {
   },
 
   getEquipmentById(id: string) {
-    return globalStore.equipment.find(e => e.id === id) || null;
+    return globalStore.equipment.find((e: any) => e.id === id) || null;
   },
 
   addEquipment(ownerId: string, data: any) {
@@ -762,14 +863,14 @@ export const inMemoryStore = {
   },
 
   updateEquipment(id: string, ownerId: string, data: any) {
-    const eq = globalStore.equipment.find(e => e.id === id && e.ownerId === ownerId);
+    const eq = globalStore.equipment.find((e: any) => e.id === id && e.ownerId === ownerId);
     if (!eq) return null;
     Object.assign(eq, data);
     return eq;
   },
 
   deleteEquipment(id: string, ownerId: string) {
-    const index = globalStore.equipment.findIndex(e => e.id === id && e.ownerId === ownerId);
+    const index = globalStore.equipment.findIndex((e: any) => e.id === id && e.ownerId === ownerId);
     if (index > -1) {
       globalStore.equipment.splice(index, 1);
       return true;
@@ -808,12 +909,12 @@ export const inMemoryStore = {
   getEquipmentBookings(ownerId?: string, farmerId?: string) {
     let list = [...globalStore.equipmentBookings];
     if (ownerId) {
-      list = list.filter(b => b.equipment?.ownerId === ownerId);
+      list = list.filter((b: any) => b.equipment?.ownerId === ownerId);
     }
     if (farmerId) {
-      list = list.filter(b => b.farmerId === farmerId);
+      list = list.filter((b: any) => b.farmerId === farmerId);
     }
-    return list.map(b => ({
+    return list.map((b: any) => ({
       ...b,
       renter: b.renter || b.farmer || {
         id: b.farmerId,
@@ -831,7 +932,7 @@ export const inMemoryStore = {
   },
 
   updateEquipmentBookingStatus(bookingId: string, status: "APPROVED" | "REJECTED") {
-    const booking = globalStore.equipmentBookings.find(b => b.id === bookingId);
+    const booking = globalStore.equipmentBookings.find((b: any) => b.id === bookingId);
     if (booking) {
       booking.status = status;
       return booking;
@@ -842,8 +943,8 @@ export const inMemoryStore = {
   // GOVERNMENT SCHEMES
   getSchemes(filter?: { category?: string; isActive?: boolean }) {
     let list = [...globalStore.schemes];
-    if (filter?.category) list = list.filter(s => s.category === filter.category);
-    if (filter?.isActive !== undefined) list = list.filter(s => s.isActive === filter.isActive);
+    if (filter?.category) list = list.filter((s: any) => s.category === filter.category);
+    if (filter?.isActive !== undefined) list = list.filter((s: any) => s.isActive === filter.isActive);
     return list;
   },
 
@@ -865,7 +966,7 @@ export const inMemoryStore = {
   // VETERINARY
   getVetConsultations(userId?: string) {
     if (!userId) return globalStore.vetConsultations;
-    return globalStore.vetConsultations.filter(v => v.farmerId === userId || v.vetId === userId);
+    return globalStore.vetConsultations.filter((v: any) => v.farmerId === userId || v.vetId === userId);
   },
 
   bookVetConsultation(data: { farmerId: string; scheduledAt: string; notes: string }) {
@@ -886,11 +987,11 @@ export const inMemoryStore = {
   // DELIVERY TASKS
   getDeliveryTasks(driverId?: string) {
     if (!driverId) return globalStore.deliveryTasks;
-    return globalStore.deliveryTasks.filter(t => t.driverId === driverId && t.status !== "DELIVERED");
+    return globalStore.deliveryTasks.filter((t: any) => t.driverId === driverId && t.status !== "DELIVERED");
   },
 
   updateDeliveryTaskStatus(taskId: string, status: "PICKED_UP" | "IN_TRANSIT" | "DELIVERED") {
-    const task = globalStore.deliveryTasks.find(t => t.id === taskId);
+    const task = globalStore.deliveryTasks.find((t: any) => t.id === taskId);
     if (task) {
       task.status = status;
       return task;
@@ -900,17 +1001,74 @@ export const inMemoryStore = {
 
   // CULTIVATIONS
   getCultivations(farmerId: string) {
-    return globalStore.cultivations.get(farmerId) || [];
+    const list = globalStore.cultivations.get(farmerId) || [];
+    return list;
+  },
+
+  getAllCultivations() {
+    const all: any[] = [];
+    for (const [fId, list] of globalStore.cultivations.entries()) {
+      const farmer = this.getUserById(fId);
+      for (const cult of list) {
+        if (!cult.farmer && farmer) {
+          cult.farmer = {
+            id: farmer.id,
+            name: farmer.name,
+            email: farmer.email,
+            phone: farmer.phone,
+            avatarUrl: farmer.avatarUrl
+          };
+        }
+        all.push(cult);
+      }
+    }
+    // Return newest first
+    return all.sort((a, b) => new Date(b.startDate || b.createdAt || 0).getTime() - new Date(a.startDate || a.createdAt || 0).getTime());
   },
 
   getCultivationById(farmerId: string, id: string) {
     const list = this.getCultivations(farmerId);
-    return list.find(c => c.id === id) || list[0] || null;
+    return list.find((c: any) => c.id === id) || null;
+  },
+
+  getCultivationByIdAny(id: string) {
+    for (const list of globalStore.cultivations.values()) {
+      const found = list.find((c: any) => c.id === id);
+      if (found) return found;
+    }
+    return null;
   },
 
   startCultivation(farmerId: string, cropName: string, region: string) {
     const knowledge = getCropKnowledge(cropName);
     const existingList = this.getCultivations(farmerId);
+    const farmer = this.getUserById(farmerId) || {
+      id: farmerId,
+      name: "Rajesh Kumar",
+      email: "farmer@agri-nova.com",
+      phone: "+91 98765 43210",
+      avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+    };
+
+    const stages = (knowledge.cultivationStages || []).map((s: any, idx: number) => ({
+      id: `st-${cropName.toLowerCase().replace(/\s+/g, '_')}-${idx + 1}`,
+      stageOrder: s.stageOrder || idx + 1,
+      stageName: s.stageName || `Stage ${idx + 1}`,
+      duration: `Day ${s.startDay || idx * 15 + 1}-${s.endDay || (idx + 1) * 20}`,
+      description: s.description || "Care and monitoring phase",
+      instructions: s.careInstructions || "Follow recommended cultivation protocols.",
+      isCompleted: false
+    }));
+
+    const firstStage = stages[0] || {
+      id: `st-${Date.now()}-1`,
+      stageOrder: 1,
+      stageName: "Stage 1: Seed Sowing & Sapling Planting",
+      duration: "Day 1-14",
+      description: "Initial planting and land preparation",
+      instructions: "Upload photo proof within 72 hours of planting.",
+      isCompleted: false
+    };
 
     const newCult = {
       id: `cult-${Date.now()}`,
@@ -919,30 +1077,40 @@ export const inMemoryStore = {
       cropName,
       region: region || "Kerala Farm Field",
       startDate: new Date().toISOString(),
-      status: "IN_PROGRESS",
-      currentStage: "Stage 1: Planting & Seedling Establishment",
+      status: "PLANTING_PENDING",
+      currentStageId: firstStage.id,
+      currentStage: firstStage.stageName,
       currentStageNumber: 1,
-      totalStages: 4,
+      totalStages: Math.max(stages.length, 4),
+      progress: 0,
+      weeklyPhotoStatus: "NOT DUE",
       healthStatus: "EXCELLENT",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      farmer: {
+        id: farmer.id,
+        name: farmer.name,
+        email: farmer.email,
+        phone: farmer.phone,
+        avatarUrl: farmer.avatarUrl
+      },
       cropProfile: {
         id: `profile_${cropName.toLowerCase().replace(/\s+/g, '_')}`,
         name: cropName,
-        category: knowledge.category,
-        expectedYield: knowledge.expectedYield,
-        growingPeriod: knowledge.growingPeriod,
-        waterRequirement: knowledge.waterRequirement,
+        category: knowledge.category || "CROP",
+        expectedYield: knowledge.expectedYield || "Standard Agricultural Yield",
+        growingPeriod: knowledge.growingPeriod || "Seasonal",
+        waterRequirement: typeof knowledge.waterRequirement === "number" ? knowledge.waterRequirement : 3.5,
         imageUrl: `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`,
         cultivationGuide: {
           id: `guide-${cropName.toLowerCase().replace(/\s+/g, '-')}`,
-          landPreparation: knowledge.landPreparation,
-          seedInformation: knowledge.seedInformation,
-          spacing: knowledge.spacing,
-          cultivationStages: [
-            { id: `st-${Date.now()}-1`, stageOrder: 1, name: "Land Preparation & Sowing", duration: "Day 1-14", instructions: "Ensure weed-free, well-aerated soil. Sow at recommended spacing.", isCompleted: false },
-            { id: `st-${Date.now()}-2`, stageOrder: 2, name: "Vegetative Growth & Weeding", duration: "Day 15-45", instructions: "Apply first top-dressing of fertilizer. Maintain regular irrigation.", isCompleted: false },
-            { id: `st-${Date.now()}-3`, stageOrder: 3, name: "Flowering & Fruit Setting", duration: "Day 46-75", instructions: "Monitor closely for insect pests. Ensure optimal soil moisture.", isCompleted: false },
-            { id: `st-${Date.now()}-4`, stageOrder: 4, name: "Maturity & Harvesting", duration: "Day 76-90", instructions: "Harvest during dry, cool hours of the morning for peak freshness.", isCompleted: false }
-          ],
+          landPreparation: knowledge.landPreparation || "",
+          seedInformation: knowledge.seedInformation || "",
+          spacing: knowledge.spacing || "",
+          plantingMethod: knowledge.plantingMethod || "",
+          harvesting: knowledge.harvesting || "",
+          postHarvest: knowledge.postHarvest || "",
+          cultivationStages: stages.length > 0 ? stages : [firstStage],
           wateringSchedules: [
             { id: "ws-1", frequency: "Every 2-3 days", method: "Drip Irrigation", waterAmount: "3-5 Litres / plant" }
           ],
@@ -954,56 +1122,230 @@ export const inMemoryStore = {
           ]
         }
       },
-      stageSubmissions: [],
-      weeklyPhotos: [],
+      stageSubmissions: [] as any[],
+      weeklyPhotos: [] as any[],
       activities: [
-        { id: `act-${Date.now()}-1`, title: "72-Hour Planting Photo Evidence", scheduledDate: new Date().toISOString(), isCompleted: false },
-        { id: `act-${Date.now()}-2`, title: "First Scheduled Irrigation", scheduledDate: new Date(Date.now() + 2 * 86400000).toISOString(), isCompleted: false }
+        { id: `act-${Date.now()}-1`, activityName: "72-Hour Planting Photo Evidence", scheduledDate: new Date().toISOString(), isCompleted: false },
+        { id: `act-${Date.now()}-2`, activityName: "First Scheduled Irrigation", scheduledDate: new Date(Date.now() + 2 * 86400000).toISOString(), isCompleted: false }
       ]
     };
 
-    existingList.unshift(newCult);
-    globalStore.cultivations.set(farmerId, existingList);
+    // Replace if existing for same crop, or unshift
+    const filtered = existingList.filter((c: any) => c.cropName !== cropName);
+    filtered.unshift(newCult);
+    globalStore.cultivations.set(farmerId, filtered);
     return newCult;
   },
 
   submitStageEvidence(farmerId: string, cultivationId: string, stageId: string, imageUrl: string, notes: string) {
     const list = this.getCultivations(farmerId);
-    const cult = list.find(c => c.id === cultivationId);
+    let cult = list.find((c: any) => c.id === cultivationId);
+    if (!cult) {
+      cult = this.getCultivationByIdAny(cultivationId);
+    }
     if (!cult) return null;
+
+    const stages = cult.cropProfile?.cultivationGuide?.cultivationStages || [];
+    const stageObj = stages.find((s: any) => s.id === stageId || s.stageOrder === 1) || {
+      id: stageId,
+      stageOrder: 1,
+      stageName: "Seed Sowing & Planting",
+      description: "Planting proof submitted by farmer"
+    };
 
     const submission = {
       id: `sub-${Date.now()}`,
-      stageId,
-      stageName: "Cultivation Evidence Submission",
+      cultivationId,
+      stageId: stageObj.id,
+      stageName: stageObj.stageName,
       imageUrl,
       farmerNotes: notes,
-      status: "APPROVED",
-      submittedAt: new Date().toISOString()
+      status: "PENDING REVIEW",
+      submittedAt: new Date().toISOString(),
+      stage: stageObj,
+      cultivation: {
+        id: cult.id,
+        status: cult.status,
+        cropProfile: cult.cropProfile,
+        farmer: cult.farmer
+      }
     };
-    cult.stageSubmissions.unshift(submission);
+
+    cult.stageSubmissions = [submission, ...(cult.stageSubmissions || [])];
+    cult.updatedAt = new Date().toISOString();
     return submission;
   },
 
   submitWeeklyPhoto(farmerId: string, cultivationId: string, weekNumber: number, imageUrl: string, notes: string) {
     const list = this.getCultivations(farmerId);
-    const cult = list.find(c => c.id === cultivationId);
+    let cult = list.find((c: any) => c.id === cultivationId);
+    if (!cult) {
+      cult = this.getCultivationByIdAny(cultivationId);
+    }
     if (!cult) return null;
 
     const weekly = {
       id: `wk-${Date.now()}`,
+      cultivationId,
       weekNumber,
       imageUrl,
-      notes,
-      uploadedAt: new Date().toISOString()
+      farmerNotes: notes,
+      status: "PENDING REVIEW",
+      submittedAt: new Date().toISOString(),
+      dueDate: new Date().toISOString(),
+      cultivation: {
+        id: cult.id,
+        cropProfile: cult.cropProfile,
+        farmer: cult.farmer
+      }
     };
-    cult.weeklyPhotos.push(weekly);
+
+    cult.weeklyPhotos = [weekly, ...(cult.weeklyPhotos || [])];
+    cult.weeklyPhotoStatus = "PENDING REVIEW";
+    cult.updatedAt = new Date().toISOString();
     return weekly;
+  },
+
+  getPendingPlantingCultivations() {
+    return this.getAllCultivations().filter((c: any) => c.status === "PLANTING_PENDING");
+  },
+
+  getPendingStageSubmissions() {
+    const submissions: any[] = [];
+    for (const cult of this.getAllCultivations()) {
+      for (const s of cult.stageSubmissions || []) {
+        if (s.status === "PENDING REVIEW" || s.status === "RESUBMISSION REQUIRED") {
+          submissions.push({
+            ...s,
+            cultivation: {
+              id: cult.id,
+              status: cult.status,
+              cropProfile: cult.cropProfile,
+              farmer: cult.farmer
+            }
+          });
+        }
+      }
+    }
+    return submissions.sort((a, b) => new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime());
+  },
+
+  getPendingWeeklyRecords() {
+    const records: any[] = [];
+    for (const cult of this.getAllCultivations()) {
+      for (const w of cult.weeklyPhotos || []) {
+        if (w.status === "PENDING REVIEW" || w.status === "RESUBMISSION REQUIRED") {
+          records.push({
+            ...w,
+            cultivation: {
+              id: cult.id,
+              status: cult.status,
+              cropProfile: cult.cropProfile,
+              farmer: cult.farmer
+            }
+          });
+        }
+      }
+    }
+    return records.sort((a, b) => new Date(a.submittedAt || 0).getTime() - new Date(b.submittedAt || 0).getTime());
+  },
+
+  getCultivationStats() {
+    const all = this.getAllCultivations();
+    const activeCount = all.filter((c: any) => c.status === "ACTIVE").length;
+    const plantingPendingCount = all.filter((c: any) => c.status === "PLANTING_PENDING").length;
+    const completedCount = all.filter((c: any) => c.status === "COMPLETED").length;
+    const pendingStagesList = this.getPendingStageSubmissions();
+    const pendingWeeklyList = this.getPendingWeeklyRecords();
+
+    const pendingPlantingSubmissions = pendingStagesList.filter(
+      (s: any) => s.stage?.stageOrder === 1 || s.cultivation?.status === "PLANTING_PENDING"
+    ).length;
+    const pendingStages = Math.max(0, pendingStagesList.length - pendingPlantingSubmissions);
+    const pendingPlanting = Math.max(plantingPendingCount, pendingPlantingSubmissions);
+    const activeCultivations = activeCount + plantingPendingCount;
+
+    return {
+      totalCultivations: all.length,
+      activeCultivations,
+      plantingPendingCount,
+      completedCultivations: completedCount,
+      pendingPlanting,
+      pendingPlantingSubmissions,
+      pendingStages,
+      pendingWeekly: pendingWeeklyList.length,
+      resubmissions: 0
+    };
+  },
+
+  approvePlanting(cultivationId: string, adminComment?: string) {
+    const cult = this.getCultivationByIdAny(cultivationId);
+    if (!cult) return null;
+
+    const stages = cult.cropProfile?.cultivationGuide?.cultivationStages || [];
+    const stage2 = stages[1];
+
+    cult.status = stage2 ? "ACTIVE" : "COMPLETED";
+    cult.currentStageId = stage2?.id || cult.currentStageId;
+    cult.progress = stages.length > 0 ? Math.round((1 / stages.length) * 100) : 25;
+    cult.updatedAt = new Date().toISOString();
+
+    if (cult.stageSubmissions && cult.stageSubmissions.length > 0) {
+      for (const s of cult.stageSubmissions) {
+        if (s.stage?.stageOrder === 1 || s.stageId === stages[0]?.id) {
+          s.status = "APPROVED";
+          s.adminComment = adminComment || "Planting approved by Administrator";
+          s.reviewedAt = new Date().toISOString();
+        }
+      }
+    }
+
+    return { success: true, updated: cult };
+  },
+
+  reviewStageSubmission(submissionId: string, action: string, adminComment?: string) {
+    for (const cult of this.getAllCultivations()) {
+      for (const s of cult.stageSubmissions || []) {
+        if (s.id === submissionId) {
+          s.status = action;
+          s.adminComment = adminComment || "";
+          s.reviewedAt = new Date().toISOString();
+
+          if (action === "APPROVED") {
+            const stages = cult.cropProfile?.cultivationGuide?.cultivationStages || [];
+            const currentIdx = stages.findIndex((st: any) => st.id === s.stageId);
+            const nextStage = stages[currentIdx + 1];
+            cult.currentStageId = nextStage?.id || s.stageId;
+            cult.progress = Math.round(((currentIdx + 1) / Math.max(stages.length, 1)) * 100);
+            cult.status = nextStage ? "ACTIVE" : "COMPLETED";
+            cult.updatedAt = new Date().toISOString();
+          }
+          return { success: true, updated: s };
+        }
+      }
+    }
+    return null;
+  },
+
+  reviewWeeklyRecord(recordId: string, action: string, adminComment?: string) {
+    for (const cult of this.getAllCultivations()) {
+      for (const w of cult.weeklyPhotos || []) {
+        if (w.id === recordId) {
+          w.status = action;
+          w.adminComment = adminComment || "";
+          w.reviewedAt = new Date().toISOString();
+          cult.weeklyPhotoStatus = action;
+          cult.updatedAt = new Date().toISOString();
+          return { success: true, updated: w };
+        }
+      }
+    }
+    return null;
   },
 
   deleteCultivation(farmerId: string, cultivationId: string) {
     const list = this.getCultivations(farmerId);
-    const filtered = list.filter(c => c.id !== cultivationId);
+    const filtered = list.filter((c: any) => c.id !== cultivationId);
     globalStore.cultivations.set(farmerId, filtered);
     return true;
   },
