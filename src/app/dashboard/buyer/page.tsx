@@ -223,12 +223,12 @@ export default function BuyerDashboard() {
                 <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-gray-500 font-medium mt-1">
                   <span className="flex items-center">
                     <Mail className="w-3.5 h-3.5 mr-1 text-gray-400" />
-                    {currentUser?.email || "buyer@agri-nova.com"}
+                    {currentUser?.email || "No email registered"}
                   </span>
                   <span className="text-gray-300">•</span>
                   <span className="flex items-center">
                     <Phone className="w-3.5 h-3.5 mr-1 text-gray-400" />
-                    {currentUser?.phone || "+91 98123 45678"}
+                    {currentUser?.phone || "No phone registered"}
                   </span>
                   <span className="text-gray-300">•</span>
                   <span className="flex items-center text-emerald-600 font-semibold group-hover:underline">

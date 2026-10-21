@@ -4,6 +4,7 @@ import {
   validatePasswords,
   validateFullName,
   validateRoleMetadata,
+  validateRole,
   validateCropInputs,
   validateExpenseAmount,
   validateCowTag,
@@ -155,6 +156,18 @@ test("Prescription non-empty and length requirement", () => {
   assert(validatePrescription("Give Oxytetracycline 10ml daily for 3 days"), "Should accept valid prescription text");
   assert(!validatePrescription("Short"), "Should reject too short prescription (< 10 chars)");
   assert(!validatePrescription("          "), "Should reject empty/whitespace prescription");
+});
+
+// 11. Public registration role restriction (Only Farmer and Buyer)
+test("Public registration role restrictions", () => {
+  assert(validateRole("FARMER").isValid, "Should allow Farmer registration");
+  assert(validateRole("BUYER").isValid, "Should allow Buyer registration");
+  assert(!validateRole("EQUIPMENT_OWNER").isValid, "Should reject Equipment Owner from public registration");
+  assert(!validateRole("VETERINARY_EXPERT").isValid, "Should reject Veterinary Expert from public registration");
+  assert(!validateRole("DELIVERY_PARTNER").isValid, "Should reject Delivery Partner from public registration");
+  assert(!validateRole("ADMIN").isValid, "Should reject Admin from public registration");
+  assert(!validateRole("SUPER_ADMIN").isValid, "Should reject Super Admin from public registration");
+  assert(!validateRole("").isValid, "Should reject empty role");
 });
 
 export function runTests(): boolean {

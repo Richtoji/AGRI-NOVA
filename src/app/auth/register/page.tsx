@@ -279,7 +279,10 @@ export default function RegisterPage() {
 
               {/* Account Role */}
               <div>
-                <label className="block text-sm font-medium text-gray-700">Account Role</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-sm font-medium text-gray-700">Account Role</label>
+                  <span className="text-[11px] text-gray-500 font-medium">Public registration only</span>
+                </div>
                 <div className="mt-1">
                   <select
                     name="role"
@@ -290,11 +293,11 @@ export default function RegisterPage() {
                   >
                     <option value="FARMER">Farmer</option>
                     <option value="BUYER">Buyer</option>
-                    <option value="EQUIPMENT_OWNER">Equipment Owner</option>
-                    <option value="VETERINARY_EXPERT">Veterinary Expert</option>
-                    <option value="DELIVERY_PARTNER">Delivery Partner</option>
                   </select>
                 </div>
+                <p className="mt-1 text-[11px] text-gray-500">
+                  Note: Only Farmer and Buyer accounts can register. Other roles are provisioned by administration.
+                </p>
                 {errors.role && <p className="mt-1 text-xs text-red-500">{errors.role}</p>}
               </div>
 

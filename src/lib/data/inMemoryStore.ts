@@ -386,6 +386,24 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
 };
 (global as any).__AGRINOVA_STORE__ = globalStore;
 
+// Ensure active seed user credentials in persistent globalStore
+const seedSync = [
+  { id: "u-buyer-01", email: "Subin@gmail.com", name: "FreshBasket Supermarkets (Subin)", role: "BUYER" },
+  { id: "u-equipment-01", email: "equipment@agrinova.com", name: "Kisan Agro Rentals", role: "EQUIPMENT_OWNER" },
+  { id: "u-vet-01", email: "Vet@agrinova.com", name: "Dr. Ananya Sharma, DVM", role: "VETERINARY_EXPERT" },
+  { id: "u-admin-01", email: "admin@agrinova.com", name: "Enterprise Admin", role: "ADMIN" },
+  { id: "u-farmer-01", email: "farmer@agri-nova.com", name: "Rajesh Kumar", role: "FARMER" },
+  { id: "u-delivery-01", email: "delivery@agri-nova.com", name: "AgriExpress Logistics", role: "DELIVERY_PARTNER" }
+];
+for (const s of seedSync) {
+  const match = globalStore.users.find((u: any) => u.id === s.id || u.role === s.role);
+  if (match) {
+    match.email = s.email;
+    match.name = s.name;
+    match.role = s.role;
+  }
+}
+
 // Initialize farmer cultivation if empty
 if (!globalStore.cultivations.has("u-farmer-01") || globalStore.cultivations.get("u-farmer-01").length === 0) {
   const coconutKnowledge = getCropKnowledge("Coconut");
@@ -462,9 +480,19 @@ export const inMemoryStore = {
 
   getUserByEmail(email: string) {
     const norm = email.trim().toLowerCase();
+    // Subin@gmail.com and buyer aliases
+    if (norm === "subin@gmail.com" || norm === "buyer@agri-nova.com" || norm === "buyer@agrinova.com") {
+      const buyerUser = globalStore.users.find((u: any) => u.id === "u-buyer-01" || u.email.toLowerCase() === norm || u.role === "BUYER");
+      if (buyerUser) {
+        buyerUser.email = "Subin@gmail.com";
+        return buyerUser;
+      }
+    }
     const altNorm = norm.includes('@agri-nova.com')
       ? norm.replace('@agri-nova.com', '@agrinova.com')
-      : norm.replace('@agrinova.com', '@agri-nova.com');
+      : norm.includes('@agrinova.com')
+      ? norm.replace('@agrinova.com', '@agri-nova.com')
+      : norm;
     return globalStore.users.find((u: any) => u.email.toLowerCase() === norm || u.email.toLowerCase() === altNorm) || null;
   },
 
@@ -485,6 +513,11 @@ export const inMemoryStore = {
   },
 
   registerUser(userData: any) {
+    // Only FARMER and BUYER can register new accounts
+    if (userData.role !== "FARMER" && userData.role !== "BUYER") {
+      return { success: false, error: "Access denied. Only Farmer and Buyer accounts can be registered. Other user roles cannot create a new account." };
+    }
+
     const existing = this.getUserByEmail(userData.email);
     if (existing) return { success: false, error: "An account with this email already exists." };
 

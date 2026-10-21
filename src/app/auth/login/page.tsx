@@ -29,8 +29,8 @@ import {
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuthRole();
-  const [email, setEmail] = useState("farmer@agri-nova.com");
-  const [password, setPassword] = useState("password123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [selectedRole, setSelectedRole] = useState<RoleType>("FARMER");
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -92,7 +92,14 @@ export default function LoginPage() {
     setIsLoading(false);
 
     if (res.success) {
-      router.push(getRoleDashboardPath(selectedRole));
+      const targetRole = (res as any)?.user?.role || selectedRole;
+      const targetPath = getRoleDashboardPath(targetRole);
+      router.push(targetPath);
+      setTimeout(() => {
+        if (typeof window !== "undefined" && window.location.pathname.startsWith("/auth/login")) {
+          window.location.href = targetPath;
+        }
+      }, 250);
     } else {
       setValidationError(res.error || "Invalid credentials or role selection.");
     }
@@ -213,16 +220,6 @@ export default function LoginPage() {
                     onChange={(e) => {
                       const newRole = e.target.value as RoleType;
                       setSelectedRole(newRole);
-
-                      // Auto-fill demo emails
-                      switch (newRole) {
-                        case "FARMER": setEmail("farmer@agri-nova.com"); break;
-                        case "BUYER": setEmail("buyer@agri-nova.com"); break;
-                        case "EQUIPMENT_OWNER": setEmail("equipment@agri-nova.com"); break;
-                        case "VETERINARY_EXPERT": setEmail("vet@agri-nova.com"); break;
-                        case "DELIVERY_PARTNER": setEmail("delivery@agri-nova.com"); break;
-                        case "ADMIN": setEmail("admin@agri-nova.com"); break;
-                      }
                     }}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-600 sm:text-sm bg-white text-gray-900"
                   >
@@ -249,8 +246,23 @@ export default function LoginPage() {
                     required
                     value={email}
                     onChange={(e) => {
-                      setEmail(e.target.value);
+                      const val = e.target.value;
+                      setEmail(val);
                       if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: "" }));
+                      const lower = val.trim().toLowerCase();
+                      if (lower === "subin@gmail.com" || lower.startsWith("subin") || lower.includes("buyer")) {
+                        setSelectedRole("BUYER");
+                      } else if (lower === "vet@agrinova.com" || lower.startsWith("vet")) {
+                        setSelectedRole("VETERINARY_EXPERT");
+                      } else if (lower === "equipment@agrinova.com" || lower.startsWith("equipment")) {
+                        setSelectedRole("EQUIPMENT_OWNER");
+                      } else if (lower === "admin@agrinova.com" || lower.startsWith("admin")) {
+                        setSelectedRole("ADMIN");
+                      } else if (lower === "delivery@agri-nova.com" || lower.startsWith("delivery")) {
+                        setSelectedRole("DELIVERY_PARTNER");
+                      } else if (lower === "farmer@agri-nova.com" || lower.startsWith("farmer")) {
+                        setSelectedRole("FARMER");
+                      }
                     }}
                     onBlur={() => {
                       const check = validateEmailWithDetails(email.trim());

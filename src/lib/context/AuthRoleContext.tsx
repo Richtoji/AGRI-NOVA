@@ -159,7 +159,7 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     fetchSession();
   }, []);
 
-  const login = async (email: string, password: string, role: RoleType): Promise<{ success: boolean; error?: string }> => {
+  const login = async (email: string, password: string, role?: RoleType): Promise<{ success: boolean; user?: any; error?: string }> => {
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -172,10 +172,12 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       
       setCurrentUser(data.user);
-      setCurrentRole(data.user.role as RoleType);
+      if (data.user?.role) {
+        setCurrentRole(data.user.role as RoleType);
+      }
       setIsLoggedIn(true);
       await fetchCart();
-      return { success: true };
+      return { success: true, user: data.user };
     } catch (err: any) {
       return { success: false, error: "Network error during login" };
     }
@@ -190,8 +192,8 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     confirmPassword?: string,
     roleMetadata?: string
   ): Promise<{ success: boolean; error?: string }> => {
-    if (role === "ADMIN" || role === "SUPER_ADMIN") {
-      return { success: false, error: "Access denied. Public registration for administrative roles is prohibited." };
+    if (role !== "FARMER" && role !== "BUYER") {
+      return { success: false, error: "Access denied. Only Farmer and Buyer accounts can be registered. Other user roles cannot create a new account." };
     }
 
     try {

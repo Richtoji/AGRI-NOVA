@@ -9,17 +9,7 @@ export const CommandPalette: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const router = useRouter();
-  const { login, toggleTheme, theme } = useAuthRole();
-
-  const switchRole = async (role: RoleType) => {
-    let demoEmail = `${role.toLowerCase()}@agri-nova.com`;
-    if (role === "EQUIPMENT_OWNER") demoEmail = "equipment@agri-nova.com";
-    if (role === "VETERINARY_EXPERT") demoEmail = "vet@agri-nova.com";
-    if (role === "DELIVERY_PARTNER") demoEmail = "delivery@agri-nova.com";
-    if (role === "ADMIN") demoEmail = "admin@agri-nova.com";
-    
-    await login(demoEmail, "password123", role);
-  };
+  const { toggleTheme, theme } = useAuthRole();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -36,12 +26,12 @@ export const CommandPalette: React.FC = () => {
   }, []);
 
   const commands = [
-    { id: "farmer", title: "Switch to Farmer Workspace", category: "Navigation", icon: <Sprout className="w-4 h-4 text-gray-600" />, action: async () => { await switchRole("FARMER"); router.push("/dashboard/farmer"); } },
-    { id: "buyer", title: "Switch to Buyer Workspace", category: "Navigation", icon: <ShoppingBag className="w-4 h-4 text-blue-400" />, action: async () => { await switchRole("BUYER"); router.push("/dashboard/buyer"); } },
-    { id: "equipment", title: "Switch to Equipment Rental Dashboard", category: "Navigation", icon: <Tractor className="w-4 h-4 text-amber-400" />, action: async () => { await switchRole("EQUIPMENT_OWNER"); router.push("/dashboard/equipment"); } },
-    { id: "vet", title: "Switch to Veterinary Doctor Portal", category: "Navigation", icon: <Stethoscope className="w-4 h-4 text-rose-400" />, action: async () => { await switchRole("VETERINARY_EXPERT"); router.push("/dashboard/veterinary"); } },
-    { id: "delivery", title: "Switch to Delivery Logistics Hub", category: "Navigation", icon: <Truck className="w-4 h-4 text-purple-400" />, action: async () => { await switchRole("DELIVERY_PARTNER"); router.push("/dashboard/delivery"); } },
-    { id: "admin", title: "Switch to Enterprise Admin Command", category: "Navigation", icon: <ShieldCheck className="w-4 h-4 text-cyan-400" />, action: async () => { await switchRole("ADMIN"); router.push("/dashboard/admin"); } },
+    { id: "farmer", title: "Farmer Workspace", category: "Navigation", icon: <Sprout className="w-4 h-4 text-gray-600" />, action: () => { router.push("/dashboard/farmer"); setIsOpen(false); } },
+    { id: "buyer", title: "Buyer Workspace", category: "Navigation", icon: <ShoppingBag className="w-4 h-4 text-blue-400" />, action: () => { router.push("/dashboard/buyer"); setIsOpen(false); } },
+    { id: "equipment", title: "Equipment Rental Dashboard", category: "Navigation", icon: <Tractor className="w-4 h-4 text-amber-400" />, action: () => { router.push("/dashboard/equipment"); setIsOpen(false); } },
+    { id: "vet", title: "Veterinary Doctor Portal", category: "Navigation", icon: <Stethoscope className="w-4 h-4 text-rose-400" />, action: () => { router.push("/dashboard/veterinary"); setIsOpen(false); } },
+    { id: "delivery", title: "Delivery Logistics Hub", category: "Navigation", icon: <Truck className="w-4 h-4 text-purple-400" />, action: () => { router.push("/dashboard/delivery"); setIsOpen(false); } },
+    { id: "admin", title: "Enterprise Admin Command", category: "Navigation", icon: <ShieldCheck className="w-4 h-4 text-cyan-400" />, action: () => { router.push("/dashboard/admin"); setIsOpen(false); } },
     { id: "theme", title: `Toggle Theme (Current: ${theme})`, category: "Settings", icon: theme === "dark" ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />, action: () => toggleTheme() },
     { id: "marketplace", title: "Browse Commodities Marketplace", category: "Direct Links", icon: <ShoppingBag className="w-4 h-4 text-gray-700" />, action: () => router.push("/marketplace") },
     { id: "schemes", title: "View Govt Schemes & Subsidies", category: "Direct Links", icon: <Sparkles className="w-4 h-4 text-blue-400" />, action: () => router.push("/schemes") },

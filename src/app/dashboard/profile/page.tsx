@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import {
@@ -33,13 +33,22 @@ export default function ProfilePage() {
   const { currentUser, updateProfile } = useAuthRole();
 
   // Profile Form State
-  const [name, setName] = useState(currentUser?.name || "Rajesh Kumar");
-  const [phone, setPhone] = useState(currentUser?.phone || "+91 98765 43210");
-  const [email, setEmail] = useState(currentUser?.email || "farmer@agri-nova.com");
+  const [name, setName] = useState(currentUser?.name || "");
+  const [phone, setPhone] = useState(currentUser?.phone || "");
+  const [email, setEmail] = useState(currentUser?.email || "");
   const [avatarBase64, setAvatarBase64] = useState<string>("");
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
+
+  // Sync loaded session user data into form fields
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.name) setName(currentUser.name);
+      if (currentUser.phone) setPhone(currentUser.phone);
+      if (currentUser.email) setEmail(currentUser.email);
+    }
+  }, [currentUser]);
 
   // Password Change State
   const [currentPassword, setCurrentPassword] = useState("");
@@ -237,7 +246,7 @@ export default function ProfilePage() {
                         className={`w-full px-4 py-2.5 rounded-xl bg-white border text-gray-900 focus:outline-none focus:ring-2 transition-colors ${
                           profileErrors.name ? "border-rose-400 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-200 focus:border-emerald-600"
                         }`}
-                        placeholder="Rajesh Kumar"
+                        placeholder="Enter full name"
                         required
                       />
                     </div>
@@ -268,7 +277,7 @@ export default function ProfilePage() {
                         className={`w-full px-4 py-2.5 rounded-xl bg-white border text-gray-900 focus:outline-none focus:ring-2 transition-colors ${
                           profileErrors.phone ? "border-rose-400 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-200 focus:border-emerald-600"
                         }`}
-                        placeholder="+91 98765 43210"
+                        placeholder="+91 98765 00000"
                         required
                       />
                     </div>
@@ -300,7 +309,7 @@ export default function ProfilePage() {
                       className={`w-full px-4 py-2.5 rounded-xl bg-white border text-gray-900 focus:outline-none focus:ring-2 transition-colors ${
                         profileErrors.email ? "border-rose-400 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-200 focus:border-emerald-600"
                       }`}
-                      placeholder="farmer@agri-nova.com"
+                      placeholder="you@example.com"
                       required
                     />
                   </div>

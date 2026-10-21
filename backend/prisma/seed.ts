@@ -12,8 +12,8 @@ export const rawSeedData = {
     },
     {
       id: "u-buyer-01",
-      email: "buyer@agri-nova.com",
-      name: "FreshBasket Supermarkets",
+      email: "Subin@gmail.com",
+      name: "FreshBasket Supermarkets (Subin)",
       role: "BUYER",
       phone: "+91 98123 45678",
       avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
@@ -21,7 +21,7 @@ export const rawSeedData = {
     },
     {
       id: "u-equipment-01",
-      email: "equipment@agri-nova.com",
+      email: "equipment@agrinova.com",
       name: "Kisan Agro Rentals",
       role: "EQUIPMENT_OWNER",
       phone: "+91 97111 22334",
@@ -30,7 +30,7 @@ export const rawSeedData = {
     },
     {
       id: "u-vet-01",
-      email: "vet@agri-nova.com",
+      email: "Vet@agrinova.com",
       name: "Dr. Ananya Sharma, DVM",
       role: "VETERINARY_EXPERT",
       phone: "+91 99887 76655",
@@ -48,7 +48,7 @@ export const rawSeedData = {
     },
     {
       id: "u-admin-01",
-      email: "admin@agri-nova.com",
+      email: "admin@agrinova.com",
       name: "Enterprise Admin",
       role: "ADMIN",
       phone: "+91 90000 00001",

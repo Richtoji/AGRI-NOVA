@@ -7,10 +7,27 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("Seeding database with authentic user profiles...");
 
-  const passwordHash = await bcrypt.hash("password123", 10);
+  const USER_PASSWORDS: Record<string, string> = {
+    "farmer@agri-nova.com": "Farmer@2026#Secure",
+    "farmer@agrinova.com": "Farmer@2026#Secure",
+    "subin@gmail.com": "Subin@123",
+    "buyer@agri-nova.com": "Subin@123",
+    "buyer@agrinova.com": "Subin@123",
+    "equipment@agrinova.com": "Equipment@1",
+    "equipment@agri-nova.com": "Equipment@1",
+    "vet@agrinova.com": "Vetagrinova@1",
+    "vet@agri-nova.com": "Vetagrinova@1",
+    "delivery@agri-nova.com": "Driver@2026#Secure",
+    "delivery@agrinova.com": "Driver@2026#Secure",
+    "admin@agrinova.com": "Admin@123",
+    "admin@agri-nova.com": "Admin@123",
+  };
 
   for (const user of rawSeedData.users) {
     try {
+      const pwd = USER_PASSWORDS[user.email.toLowerCase()] || USER_PASSWORDS[user.email] || "AgriNova@2026#Secure";
+      const passwordHash = await bcrypt.hash(pwd, 10);
+
       const existing = await prisma.user.findUnique({
         where: { id: user.id }
       });
@@ -30,7 +47,11 @@ async function main() {
         });
         console.log(`Created user: ${user.email}`);
       } else {
-        console.log(`User already exists: ${user.email}`);
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { email: user.email, name: user.name, role: user.role as any, passwordHash }
+        });
+        console.log(`Updated user data and password for user: ${user.email}`);
       }
     } catch (e) {
       console.log(`Skipping user ${user.email} due to conflict.`);

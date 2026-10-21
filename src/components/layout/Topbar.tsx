@@ -50,71 +50,6 @@ import {
 import { useAuthRole, RoleType } from "@/lib/context/AuthRoleContext";
 import { useLocationWeather } from "@/lib/hooks/useLocationWeather";
 
-const ROLE_DEFAULT_USERS: Record<string, {
-  name: string;
-  email: string;
-  phone: string;
-  avatarUrl: string;
-  kycStatus: string;
-  id: string;
-}> = {
-  FARMER: {
-    id: "u-farmer-01",
-    name: "Rajesh Kumar",
-    email: "farmer@agri-nova.com",
-    phone: "+91 98765 43210",
-    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150",
-    kycStatus: "VERIFIED"
-  },
-  BUYER: {
-    id: "u-buyer-01",
-    name: "FreshBasket Supermarkets",
-    email: "buyer@agri-nova.com",
-    phone: "+91 98123 45678",
-    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150",
-    kycStatus: "VERIFIED"
-  },
-  EQUIPMENT_OWNER: {
-    id: "u-equipment-01",
-    name: "Kisan Agro Rentals",
-    email: "equipment@agri-nova.com",
-    phone: "+91 97111 22334",
-    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150",
-    kycStatus: "VERIFIED"
-  },
-  VETERINARY_EXPERT: {
-    id: "u-vet-01",
-    name: "Dr. Ananya Sharma, DVM",
-    email: "vet@agri-nova.com",
-    phone: "+91 99887 76655",
-    avatarUrl: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150",
-    kycStatus: "VERIFIED"
-  },
-  DELIVERY_PARTNER: {
-    id: "u-delivery-01",
-    name: "AgriExpress Logistics",
-    email: "delivery@agri-nova.com",
-    phone: "+91 98989 89898",
-    avatarUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150",
-    kycStatus: "VERIFIED"
-  },
-  ADMIN: {
-    id: "u-admin-01",
-    name: "Enterprise Admin",
-    email: "admin@agri-nova.com",
-    phone: "+91 90000 00001",
-    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-    kycStatus: "VERIFIED"
-  },
-  SUPER_ADMIN: {
-    id: "u-admin-01",
-    name: "Enterprise Super Admin",
-    email: "superadmin@agri-nova.com",
-    phone: "+91 90000 00001",
-    avatarUrl: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150",
-    kycStatus: "VERIFIED"
-  }
-};
 
 const POPULAR_HUBS = [
   { name: "Kottayam", state: "Kerala", lat: 9.5916, lng: 76.5222 },
@@ -366,11 +301,7 @@ export const Topbar: React.FC = () => {
   };
 
   const effectiveRole = getEffectiveRole();
-  const fallbackUser = ROLE_DEFAULT_USERS[effectiveRole] || ROLE_DEFAULT_USERS.FARMER;
-  
-  // If currentUser is set for this role, use it; otherwise use role's default user
-  const isMatchingRole = currentUser && (currentUser.role === effectiveRole || (!pathname?.includes('/dashboard/') && currentUser.role === currentRole));
-  const activeUser = isMatchingRole ? currentUser : fallbackUser;
+  const activeUser = currentUser || null;
 
   const displayUserName = activeUser?.name || "User";
   const displayEmail = activeUser?.email || "";

@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
     if (token) {
       try {
         const { payload } = await jwtVerify(token, secret);
-        const role = payload.role as string;
+        const role = ((payload.role as string) || "").toUpperCase();
         let redirectPath = "/dashboard/farmer";
         if (role === "BUYER") redirectPath = "/dashboard/buyer";
         if (role === "EQUIPMENT_OWNER") redirectPath = "/dashboard/equipment";

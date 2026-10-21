@@ -202,20 +202,23 @@ export function validateFullName(name: string): { isValid: boolean; error?: stri
   if (/\d/.test(trimmed)) {
     return { isValid: false, error: "Full name must contain letters only. Numbers are not allowed." };
   }
+  if (/(.)\1{3,}/i.test(trimmed)) {
+    return { isValid: false, error: "Full name cannot contain excessive repeated characters." };
+  }
   if (!/^[a-zA-Z]+(?:[.' -][a-zA-Z]+)*$/.test(trimmed)) {
     return { isValid: false, error: "Full name must contain letters, spaces, hyphens, or dots only." };
   }
   return { isValid: true };
 }
 
-// Public role gatekeeping validation
+// Public role gatekeeping validation (Only Farmer and Buyer can register)
 export function validateRole(role: string): { isValid: boolean; error?: string } {
-  const allowedRoles = ["FARMER", "BUYER", "EQUIPMENT_OWNER", "VETERINARY_EXPERT", "DELIVERY_PARTNER"];
+  const allowedRoles = ["FARMER", "BUYER"];
   if (!role) {
     return { isValid: false, error: "Role is required." };
   }
   if (!allowedRoles.includes(role)) {
-    return { isValid: false, error: "Access denied. Selected role is not allowed for public registration." };
+    return { isValid: false, error: "Access denied. Only Farmer and Buyer accounts can be registered. Other user roles cannot create a new account." };
   }
   return { isValid: true };
 }
