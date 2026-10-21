@@ -243,7 +243,7 @@ export function AdminCropManagement() {
           </p>
         </div>
         
-        <div className="flex items-center space-x-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
             <Search className="w-3.5 h-3.5 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
@@ -257,7 +257,7 @@ export function AdminCropManagement() {
           <button 
             type="button"
             onClick={() => activeTab === 'ZONES' ? openZoneModal() : openCropModal()}
-            className="flex-shrink-0 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center shadow-xs cursor-pointer"
+            className="flex-shrink-0 bg-gray-900 hover:bg-gray-800 text-white px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 mr-1" /> Add {activeTab === 'ZONES' ? 'Region' : 'Crop'}
           </button>
@@ -289,11 +289,11 @@ export function AdminCropManagement() {
       </div>
 
       {/* Tab Selectors */}
-      <div className="flex space-x-4 border-b border-gray-100 mb-4">
+      <div className="flex space-x-4 border-b border-gray-100 mb-4 overflow-x-auto whitespace-nowrap">
         <button 
           type="button"
           onClick={() => setActiveTab("ZONES")} 
-          className={`pb-3 text-xs font-bold transition-colors border-b-2 cursor-pointer ${
+          className={`pb-3 text-xs font-bold transition-colors border-b-2 cursor-pointer shrink-0 ${
             activeTab === "ZONES" 
               ? "border-emerald-800 text-emerald-900" 
               : "border-transparent text-gray-500 hover:text-gray-700"
@@ -304,7 +304,7 @@ export function AdminCropManagement() {
         <button 
           type="button"
           onClick={() => setActiveTab("CROPS")} 
-          className={`pb-3 text-xs font-bold transition-colors border-b-2 cursor-pointer ${
+          className={`pb-3 text-xs font-bold transition-colors border-b-2 cursor-pointer shrink-0 ${
             activeTab === "CROPS" 
               ? "border-emerald-800 text-emerald-900" 
               : "border-transparent text-gray-500 hover:text-gray-700"
@@ -322,7 +322,7 @@ export function AdminCropManagement() {
           {filteredZones.length === 0 ? (
             <div className="text-center py-10 text-xs text-gray-400">No regions match your search query.</div>
           ) : (
-            <table className="w-full text-xs text-left">
+            <table className="w-full min-w-[620px] text-xs text-left">
               <thead className="text-[10px] text-gray-500 bg-gray-50 uppercase font-bold border-b border-gray-100">
                 <tr>
                   <th className="px-4 py-3">Region Name</th>
@@ -376,7 +376,7 @@ export function AdminCropManagement() {
           {filteredCrops.length === 0 ? (
             <div className="text-center py-10 text-xs text-gray-400">No crops match your search query.</div>
           ) : (
-            <table className="w-full text-xs text-left">
+            <table className="w-full min-w-[640px] text-xs text-left">
               <thead className="text-[10px] text-gray-500 bg-gray-50 uppercase font-bold border-b border-gray-100">
                 <tr>
                   <th className="px-4 py-3">Crop Name</th>
@@ -440,8 +440,8 @@ export function AdminCropManagement() {
 
       {/* Zone Modal */}
       {isZoneModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <form onSubmit={saveZone} className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl border border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-900/40 backdrop-blur-sm">
+          <form onSubmit={saveZone} className="bg-white rounded-2xl w-full max-w-md p-4 sm:p-6 shadow-xl border border-gray-100 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-sm uppercase text-gray-900">{editingItem ? "Edit Agro-Climatic Region" : "Add Agro-Climatic Region"}</h3>
               <button type="button" onClick={() => setIsZoneModalOpen(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">
@@ -482,8 +482,8 @@ export function AdminCropManagement() {
 
       {/* Crop Modal */}
       {isCropModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <form onSubmit={saveCrop} className="bg-white rounded-2xl w-full max-w-md p-6 shadow-xl border border-gray-100">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-900/40 backdrop-blur-sm">
+          <form onSubmit={saveCrop} className="bg-white rounded-2xl w-full max-w-md p-4 sm:p-6 shadow-xl border border-gray-100 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-sm uppercase text-gray-900">{editingItem ? "Edit Crop Profile" : "Add Crop Profile"}</h3>
               <button type="button" onClick={() => setIsCropModalOpen(false)} className="text-gray-400 hover:text-gray-600 cursor-pointer">

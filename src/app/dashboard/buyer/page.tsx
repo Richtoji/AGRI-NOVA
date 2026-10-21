@@ -343,10 +343,10 @@ export default function BuyerDashboard() {
           </div>
 
           {/* ================= 3. SEGMENTED NAVIGATION TABS ================= */}
-          <div className="flex border-b border-gray-200/80 gap-6 text-xs font-bold">
+          <div className="flex border-b border-gray-200/80 gap-4 sm:gap-6 text-xs font-bold overflow-x-auto whitespace-nowrap">
             <button
               onClick={() => setActiveTab("overview")}
-              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] ${
+              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
                 activeTab === "overview"
                   ? "border-gray-900 text-gray-900"
                   : "border-transparent text-gray-500 hover:text-gray-800"
@@ -363,7 +363,7 @@ export default function BuyerDashboard() {
 
             <button
               onClick={() => setActiveTab("orders")}
-              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] ${
+              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
                 activeTab === "orders"
                   ? "border-gray-900 text-gray-900"
                   : "border-transparent text-gray-500 hover:text-gray-800"
@@ -378,7 +378,7 @@ export default function BuyerDashboard() {
 
             <button
               onClick={() => setActiveTab("escrow")}
-              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] ${
+              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
                 activeTab === "escrow"
                   ? "border-gray-900 text-gray-900"
                   : "border-transparent text-gray-500 hover:text-gray-800"
@@ -390,7 +390,7 @@ export default function BuyerDashboard() {
 
             <button
               onClick={() => setActiveTab("addresses")}
-              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] ${
+              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
                 activeTab === "addresses"
                   ? "border-gray-900 text-gray-900"
                   : "border-transparent text-gray-500 hover:text-gray-800"

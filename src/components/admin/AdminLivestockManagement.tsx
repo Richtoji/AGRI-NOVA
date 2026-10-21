@@ -215,7 +215,7 @@ export function AdminLivestockManagement() {
       ) : (
         <div className="overflow-x-auto">
           {activeTab === "livestock" ? (
-            <table className="w-full text-sm text-left">
+            <table className="w-full min-w-[620px] text-sm text-left">
               <thead className="text-[10px] text-gray-500 bg-gray-50 uppercase font-bold border-b border-gray-100">
                 <tr>
                   <th className="px-4 py-3">Breed Name</th>
@@ -253,7 +253,7 @@ export function AdminLivestockManagement() {
               </tbody>
             </table>
           ) : (
-            <table className="w-full text-sm text-left">
+            <table className="w-full min-w-[560px] text-sm text-left">
               <thead className="text-[10px] text-gray-500 bg-gray-50 uppercase font-bold border-b border-gray-100">
                 <tr>
                   <th className="px-4 py-3">District</th>
@@ -291,8 +291,8 @@ export function AdminLivestockManagement() {
 
       {/* Livestock Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <form onSubmit={handleSubmit} className="bg-white rounded-2xl w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-900/40 backdrop-blur-sm">
+          <form onSubmit={handleSubmit} className="bg-white rounded-2xl w-full max-w-md p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="font-black text-sm mb-4 uppercase">{editingItem ? "Edit Livestock" : "Add Livestock"}</h3>
             <div className="space-y-3">
               <input required name="breedName" value={formData.breedName} onChange={handleChange} placeholder="Breed Name" className="w-full px-3 py-2 text-sm bg-gray-50 border rounded-xl" />
@@ -336,8 +336,8 @@ export function AdminLivestockManagement() {
 
       {/* Region Modal */}
       {isRegionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
-          <form onSubmit={handleRegionSubmit} className="bg-white rounded-2xl w-full max-w-md p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-900/40 backdrop-blur-sm">
+          <form onSubmit={handleRegionSubmit} className="bg-white rounded-2xl w-full max-w-md p-4 sm:p-6 max-h-[90vh] overflow-y-auto">
             <h3 className="font-black text-sm mb-4 uppercase">{editingRegion ? "Edit Region Analysis" : "Add Region Analysis"}</h3>
             <div className="space-y-3">
               <input required name="district" value={regionFormData.district} onChange={handleRegionChange} placeholder="District Name (e.g. Kottayam)" className="w-full px-3 py-2 text-sm bg-gray-50 border rounded-xl" />

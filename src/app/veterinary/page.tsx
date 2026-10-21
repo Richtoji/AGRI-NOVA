@@ -349,7 +349,7 @@ export default function VeterinaryPage() {
             ) : (
               <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full min-w-[650px] text-left text-xs">
                     <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                       <tr>
                         <th className="py-3.5 px-4">Case ID</th>

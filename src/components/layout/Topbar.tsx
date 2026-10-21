@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { 
   Search, 
   MapPin, 
@@ -17,6 +17,7 @@ import {
   RefreshCw,
   Sun,
   CloudRain,
+  CloudSun,
   Cloud,
   User,
   Mail,
@@ -45,7 +46,9 @@ import {
   ArrowRight,
   Leaf,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  ShoppingCart,
+  ClipboardList
 } from "lucide-react";
 import { useAuthRole, RoleType } from "@/lib/context/AuthRoleContext";
 import { useLocationWeather } from "@/lib/hooks/useLocationWeather";
@@ -289,6 +292,10 @@ export const Topbar: React.FC = () => {
   };
 
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const currentTab = searchParams?.get('tab') || 'dashboard';
+
+  const [adminCultivationBadge, setAdminCultivationBadge] = useState<number>(0);
 
   const getEffectiveRole = (): RoleType => {
     if (pathname?.startsWith("/dashboard/buyer")) return "BUYER";
@@ -301,6 +308,103 @@ export const Topbar: React.FC = () => {
   };
 
   const effectiveRole = getEffectiveRole();
+
+  useEffect(() => {
+    if (effectiveRole !== "ADMIN") return;
+    const fetchBadge = async () => {
+      try {
+        const res = await fetch('/api/admin/cultivation?view=stats');
+        const data = await res.json();
+        if (data.success && data.stats) {
+          const badgeCount = (data.stats.pendingPlanting || 0) + (data.stats.pendingStages || 0);
+          setAdminCultivationBadge(badgeCount);
+        }
+      } catch (e) {}
+    };
+    fetchBadge();
+    const interval = setInterval(fetchBadge, 5000);
+    const handleSync = () => fetchBadge();
+    window.addEventListener('storage', handleSync);
+    window.addEventListener('agri_nova_cultivation_started', handleSync);
+    window.addEventListener('agri_nova_cultivation_updated', handleSync);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleSync);
+      window.removeEventListener('agri_nova_cultivation_started', handleSync);
+      window.removeEventListener('agri_nova_cultivation_updated', handleSync);
+    };
+  }, [effectiveRole]);
+
+  const getMobileMenuItems = () => {
+    switch (effectiveRole) {
+      case "FARMER":
+        return [
+          { label: "Farm Overview", href: "/dashboard/farmer?tab=dashboard", icon: Home },
+          { label: "Crop Cultivation Tracker", href: "/dashboard/farmer?tab=cultivation", icon: Sprout },
+          { label: "Crop Recommendations", href: "/dashboard/farmer?tab=recommendations", icon: Sprout },
+          { label: "Weather Radar & Advisory", href: "/dashboard/farmer?tab=weather", icon: CloudSun },
+          { label: "Agri Marketplace", href: "/marketplace", icon: ShoppingBag },
+          { label: "Machinery & Equipment Rental", href: "/equipment", icon: Tractor },
+          { label: "My Listed Products", href: "/dashboard/farmer?tab=products", icon: Store },
+          { label: "Veterinary Care & Health", href: "/veterinary", icon: PawPrint },
+          { label: "Government Schemes & Subsidy", href: "/schemes", icon: FileText },
+          { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
+        ];
+      case "BUYER":
+        return [
+          { label: "Buyer Overview", href: "/dashboard/buyer", icon: Home },
+          { label: "Agri Marketplace", href: "/marketplace", icon: ShoppingBag },
+          { label: "My Orders & Escrow", href: "/dashboard/buyer", icon: ClipboardList },
+          { label: "Cold-Chain Logistics", href: "/dashboard/delivery", icon: Truck },
+          { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
+        ];
+      case "EQUIPMENT_OWNER":
+        return [
+          { label: "Equipment Dashboard", href: "/dashboard/equipment", icon: Home },
+          { label: "My Equipment Fleet", href: "/dashboard/equipment?tab=my-equipment", icon: Tractor },
+          { label: "Rental Requests", href: "/dashboard/equipment?tab=requests", icon: Bell },
+          { label: "Active Rentals", href: "/dashboard/equipment?tab=active", icon: ClipboardList },
+          { label: "Rental History", href: "/dashboard/equipment?tab=history", icon: Store },
+          { label: "Agri Marketplace", href: "/marketplace", icon: ShoppingBag },
+          { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
+        ];
+      case "VETERINARY_EXPERT":
+        return [
+          { label: "Veterinary Dashboard", href: "/dashboard/veterinary", icon: Home },
+          { label: "Clinic Appointments", href: "/dashboard/veterinary?tab=appointments", icon: ClipboardList },
+          { label: "Telehealth Consultations", href: "/dashboard/veterinary?tab=consultations", icon: MessageSquare },
+          { label: "Clinic Schedule", href: "/dashboard/veterinary?tab=schedule", icon: Settings },
+          { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
+        ];
+      case "DELIVERY_PARTNER":
+        return [
+          { label: "Delivery Dashboard", href: "/dashboard/delivery", icon: Home },
+          { label: "Cold-Chain Logistics", href: "/dashboard/delivery", icon: Truck },
+          { label: "Agri Marketplace", href: "/marketplace", icon: ShoppingBag },
+          { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
+        ];
+      case "ADMIN":
+        return [
+          { label: "Enterprise Command Center", href: "/dashboard/admin", icon: Home },
+          { label: "Platform Users & KYC", href: "/dashboard/admin?tab=users", icon: User },
+          { label: "Product Moderation", href: "/dashboard/admin?tab=products", icon: Store },
+          { label: "Stock & Inventory", href: "/dashboard/admin?tab=stock", icon: ClipboardList },
+          { label: "Cultivation Reviews", href: "/dashboard/admin?tab=cultivation", icon: Sprout, badge: adminCultivationBadge },
+          { label: "Machinery Rentals", href: "/equipment", icon: Tractor },
+          { label: "Veterinary Healthcare", href: "/veterinary", icon: PawPrint },
+          { label: "Government Schemes", href: "/dashboard/admin?tab=schemes", icon: FileText },
+          { label: "System Management", href: "/dashboard/admin?tab=system", icon: Settings },
+          { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
+        ];
+      default:
+        return [
+          { label: "Dashboard", href: "/dashboard/farmer", icon: Home },
+          { label: "Marketplace", href: "/marketplace", icon: ShoppingBag },
+          { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
+        ];
+    }
+  };
+
   const activeUser = currentUser || null;
 
   const displayUserName = activeUser?.name || "User";
@@ -395,13 +499,13 @@ export const Topbar: React.FC = () => {
 
   return (
     <>
-      <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-30 shrink-0">
+      <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-3 sm:px-6 sticky top-0 z-30 shrink-0">
         
         {/* Mobile menu toggle */}
         <button 
           type="button"
           onClick={() => setIsMobileMenuOpen(true)}
-          className="lg:hidden mr-3 text-gray-500 hover:text-gray-900 cursor-pointer p-1.5 rounded-xl hover:bg-gray-100 transition-colors"
+          className="lg:hidden mr-2 sm:mr-3 text-gray-500 hover:text-gray-900 cursor-pointer p-1.5 rounded-xl hover:bg-gray-100 transition-colors shrink-0"
           aria-label="Open mobile navigation"
           title="Open mobile navigation"
         >
@@ -409,7 +513,7 @@ export const Topbar: React.FC = () => {
         </button>
 
         {/* Global Search Bar with Live Suggestions */}
-        <div className="flex-1 max-w-sm relative" ref={searchRef}>
+        <div className="flex-1 min-w-0 max-w-xs sm:max-w-sm relative" ref={searchRef}>
           <form 
             onSubmit={(e) => {
               e.preventDefault();
@@ -486,7 +590,7 @@ export const Topbar: React.FC = () => {
         </div>
 
         {/* Right side navigation & tools */}
-        <div className="flex items-center space-x-3.5 ml-4">
+        <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3.5 ml-2 sm:ml-4 shrink-0">
           
           {/* Dynamic Interactive Location Pill */}
           <button
@@ -532,7 +636,7 @@ export const Topbar: React.FC = () => {
 
             {/* Notification Dropdown Card */}
             {isNotificationsOpen && (
-              <div className="absolute right-0 top-full mt-2.5 w-80 sm:w-88 bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
+              <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 sm:mt-2.5 w-[calc(100vw-16px)] sm:w-88 max-w-sm sm:max-w-none bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
                 <div className="p-4 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Bell className="w-4 h-4 text-emerald-300" />
@@ -647,7 +751,7 @@ export const Topbar: React.FC = () => {
 
             {/* Messages Dropdown Card */}
             {isMessagesOpen && (
-              <div className="absolute right-0 top-full mt-2.5 w-80 sm:w-88 bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
+              <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 sm:mt-2.5 w-[calc(100vw-16px)] sm:w-88 max-w-sm sm:max-w-none bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
                 <div className="p-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <MessageCircle className="w-4 h-4 text-emerald-400" />
@@ -772,7 +876,7 @@ export const Topbar: React.FC = () => {
 
             {/* Profile Dropdown Details Card */}
             {isProfileOpen && (
-              <div className="absolute right-0 top-full mt-2.5 w-84 sm:w-92 bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
+              <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 sm:mt-2.5 w-[calc(100vw-16px)] sm:w-92 max-w-sm sm:max-w-none bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
                 
                 {/* Header Profile Banner */}
                 <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 text-white p-4 relative overflow-hidden">
@@ -945,13 +1049,13 @@ export const Topbar: React.FC = () => {
 
       {/* ================= LOCATION SELECTOR MODAL ================= */}
       {isLocationModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-gray-100 overflow-hidden animate-scaleUp">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl border border-gray-100 overflow-hidden max-h-[90vh] flex flex-col animate-scaleUp">
             
             {/* Modal Header */}
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between shrink-0">
               <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
+                <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
                   <MapPin className="w-4.5 h-4.5" />
                 </div>
                 <div>
@@ -969,7 +1073,7 @@ export const Topbar: React.FC = () => {
             </div>
 
             {/* Modal Content */}
-            <div className="p-5 space-y-4 text-xs">
+            <div className="p-4 sm:p-5 space-y-4 text-xs overflow-y-auto flex-1">
               
               {/* Reset to Detected Farm GPS if an other location is selected */}
               {isOtherLocation && (
@@ -1093,11 +1197,11 @@ export const Topbar: React.FC = () => {
 
       {/* ================= FULL PROFILE DETAILS MODAL ================= */}
       {isProfileModalOpen && (
-        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-gray-100 overflow-hidden my-6 animate-scaleUp max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-gray-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-gray-100 overflow-hidden my-auto animate-scaleUp max-h-[90vh] flex flex-col">
             
             {/* Modal Header */}
-            <div className="p-5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
+            <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
               <div className="flex items-center space-x-2.5">
                 <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
                   <ShieldCheck className="w-5 h-5 text-emerald-600" />
@@ -1374,19 +1478,23 @@ export const Topbar: React.FC = () => {
 
             {/* Navigation links */}
             <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-              {[
-                { label: "Farm Overview", href: "/dashboard/farmer", icon: Home },
-                { label: "Crop Cultivation Tracker", href: "/dashboard/farmer?tab=cultivation", icon: Sprout },
-                { label: "Agri Marketplace", href: "/marketplace", icon: Store },
-                { label: "Machinery & Equipment", href: "/equipment", icon: Tractor },
-                { label: "Veterinary Care & Health", href: "/veterinary", icon: PawPrint },
-                { label: "Government Schemes", href: "/schemes", icon: FileText },
-                { label: "Cold-Chain Logistics", href: "/dashboard/delivery", icon: Truck },
-                { label: "Weather Radar & Advisory", href: "/dashboard/farmer?tab=weather", icon: CloudRain },
-                { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
-              ].map((item, idx) => {
+              <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-3 py-1">
+                {roleLabel} Navigation
+              </div>
+              {getMobileMenuItems().map((item: any, idx: number) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                let isActive = false;
+                if (item.href) {
+                  const itemUrl = new URL(item.href, 'http://localhost');
+                  const itemTab = itemUrl.searchParams.get('tab');
+                  if (itemTab) {
+                    isActive = pathname === itemUrl.pathname && currentTab === itemTab;
+                  } else if (item.label.includes('Dashboard') || item.label.includes('Overview') || item.label.includes('Command Center')) {
+                    isActive = pathname === item.href && (currentTab === 'dashboard' || !searchParams?.has('tab'));
+                  } else {
+                    isActive = pathname === item.href;
+                  }
+                }
                 return (
                   <Link
                     key={idx}
@@ -1394,15 +1502,75 @@ export const Topbar: React.FC = () => {
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-colors ${
                       isActive
-                        ? "bg-emerald-800 text-white shadow-sm"
+                        ? "bg-gray-900 text-white shadow-xs"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
-                    <span>{item.label}</span>
+                    <span className="flex-1 truncate">{item.label}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <span className={`text-[10px] font-black px-1.5 py-0.2 rounded-full ${
+                        isActive ? "bg-white text-gray-900" : "bg-emerald-600 text-white"
+                      }`}>
+                        {item.badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}
+
+              {/* Quick Platform Services */}
+              <div className="pt-3 mt-3 border-t border-gray-100">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-400 px-3 py-1">
+                  Public Platform Modules
+                </div>
+                <div className="grid grid-cols-2 gap-1.5 pt-1">
+                  <Link
+                    href="/marketplace"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+                    <span className="truncate">Marketplace</span>
+                  </Link>
+                  <Link
+                    href="/equipment"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
+                  >
+                    <Tractor className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                    <span className="truncate">Machinery</span>
+                  </Link>
+                  <Link
+                    href="/veterinary"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
+                  >
+                    <PawPrint className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                    <span className="truncate">Veterinary</span>
+                  </Link>
+                  <Link
+                    href="/schemes"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
+                    <span className="truncate">Schemes</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Return to website */}
+              <div className="pt-2">
+                <Link
+                  href="/"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center space-x-2 px-3 py-2 text-[11px] font-semibold text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  <ArrowRight className="w-3.5 h-3.5 rotate-180 text-gray-400" />
+                  <span>Back to Home Website</span>
+                </Link>
+              </div>
             </nav>
 
             {/* Drawer Footer */}

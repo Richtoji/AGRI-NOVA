@@ -35,7 +35,7 @@ export const HeroSection: React.FC = () => {
             </div>
 
             {/* Main Title */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.15]">
+            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.15]">
               Grow Smarter.<br />
               Farm Better.<br />
               <span className="text-gray-900">Sell with Confidence.</span>
@@ -62,7 +62,7 @@ export const HeroSection: React.FC = () => {
             </div>
 
             {/* Realistic Feature Highlights */}
-            <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-xs text-gray-500 font-medium">
+            <div className="pt-4 flex flex-wrap items-center justify-center lg:justify-start gap-3 sm:gap-6 text-xs text-gray-500 font-medium">
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-4 h-4 text-gray-900" />
                 <span>Verified Produce Sellers</span>

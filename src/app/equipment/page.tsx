@@ -363,7 +363,7 @@ export default function EquipmentPage() {
             ) : (
               <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-xs">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full min-w-[650px] text-left text-xs">
                     <thead className="bg-gray-50/80 border-b border-gray-100 text-gray-500 font-bold uppercase tracking-wider text-[10px]">
                       <tr>
                         <th className="py-3.5 px-4">Booking ID</th>
@@ -549,9 +549,9 @@ export default function EquipmentPage() {
 
         {/* Booking Modal (Strictly disabled for Admins) */}
         {!isAdmin && selectedEq && (
-          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl border border-gray-200 flex flex-col">
-              <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
+          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-xl border border-gray-200 flex flex-col">
+              <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50 shrink-0">
                 <h3 className="font-bold text-gray-900">Book {selectedEq.name}</h3>
                 <button 
                   type="button"

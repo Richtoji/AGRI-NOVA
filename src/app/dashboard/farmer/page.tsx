@@ -436,11 +436,11 @@ function FarmerDashboardContent() {
 
           {/* ===== TOP NAVIGATION TABS: DEDICATED WORKSPACES ===== */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-gray-100 shadow-xs">
-            <div className="flex items-center space-x-1.5 overflow-x-auto">
+            <div className="flex items-center space-x-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
               <button
                 type="button"
                 onClick={() => handleTabChange('cultivation')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer shrink-0 ${
                   activeTab === 'cultivation'
                     ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/20'
                     : 'text-gray-700 hover:text-emerald-700 hover:bg-emerald-50'
@@ -462,7 +462,7 @@ function FarmerDashboardContent() {
               <button
                 type="button"
                 onClick={() => handleTabChange('dashboard')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer shrink-0 ${
                   activeTab === 'dashboard'
                     ? 'bg-gray-900 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -475,7 +475,7 @@ function FarmerDashboardContent() {
               <button
                 type="button"
                 onClick={() => handleTabChange('recommendations')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer shrink-0 ${
                   activeTab === 'recommendations'
                     ? 'bg-gray-900 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -488,7 +488,7 @@ function FarmerDashboardContent() {
               <button
                 type="button"
                 onClick={() => handleTabChange('weather')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer shrink-0 ${
                   activeTab === 'weather'
                     ? 'bg-gray-900 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -501,7 +501,7 @@ function FarmerDashboardContent() {
               <button
                 type="button"
                 onClick={() => handleTabChange('products')}
-                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer shrink-0 ${
                   activeTab === 'products'
                     ? 'bg-gray-900 text-white shadow-sm'
                     : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'

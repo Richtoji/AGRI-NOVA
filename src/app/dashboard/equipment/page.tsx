@@ -407,9 +407,9 @@ export default function EquipmentOwnerDashboard() {
 
         {/* Add/Edit Modal */}
         {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/40 backdrop-blur-sm p-3 sm:p-4">
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                 <h3 className="font-bold text-lg text-gray-900">
                   {editingId ? "Edit Machinery" : "List New Machinery"}
                 </h3>
@@ -418,7 +418,7 @@ export default function EquipmentOwnerDashboard() {
                 </button>
               </div>
               
-              <div className="p-6 overflow-y-auto">
+              <div className="p-4 sm:p-6 overflow-y-auto">
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-gray-700 mb-1">Equipment Name *</label>

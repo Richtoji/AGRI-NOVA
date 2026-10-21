@@ -502,7 +502,7 @@ function AdminDashboardContent() {
               </div>
 
               <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
+                <table className="w-full min-w-[640px] text-sm text-left">
                   <thead className="text-xs text-gray-500 bg-gray-50 uppercase font-medium border-b border-gray-100">
                     <tr>
                       <th className="px-6 py-4">User</th>
@@ -641,7 +641,7 @@ function AdminDashboardContent() {
             </div>
             
             <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
+              <table className="w-full min-w-[640px] text-sm text-left">
                 <thead className="text-xs text-gray-500 bg-gray-50 uppercase font-medium border-b border-gray-100">
                   <tr>
                     <th className="px-6 py-4">User</th>

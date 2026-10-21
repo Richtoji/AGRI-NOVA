@@ -216,7 +216,7 @@ export function AdminProductManagement() {
         </div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
+          <table className="w-full min-w-[620px] text-sm text-left">
             <thead className="text-[10px] text-gray-500 bg-gray-50 uppercase font-bold border-b border-gray-100">
               <tr>
                 <th className="px-4 py-3">Product</th>
@@ -272,9 +272,9 @@ export function AdminProductManagement() {
 
       {/* Add / Edit Modal */}
       {(isAddModalOpen || isEditModalOpen) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden my-auto border border-gray-100">
-            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-900/40 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden my-auto border border-gray-100 max-h-[90vh] flex flex-col">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
               <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">
                 {isEditModalOpen ? "Edit Product" : "Add New Product"}
               </h3>
@@ -286,7 +286,7 @@ export function AdminProductManagement() {
               </button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Product Title</label>

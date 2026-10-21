@@ -121,10 +121,10 @@ export const AIDemoSandbox: React.FC = () => {
 
         {/* Tab Switcher */}
         <div className="flex justify-center mb-8">
-          <div className="p-1 bg-gray-50 rounded-2xl border border-gray-200 flex space-x-2">
+          <div className="p-1 bg-gray-50 rounded-2xl border border-gray-200 flex flex-col sm:flex-row gap-1.5 sm:gap-2 w-full sm:w-auto">
             <button
               onClick={() => setActiveTab("crop")}
-              className={`px-5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs font-semibold transition-all text-center ${
                 activeTab === "crop"
                   ? "bg-gray-900 text-white shadow-md shadow-gray-900/20"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
@@ -134,7 +134,7 @@ export const AIDemoSandbox: React.FC = () => {
             </button>
             <button
               onClick={() => setActiveTab("disease")}
-              className={`px-5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+              className={`px-4 sm:px-5 py-2.5 rounded-xl text-xs font-semibold transition-all text-center ${
                 activeTab === "disease"
                   ? "bg-gray-900 text-white shadow-md shadow-gray-900/20"
                   : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
@@ -146,7 +146,7 @@ export const AIDemoSandbox: React.FC = () => {
         </div>
 
         {/* Sandbox Content Container */}
-        <div className="bg-white border border-gray-100 rounded-2xl rounded-3xl p-6 sm:p-8 border border-gray-200 max-w-4xl mx-auto bg-white">
+        <div className="bg-white border border-gray-100 rounded-3xl p-4 sm:p-8 max-w-4xl mx-auto shadow-sm">
           {activeTab === "crop" ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               

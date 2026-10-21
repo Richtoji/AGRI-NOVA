@@ -195,50 +195,75 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-3 text-sm">
-          <Link href="/" className="block py-2 font-semibold text-gray-700 hover:text-gray-900">
+        <div className="md:hidden bg-white border-b border-gray-200 px-4 py-4 space-y-2 text-sm shadow-lg animate-fadeIn">
+          <Link 
+            href="/" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 px-2.5 rounded-lg font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+          >
             Home
           </Link>
-          <Link href="/marketplace" className="block py-2 font-semibold text-gray-700 hover:text-gray-900">
+          <Link 
+            href="/marketplace" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 px-2.5 rounded-lg font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+          >
             Marketplace
           </Link>
-          <Link href="/equipment" className="block py-2 font-semibold text-gray-700 hover:text-gray-900">
+          <Link 
+            href="/equipment" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 px-2.5 rounded-lg font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+          >
             Machinery Rental
           </Link>
-          <Link href="/schemes" className="block py-2 font-semibold text-gray-700 hover:text-gray-900">
+          <Link 
+            href="/schemes" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 px-2.5 rounded-lg font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+          >
             Government Schemes
           </Link>
-          <Link href="/contact" className="block py-2 font-semibold text-gray-700 hover:text-gray-900">
+          <Link 
+            href="/contact" 
+            onClick={() => setMobileMenuOpen(false)}
+            className="block py-2 px-2.5 rounded-lg font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+          >
             Contact Us
           </Link>
 
           {isLoggedIn ? (
-            <div className="space-y-2 pt-2 border-t border-gray-100">
+            <div className="space-y-2 pt-3 border-t border-gray-100">
               <Link
                 href={getDashboardPath()}
-                className="block py-2.5 px-3 rounded-xl bg-gray-900 text-white font-semibold text-center"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-2.5 px-3 rounded-xl bg-gray-900 text-white font-semibold text-center text-xs"
               >
                 Open {currentRole} Dashboard
               </Link>
               <Link
                 href="/dashboard/profile"
-                className="block py-2.5 px-3 rounded-xl bg-gray-50 text-gray-700 font-semibold text-center border border-gray-200"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block py-2.5 px-3 rounded-xl bg-gray-50 text-gray-700 font-semibold text-center border border-gray-200 text-xs"
               >
                 Account Settings
               </Link>
               <button
-                onClick={handleLogout}
-                className="w-full py-2.5 px-3 rounded-xl bg-rose-50 text-rose-600 font-semibold text-center border border-rose-100"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full py-2.5 px-3 rounded-xl bg-rose-50 text-rose-600 font-semibold text-center border border-rose-100 text-xs"
               >
                 Log Out
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-100">
-              <Link href="/auth/login" className="block text-center">
+            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-gray-100">
+              <Link href="/auth/login" onClick={() => setMobileMenuOpen(false)} className="block text-center">
                 <Button size="sm" variant="outline" className="w-full text-gray-700 border-gray-300">Sign In</Button>
               </Link>
-              <Link href="/auth/register" className="block text-center">
+              <Link href="/auth/register" onClick={() => setMobileMenuOpen(false)} className="block text-center">
                 <Button size="sm" className="w-full bg-gray-900 text-white">Register</Button>
               </Link>
             </div>

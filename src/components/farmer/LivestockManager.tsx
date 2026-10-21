@@ -283,7 +283,7 @@ export const LivestockManager: React.FC = () => {
                 </h3>
 
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
+                  <table className="w-full min-w-[580px] text-left text-xs">
                     <thead>
                       <tr className="border-b border-gray-800 text-gray-400 uppercase font-semibold">
                         <th className="py-2.5 px-3">Cow Tag</th>

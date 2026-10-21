@@ -86,9 +86,9 @@ function ReviewModal({ item, type, onClose, onAction }: {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col border border-gray-100">
-        <div className="bg-gray-900 text-white p-5 shrink-0">
+        <div className="bg-gray-900 text-white p-4 sm:p-5 shrink-0">
           <div className="flex items-center justify-between">
             <h3 className="font-black text-lg flex items-center gap-2">
               {isPlanting ? (
@@ -115,7 +115,7 @@ function ReviewModal({ item, type, onClose, onAction }: {
           <p className="text-xs text-gray-400 mt-1">{farmer?.name} · {crop?.name}</p>
         </div>
         
-        <div className="p-6 space-y-4 overflow-y-auto flex-1">
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           {/* Submission Info */}
           <div className="grid grid-cols-2 gap-3 text-xs">
             <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
@@ -585,7 +585,7 @@ export function AdminCultivationMonitoring() {
                     </div>
                   ) : (
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm text-left">
+                      <table className="w-full min-w-[720px] text-sm text-left">
                         <thead className="text-[10px] text-gray-400 uppercase font-semibold border-b border-gray-100">
                           <tr>
                             <th className="pb-3 pr-4">Farmer</th>

@@ -141,7 +141,7 @@ export default function MarketplacePage() {
           </div>
 
           {/* Sub-market toggle */}
-          <div className="flex bg-gray-100 p-1 rounded-xl">
+          <div className="flex bg-gray-100 p-1 rounded-xl overflow-x-auto max-w-full">
             {[
               { key: "produce", label: "Farm Produce" },
               { key: "feed", label: "Feed & Seeds" },
@@ -151,7 +151,7 @@ export default function MarketplacePage() {
               <button
                 key={tab.key}
                 onClick={() => setSubMarket(tab.key as any)}
-                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                   subMarket === tab.key
                     ? "bg-white text-gray-900 shadow-sm"
                     : "text-gray-500 hover:text-gray-700"

@@ -61,9 +61,9 @@ export default function SchemesPage() {
         </div>
 
         {/* Schemes Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filtered.map((s) => (
-            <div key={s.id} className="bg-white border border-gray-100 rounded-2xl border border-gray-200 bg-white shadow-sm hover:border-gray-200 transition-colors p-5 flex flex-col justify-between rounded-xl">
+            <div key={s.id} className="bg-white border border-gray-100 rounded-2xl shadow-xs hover:border-gray-200 transition-colors p-5 flex flex-col justify-between">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-gray-800 bg-gray-50 px-2.5 py-1 rounded-full border border-gray-100">

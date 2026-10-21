@@ -68,6 +68,11 @@ const ROLE_META: Record<RoleType, RoleMeta> = {
     label: "System Admin",
     badgeClass: "bg-purple-50 text-purple-700 border-purple-200",
     icon: ShieldCheck
+  },
+  SUPER_ADMIN: {
+    label: "Super Admin",
+    badgeClass: "bg-purple-100 text-purple-800 border-purple-300",
+    icon: ShieldCheck
   }
 };
 
@@ -220,7 +225,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="relative min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
       
       {/* Subtle Pastel Ambient Accents (Barely-there, matching light theme) */}
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-100/35 rounded-full blur-3xl pointer-events-none -z-10" />

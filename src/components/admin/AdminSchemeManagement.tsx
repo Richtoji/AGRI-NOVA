@@ -126,7 +126,7 @@ export function AdminSchemeManagement() {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-sm text-left">
+        <table className="w-full min-w-[640px] text-sm text-left">
           <thead className="text-xs text-gray-500 bg-gray-50 uppercase font-medium border-b border-gray-100">
             <tr>
               <th className="px-6 py-4">Title / Department</th>
@@ -181,10 +181,10 @@ export function AdminSchemeManagement() {
 
       {/* Add Scheme Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-gray-900/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 flex items-center">
                 <Landmark className="w-5 h-5 mr-2 text-indigo-600" />
                 Add New Scheme
               </h3>
@@ -193,7 +193,7 @@ export function AdminSchemeManagement() {
               </button>
             </div>
             
-            <form onSubmit={saveScheme} className="p-6 space-y-4">
+            <form onSubmit={saveScheme} className="p-4 sm:p-6 space-y-4 overflow-y-auto">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-gray-700 mb-1">Scheme Title</label>
