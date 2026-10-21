@@ -9,6 +9,7 @@ import {
   Sprout,
   Lock,
   Mail,
+  ArrowRight,
   Loader2,
   Phone,
   Calendar,
@@ -31,14 +32,44 @@ import {
   evaluatePasswordStrength
 } from "@/lib/validation";
 
-const ROLES: { id: RoleType; label: string; icon: React.ElementType }[] = [
-  { id: "FARMER", label: "Farmer", icon: Sprout },
-  { id: "BUYER", label: "Buyer", icon: ShoppingBag },
-  { id: "EQUIPMENT_OWNER", label: "Equipment Owner", icon: Wrench },
-  { id: "VETERINARY_EXPERT", label: "Veterinary Expert", icon: HeartHandshake },
-  { id: "DELIVERY_PARTNER", label: "Delivery Partner", icon: Truck },
-  { id: "ADMIN", label: "System Admin", icon: ShieldCheck }
-];
+interface RoleMeta {
+  label: string;
+  badgeClass: string;
+  icon: React.ElementType;
+}
+
+const ROLE_META: Record<RoleType, RoleMeta> = {
+  FARMER: {
+    label: "Farmer",
+    badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    icon: Sprout
+  },
+  BUYER: {
+    label: "Buyer",
+    badgeClass: "bg-sky-50 text-sky-700 border-sky-200",
+    icon: ShoppingBag
+  },
+  EQUIPMENT_OWNER: {
+    label: "Equipment Owner",
+    badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+    icon: Wrench
+  },
+  VETERINARY_EXPERT: {
+    label: "Veterinary Expert",
+    badgeClass: "bg-teal-50 text-teal-700 border-teal-200",
+    icon: HeartHandshake
+  },
+  DELIVERY_PARTNER: {
+    label: "Delivery Partner",
+    badgeClass: "bg-orange-50 text-orange-700 border-orange-200",
+    icon: Truck
+  },
+  ADMIN: {
+    label: "System Admin",
+    badgeClass: "bg-purple-50 text-purple-700 border-purple-200",
+    icon: ShieldCheck
+  }
+};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -66,6 +97,9 @@ export default function LoginPage() {
 
   const fpStrength = evaluatePasswordStrength(fpNewPassword);
   const fpMatch = fpNewPassword.length > 0 && fpConfirmPassword.length > 0 && fpNewPassword === fpConfirmPassword;
+
+  const activeRole = ROLE_META[selectedRole] || ROLE_META.FARMER;
+  const ActiveRoleIcon = activeRole.icon;
 
   const getRoleDashboardPath = (r: RoleType) => {
     switch (r) {
@@ -186,28 +220,39 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <div className="relative min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 overflow-hidden">
       
+      {/* Subtle Pastel Ambient Accents (Barely-there, matching light theme) */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-100/35 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-100/25 rounded-full blur-3xl pointer-events-none -z-10" />
+
       {/* Brand Header */}
       <motion.div 
-        initial={{ opacity: 0, y: -10 }}
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
         className="sm:mx-auto sm:w-full sm:max-w-md text-center"
       >
         <Link href="/" className="inline-flex items-center space-x-2 group mb-6">
-          <div className="w-10 h-10 rounded-xl bg-gray-100 group-hover:bg-emerald-50 flex items-center justify-center text-gray-900 transition-colors">
-            <Sprout className="w-6 h-6 text-emerald-600 group-hover:scale-110 transition-transform" />
-          </div>
+          <motion.div 
+            animate={{ y: [0, -3, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+            className="w-10 h-10 rounded-xl bg-gray-100 group-hover:bg-emerald-50 flex items-center justify-center text-gray-900 transition-colors shadow-xs"
+          >
+            <Sprout className="w-6 h-6 text-emerald-600 group-hover:scale-105 transition-transform" />
+          </motion.div>
           <span className="font-bold text-2xl text-gray-900 tracking-tight">AGRI-NOVA</span>
         </Link>
-        <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900">
+        <h2 className="mt-1 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
           {mode === "login" ? "Sign in to your account" : "Reset your password"}
         </h2>
         {mode === "login" && (
           <p className="mt-2 text-center text-sm text-gray-600">
             Or{" "}
-            <Link href="/auth/register" className="font-medium text-emerald-600 hover:text-emerald-700 transition-colors font-semibold">
+            <Link 
+              href="/auth/register" 
+              className="font-medium text-emerald-600 hover:text-emerald-700 transition-colors font-semibold"
+            >
               create a new account
             </Link>
           </p>
@@ -221,15 +266,15 @@ export default function LoginPage() {
         transition={{ duration: 0.35, delay: 0.05, ease: "easeOut" }}
         className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
       >
-        <div className="bg-white py-8 px-4 shadow-sm rounded-2xl sm:px-10 border border-gray-100">
+        <div className="bg-white py-8 px-4 shadow-sm sm:shadow-md rounded-2xl sm:px-10 border border-gray-100 relative transition-all">
 
           <AnimatePresence mode="wait">
             {validationError && (
               <motion.div 
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-sm font-medium flex items-center"
+                initial={{ opacity: 0, y: -6, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: -6, height: 0 }}
+                className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-sm font-medium flex items-center shadow-xs"
               >
                 <AlertCircle className="w-4 h-4 mr-2 shrink-0 text-rose-500" />
                 <span>{validationError}</span>
@@ -238,10 +283,10 @@ export default function LoginPage() {
 
             {fpSuccess && (
               <motion.div 
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm font-medium flex items-center"
+                initial={{ opacity: 0, y: -6, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: -6, height: 0 }}
+                className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm font-medium flex items-center shadow-xs"
               >
                 <CheckCircle2 className="w-4 h-4 mr-2 shrink-0 text-emerald-600" />
                 <span>Password updated successfully! Redirecting to login...</span>
@@ -252,13 +297,23 @@ export default function LoginPage() {
           {mode === "login" ? (
             <form className="space-y-5" onSubmit={handleLogin} noValidate>
               
-              {/* Account Role Selector */}
+              {/* Account Role with Dynamic Subtle Badge */}
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center justify-between mb-1.5">
                   <label className="block text-sm font-medium text-gray-700">Account Role</label>
-                  <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-2 py-0.5 rounded-full">
-                    Auto-selects on email
-                  </span>
+                  <AnimatePresence mode="wait">
+                    <motion.span
+                      key={selectedRole}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.2 }}
+                      className={`inline-flex items-center gap-1 text-[11px] font-semibold border px-2 py-0.5 rounded-full ${activeRole.badgeClass}`}
+                    >
+                      <ActiveRoleIcon className="w-3 h-3" />
+                      {activeRole.label}
+                    </motion.span>
+                  </AnimatePresence>
                 </div>
                 <div className="mt-1">
                   <select
@@ -267,7 +322,7 @@ export default function LoginPage() {
                       const newRole = e.target.value as RoleType;
                       setSelectedRole(newRole);
                     }}
-                    className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-600 sm:text-sm bg-white text-gray-900 transition-colors"
+                    className="appearance-none block w-full px-3.5 py-2.5 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-600 sm:text-sm bg-white text-gray-900 transition-colors cursor-pointer"
                   >
                     <option value="FARMER">Farmer</option>
                     <option value="BUYER">Buyer</option>
@@ -284,9 +339,9 @@ export default function LoginPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address <span className="text-rose-500">*</span>
                 </label>
-                <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Mail className="h-4 w-4 text-gray-400" />
+                <div className="relative rounded-md shadow-xs group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
+                    <Mail className="h-4 w-4" />
                   </div>
                   <input
                     type="email"
@@ -315,17 +370,23 @@ export default function LoginPage() {
                       const check = validateEmailWithDetails(email.trim());
                       if (!check.isValid) setFieldErrors(prev => ({ ...prev, email: check.error || "" }));
                     }}
-                    className={`appearance-none block w-full pl-10 px-3 py-2.5 border rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 transition-colors ${
-                      fieldErrors.email ? "border-rose-400 focus:ring-rose-200" : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-600"
+                    className={`appearance-none block w-full pl-10 px-3 py-2.5 border rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 transition-all ${
+                      fieldErrors.email 
+                        ? "border-rose-400 focus:ring-rose-200" 
+                        : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-600"
                     }`}
                     placeholder="you@example.com"
                   />
                 </div>
                 {fieldErrors.email && (
-                  <p className="text-[11px] text-rose-600 mt-1 flex items-center">
+                  <motion.p 
+                    initial={{ opacity: 0, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-[11px] text-rose-600 mt-1 flex items-center font-medium"
+                  >
                     <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                     {fieldErrors.email}
-                  </p>
+                  </motion.p>
                 )}
               </div>
 
@@ -334,9 +395,9 @@ export default function LoginPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password <span className="text-rose-500">*</span>
                 </label>
-                <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-gray-400" />
+                <div className="relative rounded-md shadow-xs group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
+                    <Lock className="h-4 w-4" />
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
@@ -346,8 +407,10 @@ export default function LoginPage() {
                       setPassword(e.target.value);
                       if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: "" }));
                     }}
-                    className={`appearance-none block w-full pl-10 pr-10 px-3 py-2.5 border rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 transition-colors ${
-                      fieldErrors.password ? "border-rose-400 focus:ring-rose-200" : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-600"
+                    className={`appearance-none block w-full pl-10 pr-10 px-3 py-2.5 border rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 transition-all ${
+                      fieldErrors.password 
+                        ? "border-rose-400 focus:ring-rose-200" 
+                        : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-600"
                     }`}
                     placeholder="••••••••"
                   />
@@ -355,33 +418,37 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
                 {fieldErrors.password && (
-                  <p className="text-[11px] text-rose-600 mt-1 flex items-center">
+                  <motion.p 
+                    initial={{ opacity: 0, y: -2 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-[11px] text-rose-600 mt-1 flex items-center font-medium"
+                  >
                     <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                     {fieldErrors.password}
-                  </p>
+                  </motion.p>
                 )}
               </div>
 
               {/* Options */}
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                <label className="flex items-center cursor-pointer select-none">
                   <input
                     id="remember-me"
                     name="remember-me"
                     type="checkbox"
                     className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded cursor-pointer"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 cursor-pointer">
+                  <span className="ml-2 block text-sm text-gray-900 font-medium">
                     Remember me
-                  </label>
-                </div>
+                  </span>
+                </label>
 
                 <div className="text-sm">
                   <button
@@ -398,16 +465,23 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              {/* Submit Button */}
-              <div>
+              {/* Submit Button with Subtle Hover Feedback */}
+              <div className="pt-1">
                 <motion.button
-                  whileHover={{ scale: 1.008 }}
+                  whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   type="submit"
                   disabled={isLoading}
-                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+                  className="group w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
                 >
-                  {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Sign in to Dashboard"}
+                  {isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <span className="flex items-center space-x-1.5">
+                      <span>Sign in to Dashboard</span>
+                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  )}
                 </motion.button>
               </div>
             </form>
@@ -419,8 +493,8 @@ export default function LoginPage() {
                   Registered Phone Number <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Phone className="h-4 w-4 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Phone className="h-4 w-4" />
                   </div>
                   <input
                     type="tel"
@@ -441,7 +515,7 @@ export default function LoginPage() {
                   />
                 </div>
                 {fpFieldErrors.phone && (
-                  <p className="text-[11px] text-rose-600 mt-1 flex items-center">
+                  <p className="text-[11px] text-rose-600 mt-1 flex items-center font-medium">
                     <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                     {fpFieldErrors.phone}
                   </p>
@@ -453,8 +527,8 @@ export default function LoginPage() {
                   Date of Birth (For Identity Verification) <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Calendar className="h-4 w-4 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Calendar className="h-4 w-4" />
                   </div>
                   <input
                     type="date"
@@ -474,7 +548,7 @@ export default function LoginPage() {
                   />
                 </div>
                 {fpFieldErrors.dob && (
-                  <p className="text-[11px] text-rose-600 mt-1 flex items-center">
+                  <p className="text-[11px] text-rose-600 mt-1 flex items-center font-medium">
                     <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                     {fpFieldErrors.dob}
                   </p>
@@ -493,8 +567,8 @@ export default function LoginPage() {
                   )}
                 </div>
                 <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Lock className="h-4 w-4" />
                   </div>
                   <input
                     type={showFpNewPassword ? "text" : "password"}
@@ -511,7 +585,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowFpNewPassword(!showFpNewPassword)}
-                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
                     >
                       {showFpNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -548,8 +622,8 @@ export default function LoginPage() {
                   )}
                 </div>
                 <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Lock className="h-4 w-4 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                    <Lock className="h-4 w-4" />
                   </div>
                   <input
                     type={showFpConfirmPassword ? "text" : "password"}
@@ -563,7 +637,7 @@ export default function LoginPage() {
                     <button
                       type="button"
                       onClick={() => setShowFpConfirmPassword(!showFpConfirmPassword)}
-                      className="text-gray-400 hover:text-gray-600 focus:outline-none"
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
                     >
                       {showFpConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -572,7 +646,7 @@ export default function LoginPage() {
               </div>
 
               {fpFieldErrors.password && (
-                <p className="text-[11px] text-rose-600 flex items-center">
+                <p className="text-[11px] text-rose-600 flex items-center font-medium">
                   <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                   {fpFieldErrors.password}
                 </p>
@@ -580,7 +654,7 @@ export default function LoginPage() {
 
               <div className="flex flex-col space-y-2 pt-2">
                 <motion.button
-                  whileHover={{ scale: 1.008 }}
+                  whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   type="submit"
                   disabled={isLoading || fpSuccess || !fpStrength.isValid || !fpMatch}
@@ -605,10 +679,20 @@ export default function LoginPage() {
 
         </div>
 
-        {/* Minimal clean trust notice matching the website */}
-        <div className="mt-6 text-center text-xs text-gray-400 font-medium">
-          Protected by AGRI-NOVA Security &amp; End-to-End Encryption
-        </div>
+        {/* Minimal clean live status badge */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+          className="mt-6 flex items-center justify-center space-x-3 text-xs text-gray-500 font-medium"
+        >
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            End-to-End Encrypted Session
+          </span>
+          <span>•</span>
+          <span>Kerala Smart Agriculture</span>
+        </motion.div>
       </motion.div>
     </div>
   );
