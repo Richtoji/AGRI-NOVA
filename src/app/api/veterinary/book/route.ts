@@ -40,6 +40,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Buyers are restricted to purchasing products and cannot book veterinary appointments
+    if (role === 'BUYER' || userId === 'u-buyer-01') {
+      return NextResponse.json(
+        { error: 'Buyers cannot book veterinary appointments. Veterinary care services are strictly reserved for farmers.' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const { date, time, symptoms, animal } = body;
 

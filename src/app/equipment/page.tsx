@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { 
@@ -28,6 +29,7 @@ import { useAuthRole } from "@/lib/context/AuthRoleContext";
 export default function EquipmentPage() {
   const { currentUser, currentRole } = useAuthRole();
   const isAdmin = currentRole === "ADMIN" || currentUser?.role === "ADMIN";
+  const isBuyer = currentRole === "BUYER" || currentUser?.role === "BUYER";
 
   const [equipmentList, setEquipmentList] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -47,8 +49,8 @@ export default function EquipmentPage() {
   const [statusFilter, setStatusFilter] = useState("ALL");
 
   useEffect(() => {
-    // If Admin, do not allow selectedEq
-    if (isAdmin) {
+    // If Admin or Buyer, do not allow selectedEq
+    if (isAdmin || isBuyer) {
       setSelectedEq(null);
       return;
     }
@@ -114,9 +116,13 @@ export default function EquipmentPage() {
   };
 
   const handleConfirmBooking = async () => {
-    // Extra safety: Admins cannot book
+    // Extra safety: Admins and Buyers cannot book machinery
     if (isAdmin) {
       setValidationError("Admins are restricted to view-only mode and cannot book equipment.");
+      return;
+    }
+    if (isBuyer) {
+      setValidationError("Buyers are restricted to product procurement only and cannot book agricultural machinery.");
       return;
     }
 
@@ -480,14 +486,29 @@ export default function EquipmentPage() {
         {/* Machinery Grid (Shown for Farmers always, and for Admin under 'fleet' tab) */}
         {(!isAdmin || (isAdmin && adminTab === "fleet")) && (
           <div className="space-y-4">
-            {isAdmin && (
+            {isAdmin ? (
               <div className="p-3.5 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-600 flex items-center gap-2">
                 <Info className="w-4 h-4 text-emerald-700 shrink-0" />
                 <span>
                   <strong>Fleet Overview:</strong> Review catalog machinery rates and availability. Booking actions are restricted to registered farmer accounts.
                 </span>
               </div>
-            )}
+            ) : isBuyer ? (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span>
+                    <strong>Buyer Notice:</strong> Agricultural machinery booking is restricted to farmers. Buyers are registered exclusively for purchasing produce and products in the Agri Marketplace.
+                  </span>
+                </div>
+                <Link
+                  href="/marketplace"
+                  className="px-3.5 py-1.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-lg text-xs whitespace-nowrap self-start sm:self-auto shrink-0 transition-colors"
+                >
+                  Go to Marketplace &rarr;
+                </Link>
+              </div>
+            ) : null}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {equipmentList.map((eq: any) => (
@@ -525,11 +546,16 @@ export default function EquipmentPage() {
 
                   </div>
 
-                  {/* ACTION: Non-Admin gets 'Book Equipment', Admin gets view-only badge */}
+                  {/* ACTION: Non-Admin & Non-Buyer gets 'Book Equipment' */}
                   {isAdmin ? (
                     <div className="w-full mt-4 bg-gray-50 border border-gray-200 text-gray-500 font-semibold rounded-lg py-2.5 flex items-center justify-center text-xs space-x-1.5 select-none">
                       <ShieldCheck className="w-4 h-4 text-emerald-700" />
                       <span>Farmer Booking Only &bull; View Only</span>
+                    </div>
+                  ) : isBuyer ? (
+                    <div className="w-full mt-4 bg-gray-50 border border-gray-200 text-gray-400 font-semibold rounded-lg py-2.5 flex items-center justify-center text-xs space-x-1.5 select-none">
+                      <ShieldCheck className="w-4 h-4 text-gray-400" />
+                      <span>Buyers Restrict &bull; Purchase in Marketplace</span>
                     </div>
                   ) : (
                     <button 
@@ -547,8 +573,8 @@ export default function EquipmentPage() {
           </div>
         )}
 
-        {/* Booking Modal (Strictly disabled for Admins) */}
-        {!isAdmin && selectedEq && (
+        {/* Booking Modal (Strictly disabled for Admins and Buyers) */}
+        {!isAdmin && !isBuyer && selectedEq && (
           <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
             <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-xl border border-gray-200 flex flex-col">
               <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50 shrink-0">

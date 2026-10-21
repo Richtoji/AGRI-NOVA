@@ -355,7 +355,6 @@ export const Topbar: React.FC = () => {
           { label: "Buyer Overview", href: "/dashboard/buyer", icon: Home },
           { label: "Agri Marketplace", href: "/marketplace", icon: ShoppingBag },
           { label: "My Orders & Escrow", href: "/dashboard/buyer", icon: ClipboardList },
-          { label: "Cold-Chain Logistics", href: "/dashboard/delivery", icon: Truck },
           { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
         ];
       case "EQUIPMENT_OWNER":
@@ -1534,22 +1533,6 @@ export const Topbar: React.FC = () => {
                     <span className="truncate">Marketplace</span>
                   </Link>
                   <Link
-                    href="/equipment"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
-                  >
-                    <Tractor className="w-3.5 h-3.5 text-amber-500 shrink-0" />
-                    <span className="truncate">Machinery</span>
-                  </Link>
-                  <Link
-                    href="/veterinary"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
-                  >
-                    <PawPrint className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                    <span className="truncate">Veterinary</span>
-                  </Link>
-                  <Link
                     href="/schemes"
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
@@ -1557,6 +1540,26 @@ export const Topbar: React.FC = () => {
                     <FileText className="w-3.5 h-3.5 text-sky-600 shrink-0" />
                     <span className="truncate">Schemes</span>
                   </Link>
+                  {currentRole !== "BUYER" && (
+                    <Link
+                      href="/equipment"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
+                    >
+                      <Tractor className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                      <span className="truncate">Machinery</span>
+                    </Link>
+                  )}
+                  {currentRole !== "BUYER" && (
+                    <Link
+                      href="/veterinary"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="flex items-center space-x-1.5 px-2.5 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-700 text-[11px] font-semibold"
+                    >
+                      <PawPrint className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                      <span className="truncate">Veterinary</span>
+                    </Link>
+                  )}
                 </div>
               </div>
 

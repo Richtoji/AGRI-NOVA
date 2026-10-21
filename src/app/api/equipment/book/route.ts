@@ -40,6 +40,14 @@ export async function POST(request: Request) {
       );
     }
 
+    // Buyers are restricted to purchasing products and cannot book machinery
+    if (role === 'BUYER' || userId === 'u-buyer-01') {
+      return NextResponse.json(
+        { error: 'Buyers cannot book agricultural machinery. Machinery rental is strictly reserved for farmers.' },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const { equipmentId, startDate, endDate, totalCost } = body;
     

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { 
   Stethoscope, 
@@ -36,6 +37,7 @@ import { AppointmentModal } from "@/components/veterinary/AppointmentModal";
 export default function VeterinaryPage() {
   const { currentUser, currentRole } = useAuthRole();
   const isAdmin = currentRole === "ADMIN" || currentUser?.role === "ADMIN";
+  const isBuyer = currentRole === "BUYER" || currentUser?.role === "BUYER";
 
   // Farmer booking modal states
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -215,6 +217,11 @@ export default function VeterinaryPage() {
             <div className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600">
               <Ban className="w-4 h-4 text-rose-500" />
               <span>Admin Booking Disabled &bull; Read-Only Audit Mode</span>
+            </div>
+          ) : isBuyer ? (
+            <div className="inline-flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-xl text-xs font-semibold text-amber-800">
+              <Ban className="w-4 h-4 text-amber-600" />
+              <span>Buyer Account &bull; Veterinary Services Restricted to Farmers</span>
             </div>
           ) : (
             <button 
@@ -632,16 +639,32 @@ export default function VeterinaryPage() {
               
               <div className="bg-white border border-gray-100 rounded-2xl p-5 bg-gray-50 border border-gray-100 rounded-xl">
                 <h3 className="font-bold text-emerald-900 mb-2">Book Veterinary Care</h3>
-                <p className="text-sm text-gray-800 mb-4 leading-relaxed">
-                  Schedule an on-farm visit or teleconsultation with certified veterinary doctors.
-                </p>
-                <button 
-                  type="button"
-                  onClick={() => setIsBookingModalOpen(true)}
-                  className="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-lg shadow-sm transition-colors text-sm flex items-center justify-center cursor-pointer"
-                >
-                  <Calendar className="w-4 h-4 mr-2" /> Book Appointment
-                </button>
+                {isBuyer ? (
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-700 leading-relaxed">
+                      Veterinary care and appointments are reserved for farmers. As a registered Buyer, your account is configured for agricultural produce and product purchases.
+                    </p>
+                    <Link
+                      href="/marketplace"
+                      className="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-lg shadow-sm transition-colors text-sm flex items-center justify-center cursor-pointer"
+                    >
+                      Browse Marketplace &rarr;
+                    </Link>
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-800 mb-4 leading-relaxed">
+                      Schedule an on-farm visit or teleconsultation with certified veterinary doctors.
+                    </p>
+                    <button 
+                      type="button"
+                      onClick={() => setIsBookingModalOpen(true)}
+                      className="w-full py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-lg shadow-sm transition-colors text-sm flex items-center justify-center cursor-pointer"
+                    >
+                      <Calendar className="w-4 h-4 mr-2" /> Book Appointment
+                    </button>
+                  </>
+                )}
               </div>
 
               <div className="bg-white border border-gray-100 rounded-2xl p-5 bg-white border border-gray-200 rounded-xl shadow-sm">
@@ -677,8 +700,8 @@ export default function VeterinaryPage() {
 
       </div>
 
-      {/* Appointment Modal: Strictly non-admin only */}
-      {!isAdmin && (
+      {/* Appointment Modal: Strictly non-admin and non-buyer only */}
+      {!isAdmin && !isBuyer && (
         <AppointmentModal 
           isOpen={isBookingModalOpen} 
           onClose={() => setIsBookingModalOpen(false)} 
@@ -782,7 +805,7 @@ export default function VeterinaryPage() {
               >
                 Close
               </button>
-              {!isAdmin && (
+              {!isAdmin && !isBuyer && (
                 <button
                   type="button"
                   onClick={() => {
@@ -893,7 +916,7 @@ export default function VeterinaryPage() {
               >
                 Close
               </button>
-              {!isAdmin && (
+              {!isAdmin && !isBuyer && (
                 <button
                   type="button"
                   onClick={() => {

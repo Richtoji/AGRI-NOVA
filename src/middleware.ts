@@ -48,6 +48,11 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith("/marketplace") && !role) {
         return NextResponse.redirect(new URL("/auth/login", request.url));
       }
+      // Buyers are exclusively on the platform to purchase products; restrict equipment & veterinary
+      if ((pathname.startsWith("/equipment") || pathname.startsWith("/veterinary")) && role === "BUYER") {
+        return NextResponse.redirect(new URL("/marketplace", request.url));
+      }
+
       if (pathname.startsWith("/equipment") && !["FARMER", "EQUIPMENT_OWNER", "ADMIN"].includes(role)) {
         return NextResponse.redirect(new URL("/auth/login", request.url));
       }

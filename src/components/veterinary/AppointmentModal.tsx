@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Calendar, User, AlignLeft, Info, CheckCircle2 } from 'lucide-react';
+import { useAuthRole } from '@/lib/context/AuthRoleContext';
 
 interface AppointmentModalProps {
   isOpen: boolean;
@@ -7,6 +8,7 @@ interface AppointmentModalProps {
 }
 
 export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
+  const { currentRole, currentUser } = useAuthRole();
   const [formData, setFormData] = useState({
     name: '',
     animal: '',
@@ -18,7 +20,8 @@ export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
   const [isSuccess, setIsSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  if (!isOpen) return null;
+  const isRestricted = currentRole === "BUYER" || currentUser?.role === "BUYER" || currentRole === "ADMIN" || currentUser?.role === "ADMIN";
+  if (!isOpen || isRestricted) return null;
 
   const getTomorrowDate = () => {
     const tomorrow = new Date();

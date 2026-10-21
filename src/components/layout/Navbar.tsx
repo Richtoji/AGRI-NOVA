@@ -76,10 +76,12 @@ export const Navbar: React.FC = () => {
               <span>Marketplace</span>
             </Link>
           )}
-          <Link href="/equipment" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
-            <Tractor className="w-3.5 h-3.5 text-amber-500" />
-            <span>Machinery Rental</span>
-          </Link>
+          {currentRole !== "BUYER" && (
+            <Link href="/equipment" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
+              <Tractor className="w-3.5 h-3.5 text-amber-500" />
+              <span>Machinery Rental</span>
+            </Link>
+          )}
           <Link href="/schemes" className="hover:text-gray-900 transition-colors flex items-center space-x-1.5 whitespace-nowrap">
             <FileText className="w-3.5 h-3.5 text-sky-500" />
             <span>Government Schemes</span>
@@ -210,13 +212,15 @@ export const Navbar: React.FC = () => {
           >
             Marketplace
           </Link>
-          <Link 
-            href="/equipment" 
-            onClick={() => setMobileMenuOpen(false)}
-            className="block py-2 px-2.5 rounded-lg font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
-          >
-            Machinery Rental
-          </Link>
+          {currentRole !== "BUYER" && (
+            <Link 
+              href="/equipment" 
+              onClick={() => setMobileMenuOpen(false)}
+              className="block py-2 px-2.5 rounded-lg font-semibold text-gray-700 hover:text-gray-900 hover:bg-gray-50 transition-colors"
+            >
+              Machinery Rental
+            </Link>
+          )}
           <Link 
             href="/schemes" 
             onClick={() => setMobileMenuOpen(false)}
