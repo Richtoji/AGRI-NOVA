@@ -39,8 +39,6 @@ interface RoleMeta {
   badgeClass: string;
   pillColor: string;
   icon: React.ElementType;
-  demoEmail: string;
-  demoPass: string;
 }
 
 const ROLE_META: Record<RoleType, RoleMeta> = {
@@ -48,61 +46,45 @@ const ROLE_META: Record<RoleType, RoleMeta> = {
     label: "Farmer",
     badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-200",
     pillColor: "hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300",
-    icon: Sprout,
-    demoEmail: "farmer@agri-nova.com",
-    demoPass: "Farmer@123"
+    icon: Sprout
   },
   BUYER: {
     label: "Buyer",
     badgeClass: "bg-sky-50 text-sky-800 border-sky-200",
     pillColor: "hover:bg-sky-50 hover:text-sky-800 hover:border-sky-300",
-    icon: ShoppingBag,
-    demoEmail: "subin@gmail.com",
-    demoPass: "Buyer@123"
+    icon: ShoppingBag
   },
   EQUIPMENT_OWNER: {
     label: "Equipment",
     badgeClass: "bg-amber-50 text-amber-800 border-amber-200",
     pillColor: "hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300",
-    icon: Wrench,
-    demoEmail: "equipment@agrinova.com",
-    demoPass: "Equipment@123"
+    icon: Wrench
   },
   VETERINARY_EXPERT: {
     label: "Veterinary",
     badgeClass: "bg-teal-50 text-teal-800 border-teal-200",
     pillColor: "hover:bg-teal-50 hover:text-teal-800 hover:border-teal-300",
-    icon: HeartHandshake,
-    demoEmail: "vet@agrinova.com",
-    demoPass: "Vet@123"
+    icon: HeartHandshake
   },
   DELIVERY_PARTNER: {
     label: "Delivery",
     badgeClass: "bg-orange-50 text-orange-800 border-orange-200",
     pillColor: "hover:bg-orange-50 hover:text-orange-800 hover:border-orange-300",
-    icon: Truck,
-    demoEmail: "delivery@agri-nova.com",
-    demoPass: "Delivery@123"
+    icon: Truck
   },
   ADMIN: {
     label: "Admin",
     badgeClass: "bg-purple-50 text-purple-800 border-purple-200",
     pillColor: "hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300",
-    icon: ShieldCheck,
-    demoEmail: "admin@agri-nova.com",
-    demoPass: "Admin@12345"
+    icon: ShieldCheck
   },
   SUPER_ADMIN: {
     label: "Super Admin",
     badgeClass: "bg-purple-100 text-purple-900 border-purple-300",
     pillColor: "hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300",
-    icon: ShieldCheck,
-    demoEmail: "admin@agri-nova.com",
-    demoPass: "Admin@12345"
+    icon: ShieldCheck
   }
 };
-
-const DEMO_ROLES: RoleType[] = ["FARMER", "BUYER", "ADMIN", "EQUIPMENT_OWNER", "VETERINARY_EXPERT"];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -252,15 +234,6 @@ export default function LoginPage() {
     }
   };
 
-  const handleQuickFill = (role: RoleType) => {
-    const meta = ROLE_META[role];
-    if (!meta) return;
-    setSelectedRole(role);
-    setEmail(meta.demoEmail);
-    setPassword(meta.demoPass);
-    setFieldErrors({});
-    setValidationError(null);
-  };
 
   return (
     <div className="h-screen w-full bg-slate-50 flex flex-col justify-between overflow-hidden relative">
@@ -587,32 +560,6 @@ export default function LoginPage() {
                   )}
                 </div>
 
-                {/* Quick Demo Autofill Bar */}
-                <div className="p-2 bg-emerald-50/60 border border-emerald-100 rounded-xl flex items-center justify-between text-[10px]">
-                  <span className="font-bold text-emerald-900 flex items-center space-x-1 shrink-0">
-                    <Sparkles className="w-2.5 h-2.5 text-emerald-600" />
-                    <span>Demo Pre-fill:</span>
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {DEMO_ROLES.map((r) => {
-                      const meta = ROLE_META[r];
-                      return (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => handleQuickFill(r)}
-                          className={`font-bold px-2 py-0.5 rounded-md border transition-all cursor-pointer ${
-                            selectedRole === r
-                              ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
-                              : "bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-100"
-                          }`}
-                        >
-                          {meta.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
 
                 {/* Submit Button */}
                 <div className="pt-1">
