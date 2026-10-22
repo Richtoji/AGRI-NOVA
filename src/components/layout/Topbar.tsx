@@ -635,7 +635,7 @@ export const Topbar: React.FC = () => {
 
             {/* Notification Dropdown Card */}
             {isNotificationsOpen && (
-              <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 sm:mt-2.5 w-[calc(100vw-16px)] sm:w-88 max-w-sm sm:max-w-none bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
+              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
                 <div className="p-4 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <Bell className="w-4 h-4 text-emerald-300" />
@@ -750,7 +750,7 @@ export const Topbar: React.FC = () => {
 
             {/* Messages Dropdown Card */}
             {isMessagesOpen && (
-              <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 sm:mt-2.5 w-[calc(100vw-16px)] sm:w-88 max-w-sm sm:max-w-none bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
+              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
                 <div className="p-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <MessageCircle className="w-4 h-4 text-emerald-400" />
@@ -875,7 +875,7 @@ export const Topbar: React.FC = () => {
 
             {/* Profile Dropdown Details Card */}
             {isProfileOpen && (
-              <div className="fixed sm:absolute right-2 sm:right-0 top-16 sm:top-full mt-2 sm:mt-2.5 w-[calc(100vw-16px)] sm:w-92 max-w-sm sm:max-w-none bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
+              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
                 
                 {/* Header Profile Banner */}
                 <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 text-white p-4 relative overflow-hidden">
