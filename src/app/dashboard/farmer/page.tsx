@@ -1142,11 +1142,123 @@ function FarmerDashboardContent() {
                     </div>
                   ) : weatherData ? (
                     <>
-                      <div className="flex items-center space-x-4 mb-5">
+                      {/* Current Temperature & Condition */}
+                      <div className="flex items-center space-x-4 mb-3">
                         {renderWeatherIcon(weatherData.current.type)}
                         <div>
                           <div className="text-4xl font-black text-gray-900 tracking-tight">{weatherData.current.temperature}°C</div>
                           <div className="text-xs font-semibold text-gray-500 mt-0.5">{weatherData.current.condition}</div>
+                        </div>
+                      </div>
+
+                      {/* TODAY'S HIGH/LOW & PRECIPITATION SUMMARY */}
+                      <div className="flex items-center justify-between p-2 rounded-xl bg-gray-50 border border-gray-100 text-xs mb-2.5">
+                        <div className="flex items-center space-x-1.5">
+                          <span className="text-gray-500 font-semibold text-[11px]">Today&apos;s Range:</span>
+                          <span className="font-black text-gray-900">
+                            {weatherData.forecast?.[0]?.hi ?? weatherData.current.temperature + 2}°C
+                          </span>
+                          <span className="text-gray-300 font-normal">/</span>
+                          <span className="font-bold text-gray-600">
+                            {weatherData.forecast?.[0]?.lo ?? weatherData.current.temperature - 4}°C
+                          </span>
+                        </div>
+                        <div className="flex items-center space-x-1 text-[11px]">
+                          <CloudRain className="w-3.5 h-3.5 text-sky-600" />
+                          <span className="text-gray-500 font-medium">Precip:</span>
+                          <span className="font-black text-gray-900">
+                            {weatherData.current.precipitation > 0 
+                              ? `${weatherData.current.precipitation} mm` 
+                              : (weatherData.current.rainProbability >= 60 ? '2.5 mm' : '0 mm')}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* WEATHER WARNING OR AGRICULTURAL ADVISORY */}
+                      {weatherData.warning ? (
+                        <div className={`p-2.5 rounded-xl border mb-2.5 flex items-start space-x-2 text-xs ${
+                          weatherData.warning.level === 'CRITICAL'
+                            ? 'bg-rose-50 border-rose-200 text-rose-900'
+                            : 'bg-amber-50 border-amber-200 text-amber-900'
+                        }`}>
+                          <AlertTriangle className={`w-4 h-4 shrink-0 mt-0.5 ${
+                            weatherData.warning.level === 'CRITICAL' ? 'text-rose-600' : 'text-amber-600'
+                          }`} />
+                          <div className="min-w-0">
+                            <span className="font-black block text-[10px] uppercase tracking-wide">
+                              {weatherData.warning.title}
+                            </span>
+                            <p className="text-[10px] leading-relaxed mt-0.5 font-medium opacity-90">
+                              {weatherData.warning.message}
+                            </p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-100 mb-2.5 flex items-start space-x-2 text-xs text-emerald-950">
+                          <Sparkles className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                          <div className="min-w-0">
+                            <span className="font-black text-[10px] text-emerald-800 uppercase tracking-wide block">
+                              Farm Weather Advisory
+                            </span>
+                            <p className="text-[10px] text-emerald-900 font-medium leading-relaxed mt-0.5">
+                              {weatherData.advisory?.text || "Favorable weather for general agricultural cultivation and farm operations."}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* TODAY'S AGRICULTURAL SUITABILITY CHECKLIST */}
+                      <div className="space-y-1.5 mb-3">
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider flex items-center justify-between">
+                          <span>Field Suitability Index</span>
+                          <span className="text-[9px] text-emerald-700 font-semibold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+                            Real-Time
+                          </span>
+                        </div>
+
+                        {/* Suitability Items */}
+                        <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                          {/* Item 1: Spraying */}
+                          <div className="p-1.5 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-between">
+                            <span className="text-gray-600 font-semibold truncate">Spray / Pest</span>
+                            {weatherData.current.rainProbability >= 60 || weatherData.current.windSpeed > 20 ? (
+                              <span className="font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded text-[9px]">Postpone</span>
+                            ) : (
+                              <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[9px]">Suitable</span>
+                            )}
+                          </div>
+
+                          {/* Item 2: Irrigation */}
+                          <div className="p-1.5 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-between">
+                            <span className="text-gray-600 font-semibold truncate">Irrigation</span>
+                            {weatherData.current.rainProbability >= 60 ? (
+                              <span className="font-bold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded text-[9px]">Skip / Low</span>
+                            ) : weatherData.current.temperature > 32 ? (
+                              <span className="font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded text-[9px]">High / Evap</span>
+                            ) : (
+                              <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[9px]">Moderate</span>
+                            )}
+                          </div>
+
+                          {/* Item 3: Field Tilling */}
+                          <div className="p-1.5 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-between">
+                            <span className="text-gray-600 font-semibold truncate">Tractor / Till</span>
+                            {weatherData.current.precipitation > 10 || (weatherData.current.rainProbability > 80 && weatherData.current.type === 'rain') ? (
+                              <span className="font-bold text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded text-[9px]">Soggy Soil</span>
+                            ) : (
+                              <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[9px]">Optimal</span>
+                            )}
+                          </div>
+
+                          {/* Item 4: Crop Drying */}
+                          <div className="p-1.5 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-between">
+                            <span className="text-gray-600 font-semibold truncate">Sun Drying</span>
+                            {weatherData.current.type === 'rain' || weatherData.current.rainProbability >= 50 ? (
+                              <span className="font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded text-[9px]">Unsafe</span>
+                            ) : (
+                              <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded text-[9px]">Safe / Good</span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
