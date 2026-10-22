@@ -56,7 +56,8 @@ import {
   Sparkles,
   ExternalLink,
   RotateCcw,
-  Compass
+  Compass,
+  Wind
 } from "lucide-react";
 
 // Dynamically import the map to avoid SSR issues with Leaflet
@@ -792,6 +793,126 @@ function FarmerDashboardContent() {
                       {greeting},<br />{userName}! 👋
                     </h2>
                     <p className="text-xs text-gray-500 font-medium">Here&apos;s what&apos;s happening on your farm today.</p>
+                  </div>
+
+                  {/* OVERALL TODAY'S WEATHER DETAILS (RAINING VS SUNNY) */}
+                  <div className="my-3">
+                    {loading && !weatherData ? (
+                      <div className="p-3 rounded-xl bg-gray-50 border border-gray-100 flex items-center space-x-2.5 text-xs text-gray-500 animate-pulse">
+                        <RefreshCw className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+                        <span>Detecting today&apos;s farm weather...</span>
+                      </div>
+                    ) : (() => {
+                      const current = weatherData?.current;
+                      const condLower = (current?.condition || "").toLowerCase();
+                      const type = current?.type || "sun";
+                      const rainProb = current?.rainProbability ?? 15;
+                      const temp = current?.temperature ?? 30;
+                      const feelsLike = current?.feelsLike ?? 33;
+                      const humidity = current?.humidity ?? 68;
+                      const wind = current?.windSpeed ?? 12;
+                      const locationName = weatherData?.location?.name || "Palakkad Agricultural Belt";
+
+                      const isRaining = type === 'rain' || condLower.includes('rain') || condLower.includes('shower') || condLower.includes('storm') || condLower.includes('drizzle') || rainProb >= 60;
+                      const isSunny = !isRaining && (type === 'sun' || condLower.includes('sun') || condLower.includes('clear') || rainProb < 30);
+                      const isCloudy = !isRaining && !isSunny;
+
+                      let weatherStatusBadge = "☀️ SUNNY TODAY";
+                      let weatherBadgeBg = "bg-amber-100 text-amber-900 border-amber-300";
+                      let cardBg = "bg-gradient-to-br from-amber-50/70 via-orange-50/30 to-amber-50/10 border-amber-200/90";
+                      let weatherTitle = "Sunny & Clear Skies";
+                      let adviceText = "Optimal sunshine. Ideal day for solar crop drying, weeding, and irrigation.";
+                      let iconElement = <Sun className="w-6 h-6 text-amber-500 shrink-0" strokeWidth={1.8} />;
+
+                      if (isRaining) {
+                        weatherStatusBadge = "🌧️ RAINING TODAY";
+                        weatherBadgeBg = "bg-sky-100 text-sky-900 border-sky-300";
+                        cardBg = "bg-gradient-to-br from-sky-50/90 via-blue-50/40 to-sky-50/20 border-sky-200";
+                        weatherTitle = rainProb >= 80 ? "Heavy Rain Expected" : "Rain Showers Expected";
+                        adviceText = "Rainfall active. Inspect farm drainage channels and postpone foliar spraying.";
+                        iconElement = <CloudRain className="w-6 h-6 text-sky-600 shrink-0" strokeWidth={1.8} />;
+                      } else if (isCloudy) {
+                        weatherStatusBadge = "⛅ PARTLY CLOUDY";
+                        weatherBadgeBg = "bg-teal-50 text-teal-900 border-teal-200";
+                        cardBg = "bg-gradient-to-br from-emerald-50/60 via-teal-50/30 to-white border-emerald-200/80";
+                        weatherTitle = "Mild & Partly Overcast";
+                        adviceText = "Mild sunshine with partial cloud cover. Favorable for general field operations.";
+                        iconElement = <CloudSun className="w-6 h-6 text-emerald-600 shrink-0" strokeWidth={1.8} />;
+                      }
+
+                      return (
+                        <div className={`p-3 rounded-xl border ${cardBg} shadow-2xs transition-all`}>
+                          
+                          {/* Weather Header: Status Pill & District */}
+                          <div className="flex items-center justify-between gap-1.5 mb-2">
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black border tracking-wide uppercase shadow-2xs ${weatherBadgeBg}`}>
+                              {weatherStatusBadge}
+                            </span>
+                            <span className="text-[10px] text-gray-500 font-semibold truncate flex items-center gap-1">
+                              <MapPin className="w-2.5 h-2.5 text-gray-400 shrink-0" />
+                              {locationName}
+                            </span>
+                          </div>
+
+                          {/* Weather Main Info */}
+                          <div className="flex items-center justify-between gap-2 mb-2">
+                            <div className="flex items-center space-x-2.5 min-w-0">
+                              <div className="p-1.5 rounded-xl bg-white shadow-2xs border border-white/80">
+                                {iconElement}
+                              </div>
+                              <div className="min-w-0">
+                                <div className="flex items-baseline space-x-1.5">
+                                  <span className="text-xl font-black text-gray-900 leading-none">{temp}°C</span>
+                                  <span className="text-[10px] text-gray-500 font-medium">Feels {feelsLike}°C</span>
+                                </div>
+                                <p className="text-[11px] font-bold text-gray-800 truncate mt-0.5">{weatherTitle}</p>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleTabChange('weather')}
+                              className="text-[10px] font-bold text-emerald-700 hover:text-emerald-800 bg-white hover:bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-lg transition-colors cursor-pointer shrink-0 shadow-2xs flex items-center space-x-0.5"
+                              title="View full 7-day weather forecast"
+                            >
+                              <span>Forecast</span>
+                              <ChevronRight className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Farm Advisory / Advice */}
+                          <p className="text-[10px] text-gray-700 font-medium leading-relaxed mb-2 bg-white/75 p-2 rounded-lg border border-white/60">
+                            💡 {adviceText}
+                          </p>
+
+                          {/* Quick Farm Metrics (Rain, Humidity, Wind) */}
+                          <div className="grid grid-cols-3 gap-1.5 text-center">
+                            <div className="bg-white/80 rounded-lg py-1 px-1 border border-black/5">
+                              <div className="text-[9px] text-gray-500 font-bold flex items-center justify-center gap-0.5">
+                                <CloudRain className="w-2.5 h-2.5 text-sky-600" />
+                                <span>Rain</span>
+                              </div>
+                              <div className="text-[11px] font-black text-gray-900 mt-0.5">{rainProb}%</div>
+                            </div>
+                            <div className="bg-white/80 rounded-lg py-1 px-1 border border-black/5">
+                              <div className="text-[9px] text-gray-500 font-bold flex items-center justify-center gap-0.5">
+                                <Droplets className="w-2.5 h-2.5 text-blue-500" />
+                                <span>Humidity</span>
+                              </div>
+                              <div className="text-[11px] font-black text-gray-900 mt-0.5">{humidity}%</div>
+                            </div>
+                            <div className="bg-white/80 rounded-lg py-1 px-1 border border-black/5">
+                              <div className="text-[9px] text-gray-500 font-bold flex items-center justify-center gap-0.5">
+                                <Wind className="w-2.5 h-2.5 text-teal-600" />
+                                <span>Wind</span>
+                              </div>
+                              <div className="text-[11px] font-black text-gray-900 mt-0.5">{wind} km/h</div>
+                            </div>
+                          </div>
+
+                        </div>
+                      );
+                    })()}
                   </div>
                   
                   <div className="grid grid-cols-4 gap-2 pt-4 border-t border-gray-50 mt-4">
