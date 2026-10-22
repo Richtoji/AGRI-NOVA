@@ -22,7 +22,10 @@ import {
   HeartHandshake,
   Truck,
   ShieldCheck,
-  Shield
+  TrendingUp,
+  Sparkles,
+  Award,
+  Layers
 } from "lucide-react";
 import {
   validateEmailWithDetails,
@@ -35,46 +38,72 @@ import {
 interface RoleMeta {
   label: string;
   badgeClass: string;
+  pillColor: string;
   icon: React.ElementType;
+  demoEmail: string;
+  demoPass: string;
 }
 
 const ROLE_META: Record<RoleType, RoleMeta> = {
   FARMER: {
     label: "Farmer",
-    badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    icon: Sprout
+    badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    pillColor: "hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300",
+    icon: Sprout,
+    demoEmail: "farmer@agri-nova.com",
+    demoPass: "Farmer@123"
   },
   BUYER: {
     label: "Buyer",
-    badgeClass: "bg-sky-50 text-sky-700 border-sky-200",
-    icon: ShoppingBag
+    badgeClass: "bg-sky-50 text-sky-800 border-sky-200",
+    pillColor: "hover:bg-sky-50 hover:text-sky-800 hover:border-sky-300",
+    icon: ShoppingBag,
+    demoEmail: "subin@gmail.com",
+    demoPass: "Buyer@123"
   },
   EQUIPMENT_OWNER: {
-    label: "Equipment Owner",
-    badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
-    icon: Wrench
+    label: "Equipment",
+    badgeClass: "bg-amber-50 text-amber-800 border-amber-200",
+    pillColor: "hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300",
+    icon: Wrench,
+    demoEmail: "equipment@agrinova.com",
+    demoPass: "Equipment@123"
   },
   VETERINARY_EXPERT: {
-    label: "Veterinary Expert",
-    badgeClass: "bg-teal-50 text-teal-700 border-teal-200",
-    icon: HeartHandshake
+    label: "Veterinary",
+    badgeClass: "bg-teal-50 text-teal-800 border-teal-200",
+    pillColor: "hover:bg-teal-50 hover:text-teal-800 hover:border-teal-300",
+    icon: HeartHandshake,
+    demoEmail: "vet@agrinova.com",
+    demoPass: "Vet@123"
   },
   DELIVERY_PARTNER: {
-    label: "Delivery Partner",
-    badgeClass: "bg-orange-50 text-orange-700 border-orange-200",
-    icon: Truck
+    label: "Delivery",
+    badgeClass: "bg-orange-50 text-orange-800 border-orange-200",
+    pillColor: "hover:bg-orange-50 hover:text-orange-800 hover:border-orange-300",
+    icon: Truck,
+    demoEmail: "delivery@agri-nova.com",
+    demoPass: "Delivery@123"
   },
   ADMIN: {
-    label: "System Admin",
-    badgeClass: "bg-purple-50 text-purple-700 border-purple-200",
-    icon: ShieldCheck
+    label: "Admin",
+    badgeClass: "bg-purple-50 text-purple-800 border-purple-200",
+    pillColor: "hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300",
+    icon: ShieldCheck,
+    demoEmail: "admin@agri-nova.com",
+    demoPass: "Admin@12345"
   },
   SUPER_ADMIN: {
     label: "Super Admin",
-    badgeClass: "bg-purple-100 text-purple-800 border-purple-300",
-    icon: ShieldCheck
+    badgeClass: "bg-purple-100 text-purple-900 border-purple-300",
+    pillColor: "hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300",
+    icon: ShieldCheck,
+    demoEmail: "admin@agri-nova.com",
+    demoPass: "Admin@12345"
   }
 };
+
+const DEMO_ROLES: RoleType[] = ["FARMER", "BUYER", "ADMIN", "EQUIPMENT_OWNER", "VETERINARY_EXPERT"];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -224,64 +253,166 @@ export default function LoginPage() {
     }
   };
 
+  const handleQuickFill = (role: RoleType) => {
+    const meta = ROLE_META[role];
+    if (!meta) return;
+    setSelectedRole(role);
+    setEmail(meta.demoEmail);
+    setPassword(meta.demoPass);
+    setFieldErrors({});
+    setValidationError(null);
+  };
+
   return (
-    <div className="relative min-h-screen bg-gray-50 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+    <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center p-3 sm:p-6 lg:p-10 relative overflow-hidden">
       
-      {/* Subtle Pastel Ambient Accents (Barely-there, matching light theme) */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-emerald-100/35 rounded-full blur-3xl pointer-events-none -z-10" />
-      <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-amber-100/25 rounded-full blur-3xl pointer-events-none -z-10" />
+      {/* Decorative Atmosphere Glows (Themed to Kerala Emerald & Forest tones) */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-emerald-200/20 rounded-full blur-[140px] pointer-events-none -z-10" />
 
-      {/* Brand Header */}
-      <motion.div 
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, ease: "easeOut" }}
-        className="sm:mx-auto sm:w-full sm:max-w-md text-center"
-      >
-        <Link href="/" className="inline-flex items-center space-x-2 group mb-6">
-          <motion.div 
-            animate={{ y: [0, -3, 0] }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            className="w-10 h-10 rounded-xl bg-gray-100 group-hover:bg-emerald-50 flex items-center justify-center text-gray-900 transition-colors shadow-xs"
-          >
-            <Sprout className="w-6 h-6 text-emerald-600 group-hover:scale-105 transition-transform" />
-          </motion.div>
-          <span className="font-bold text-2xl text-gray-900 tracking-tight">AGRI-NOVA</span>
-        </Link>
-        <h2 className="mt-1 text-center text-3xl font-extrabold text-gray-900 tracking-tight">
-          {mode === "login" ? "Sign in to your account" : "Reset your password"}
-        </h2>
-        {mode === "login" && (
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{" "}
-            <Link 
-              href="/auth/register" 
-              className="font-medium text-emerald-600 hover:text-emerald-700 transition-colors font-semibold"
-            >
-              create a new account
+      {/* Main Container Card */}
+      <div className="w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-gray-100/90 overflow-hidden grid grid-cols-1 lg:grid-cols-12 relative z-10">
+
+        {/* ================= LEFT COLUMN: STUNNING AGRICULTURAL SHOWCASE (Desktop) ================= */}
+        <div className="hidden lg:flex lg:col-span-6 xl:col-span-6 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-950 text-white p-8 xl:p-12 flex-col justify-between relative overflow-hidden">
+          
+          {/* Subtle Ambient Light Orb inside Left Panel */}
+          <div className="absolute -top-24 -right-24 w-80 h-80 bg-emerald-400/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-teal-400/15 rounded-full blur-3xl pointer-events-none" />
+          
+          {/* Subtle Texture Overlay */}
+          <div className="absolute inset-0 opacity-[0.04] bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:20px_20px] pointer-events-none" />
+
+          {/* Top Brand Banner */}
+          <div className="relative z-10">
+            <Link href="/" className="inline-flex items-center space-x-3 group">
+              <div className="w-11 h-11 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white group-hover:bg-white/20 transition-all shadow-sm">
+                <Sprout className="w-6 h-6 text-emerald-300 group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-black text-xl text-white tracking-tight leading-none">
+                  AGRI-NOVA
+                </span>
+                <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest mt-1">
+                  Smart Agriculture Platform
+                </span>
+              </div>
             </Link>
-          </p>
-        )}
-      </motion.div>
 
-      {/* Login Card */}
-      <motion.div 
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.05, ease: "easeOut" }}
-        className="mt-8 sm:mx-auto sm:w-full sm:max-w-md"
-      >
-        <div className="bg-white py-8 px-4 shadow-sm sm:shadow-md rounded-2xl sm:px-10 border border-gray-100 relative transition-all">
+            {/* Platform Feature Highlight Title */}
+            <div className="mt-8 xl:mt-10 space-y-3">
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 text-xs font-semibold">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
+                <span>AI Agriculture &amp; Agri-Commerce</span>
+              </div>
+              
+              <h1 className="text-2xl xl:text-4xl font-black text-white leading-tight tracking-tight">
+                Empower Your Harvest.<br />
+                Connect With Markets.<br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-teal-200 to-emerald-400">
+                  Grow With Certainty.
+                </span>
+              </h1>
 
+              <p className="text-xs xl:text-sm text-emerald-100/80 leading-relaxed font-normal max-w-md">
+                A unified ecosystem connecting Kerala&apos;s agricultural community with AI-backed crop advisories, direct marketplace auctions, and certified veterinary healthcare.
+              </p>
+            </div>
+          </div>
+
+          {/* Center Card: Agricultural Visual Showcase */}
+          <div className="relative z-10 my-6">
+            <div className="rounded-2xl overflow-hidden border border-white/15 bg-white/5 backdrop-blur-md p-3 relative group">
+              <div className="relative aspect-video rounded-xl overflow-hidden">
+                <img
+                  src="/images/slide1.png"
+                  alt="Supervised Farm Cultivation"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/20 to-transparent" />
+                
+                {/* Live Floating Info Pill */}
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-white text-[11px] font-bold bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+                  <span className="flex items-center space-x-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>Active Cultivations in Kerala</span>
+                  </span>
+                  <span className="text-emerald-300">1,200+ Acres</span>
+                </div>
+              </div>
+
+              {/* 3 Value Pillars */}
+              <div className="grid grid-cols-3 gap-2 mt-3 pt-1 text-center">
+                <div className="p-2 rounded-xl bg-white/5 border border-white/10">
+                  <Sprout className="w-4 h-4 mx-auto text-emerald-300 mb-1" />
+                  <div className="text-[11px] font-bold text-white">AI Diagnostics</div>
+                  <div className="text-[9px] text-emerald-200/70">Soil &amp; Weather</div>
+                </div>
+                <div className="p-2 rounded-xl bg-white/5 border border-white/10">
+                  <ShoppingBag className="w-4 h-4 mx-auto text-amber-300 mb-1" />
+                  <div className="text-[11px] font-bold text-white">Direct Trade</div>
+                  <div className="text-[9px] text-amber-200/70">Fair Prices</div>
+                </div>
+                <div className="p-2 rounded-xl bg-white/5 border border-white/10">
+                  <ShieldCheck className="w-4 h-4 mx-auto text-teal-300 mb-1" />
+                  <div className="text-[11px] font-bold text-white">Verified KYC</div>
+                  <div className="text-[9px] text-teal-200/70">Tier-2 Security</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer Security Note */}
+          <div className="relative z-10 flex items-center justify-between pt-4 border-t border-white/10 text-[11px] text-emerald-200/80 font-medium">
+            <span className="flex items-center space-x-1.5">
+              <Award className="w-3.5 h-3.5 text-emerald-300" />
+              <span>State Agricultural Compliant</span>
+            </span>
+            <span>256-Bit SSL Encrypted</span>
+          </div>
+
+        </div>
+
+        {/* ================= RIGHT COLUMN: SLEEK AUTHENTICATION FORM ================= */}
+        <div className="lg:col-span-6 xl:col-span-6 p-6 sm:p-10 xl:p-12 flex flex-col justify-center bg-white">
+          
+          {/* Mobile Header Branding (< lg) */}
+          <div className="lg:hidden text-center mb-6">
+            <Link href="/" className="inline-flex items-center space-x-2 group">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+                <Sprout className="w-6 h-6" />
+              </div>
+              <span className="font-black text-xl text-gray-900 tracking-tight">AGRI-NOVA</span>
+            </Link>
+          </div>
+
+          {/* Header Title */}
+          <div className="mb-6">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">
+                {mode === "login" ? "Sign In" : "Reset Password"}
+              </h2>
+              <span className="text-xl">🌿</span>
+            </div>
+            <p className="text-xs sm:text-sm text-gray-500 mt-1 font-medium">
+              {mode === "login" 
+                ? "Enter your credentials to access your agricultural dashboard."
+                : "Verify your phone and date of birth to set a secure new password."
+              }
+            </p>
+          </div>
+
+          {/* Alerts: Validation Error / Success */}
           <AnimatePresence mode="wait">
             {validationError && (
               <motion.div 
                 initial={{ opacity: 0, y: -6, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -6, height: 0 }}
-                className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-700 text-sm font-medium flex items-center shadow-xs"
+                className="mb-5 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center shadow-xs"
               >
-                <AlertCircle className="w-4 h-4 mr-2 shrink-0 text-rose-500" />
+                <AlertCircle className="w-4 h-4 mr-2 shrink-0 text-rose-600" />
                 <span>{validationError}</span>
               </motion.div>
             )}
@@ -291,61 +422,61 @@ export default function LoginPage() {
                 initial={{ opacity: 0, y: -6, height: 0 }}
                 animate={{ opacity: 1, y: 0, height: "auto" }}
                 exit={{ opacity: 0, y: -6, height: 0 }}
-                className="mb-6 p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm font-medium flex items-center shadow-xs"
+                className="mb-5 p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-semibold flex items-center shadow-xs"
               >
                 <CheckCircle2 className="w-4 h-4 mr-2 shrink-0 text-emerald-600" />
-                <span>Password updated successfully! Redirecting to login...</span>
+                <span>Password updated successfully! Redirecting to sign in...</span>
               </motion.div>
             )}
           </AnimatePresence>
 
           {mode === "login" ? (
-            <form className="space-y-5" onSubmit={handleLogin} noValidate>
+            <form className="space-y-4" onSubmit={handleLogin} noValidate>
               
-              {/* Account Role with Dynamic Subtle Badge */}
+              {/* Account Role Selector with Interactive Tabs */}
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-medium text-gray-700">Account Role</label>
-                  <AnimatePresence mode="wait">
-                    <motion.span
-                      key={selectedRole}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.2 }}
-                      className={`inline-flex items-center gap-1 text-[11px] font-semibold border px-2 py-0.5 rounded-full ${activeRole.badgeClass}`}
-                    >
-                      <ActiveRoleIcon className="w-3 h-3" />
-                      {activeRole.label}
-                    </motion.span>
-                  </AnimatePresence>
+                  <label className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Select Your Role
+                  </label>
+                  <span className={`inline-flex items-center gap-1 text-[10px] font-bold border px-2 py-0.5 rounded-full ${activeRole.badgeClass}`}>
+                    <ActiveRoleIcon className="w-3 h-3" />
+                    <span>{activeRole.label}</span>
+                  </span>
                 </div>
-                <div className="mt-1">
-                  <select
-                    value={selectedRole}
-                    onChange={(e) => {
-                      const newRole = e.target.value as RoleType;
-                      setSelectedRole(newRole);
-                    }}
-                    className="appearance-none block w-full px-3.5 py-2.5 border border-gray-300 rounded-xl shadow-xs placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-600 sm:text-sm bg-white text-gray-900 transition-colors cursor-pointer"
-                  >
-                    <option value="FARMER">Farmer</option>
-                    <option value="BUYER">Buyer</option>
-                    <option value="EQUIPMENT_OWNER">Equipment Owner</option>
-                    <option value="VETERINARY_EXPERT">Veterinary Expert</option>
-                    <option value="DELIVERY_PARTNER">Delivery Partner</option>
-                    <option value="ADMIN">System Admin</option>
-                  </select>
+
+                {/* Role Pill Grid */}
+                <div className="grid grid-cols-3 gap-1.5">
+                  {(["FARMER", "BUYER", "ADMIN", "EQUIPMENT_OWNER", "VETERINARY_EXPERT", "DELIVERY_PARTNER"] as RoleType[]).map((r) => {
+                    const meta = ROLE_META[r];
+                    const Icon = meta.icon;
+                    const isSelected = selectedRole === r;
+                    return (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => setSelectedRole(r)}
+                        className={`flex items-center space-x-1.5 p-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-gray-900 text-white border-gray-900 shadow-sm"
+                            : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
+                      >
+                        <Icon className={`w-3.5 h-3.5 shrink-0 ${isSelected ? "text-emerald-400" : "text-gray-500"}`} />
+                        <span className="truncate">{meta.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Email Address */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                   Email Address <span className="text-rose-500">*</span>
                 </label>
-                <div className="relative rounded-md shadow-xs group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
+                <div className="relative rounded-2xl group">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
                     <Mail className="h-4 w-4" />
                   </div>
                   <input
@@ -363,7 +494,7 @@ export default function LoginPage() {
                         setSelectedRole("VETERINARY_EXPERT");
                       } else if (lower === "equipment@agrinova.com" || lower.startsWith("equipment")) {
                         setSelectedRole("EQUIPMENT_OWNER");
-                      } else if (lower === "admin@agrinova.com" || lower.startsWith("admin")) {
+                      } else if (lower === "admin@agri-nova.com" || lower.startsWith("admin")) {
                         setSelectedRole("ADMIN");
                       } else if (lower === "delivery@agri-nova.com" || lower.startsWith("delivery")) {
                         setSelectedRole("DELIVERY_PARTNER");
@@ -375,19 +506,19 @@ export default function LoginPage() {
                       const check = validateEmailWithDetails(email.trim());
                       if (!check.isValid) setFieldErrors(prev => ({ ...prev, email: check.error || "" }));
                     }}
-                    className={`appearance-none block w-full pl-10 px-3 py-2.5 border rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 transition-all ${
+                    className={`block w-full pl-10 pr-3.5 py-2.5 border rounded-2xl text-xs sm:text-sm bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                       fieldErrors.email 
                         ? "border-rose-400 focus:ring-rose-200" 
-                        : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-600"
+                        : "border-gray-200 focus:ring-emerald-200 focus:border-emerald-600"
                     }`}
-                    placeholder="you@example.com"
+                    placeholder="e.g. farmer@agri-nova.com"
                   />
                 </div>
                 {fieldErrors.email && (
                   <motion.p 
                     initial={{ opacity: 0, y: -2 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-[11px] text-rose-600 mt-1 flex items-center font-medium"
+                    className="text-[11px] text-rose-600 mt-1 flex items-center font-semibold"
                   >
                     <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                     {fieldErrors.email}
@@ -397,11 +528,24 @@ export default function LoginPage() {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Password <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative rounded-md shadow-xs group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    Password <span className="text-rose-500">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMode("forgot_password");
+                      setValidationError(null);
+                      setFieldErrors({});
+                    }}
+                    className="text-xs font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
+                </div>
+                <div className="relative rounded-2xl group">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 group-focus-within:text-emerald-600 transition-colors">
                     <Lock className="h-4 w-4" />
                   </div>
                   <input
@@ -412,18 +556,18 @@ export default function LoginPage() {
                       setPassword(e.target.value);
                       if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: "" }));
                     }}
-                    className={`appearance-none block w-full pl-10 pr-10 px-3 py-2.5 border rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 transition-all ${
+                    className={`block w-full pl-10 pr-10 py-2.5 border rounded-2xl text-xs sm:text-sm bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-all ${
                       fieldErrors.password 
                         ? "border-rose-400 focus:ring-rose-200" 
-                        : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-600"
+                        : "border-gray-200 focus:ring-emerald-200 focus:border-emerald-600"
                     }`}
-                    placeholder="••••••••"
+                    placeholder="Enter account password"
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1"
                     >
                       {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -433,7 +577,7 @@ export default function LoginPage() {
                   <motion.p 
                     initial={{ opacity: 0, y: -2 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-[11px] text-rose-600 mt-1 flex items-center font-medium"
+                    className="text-[11px] text-rose-600 mt-1 flex items-center font-semibold"
                   >
                     <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                     {fieldErrors.password}
@@ -441,64 +585,80 @@ export default function LoginPage() {
                 )}
               </div>
 
-              {/* Options */}
-              <div className="flex items-center justify-between">
-                <label className="flex items-center cursor-pointer select-none">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded cursor-pointer"
-                  />
-                  <span className="ml-2 block text-sm text-gray-900 font-medium">
-                    Remember me
+              {/* Quick Demo Credentials Autofill Helper */}
+              <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-2xl">
+                <div className="flex items-center justify-between text-[10px] font-bold text-emerald-900 mb-1.5 uppercase tracking-wider">
+                  <span className="flex items-center space-x-1">
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    <span>Quick Demo Pre-fills:</span>
                   </span>
-                </label>
-
-                <div className="text-sm">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode("forgot_password");
-                      setValidationError(null);
-                      setFieldErrors({});
-                    }}
-                    className="font-semibold text-emerald-600 hover:text-emerald-700 transition-colors"
-                  >
-                    Forgot password?
-                  </button>
+                  <span className="text-emerald-700/80">Tap to auto-fill</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {DEMO_ROLES.map((r) => {
+                    const meta = ROLE_META[r];
+                    return (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => handleQuickFill(r)}
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer ${
+                          selectedRole === r
+                            ? "bg-emerald-600 text-white border-emerald-600 shadow-2xs"
+                            : "bg-white text-emerald-800 border-emerald-200 hover:bg-emerald-100"
+                        }`}
+                      >
+                        {meta.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* Submit Button with Subtle Hover Feedback */}
-              <div className="pt-1">
+              {/* Submit Button */}
+              <div className="pt-2">
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   type="submit"
                   disabled={isLoading}
-                  className="group w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-gray-900 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-3 px-4 rounded-2xl shadow-md text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-700 via-emerald-800 to-teal-900 hover:from-emerald-800 hover:to-teal-950 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center space-x-2 cursor-pointer"
                 >
                   {isLoading ? (
                     <Loader2 className="w-5 h-5 animate-spin" />
                   ) : (
-                    <span className="flex items-center space-x-1.5">
-                      <span>Sign in to Dashboard</span>
-                      <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </span>
+                    <>
+                      <span>Sign In to Dashboard</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </>
                   )}
                 </motion.button>
               </div>
+
+              {/* Register Callout */}
+              <div className="text-center pt-2">
+                <p className="text-xs text-gray-500 font-medium">
+                  Don&apos;t have an account yet?{" "}
+                  <Link 
+                    href="/auth/register" 
+                    className="font-bold text-emerald-700 hover:text-emerald-800 transition-colors"
+                  >
+                    Register new account
+                  </Link>
+                </p>
+              </div>
+
             </form>
           ) : (
             /* ================= FORGOT PASSWORD FORM ================= */
             <form className="space-y-4" onSubmit={handleForgotPassword} noValidate>
+              
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
                   Registered Phone Number <span className="text-rose-500">*</span>
                 </label>
-                <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <div className="relative rounded-2xl">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <Phone className="h-4 w-4" />
                   </div>
                   <input
@@ -513,14 +673,14 @@ export default function LoginPage() {
                       const check = validatePhoneWithDetails(fpPhone);
                       if (!check.isValid) setFpFieldErrors(prev => ({ ...prev, phone: check.error || "" }));
                     }}
-                    className={`appearance-none block w-full pl-10 px-3 py-2.5 border rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 transition-colors ${
-                      fpFieldErrors.phone ? "border-rose-400 focus:ring-rose-200" : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-600"
+                    className={`block w-full pl-10 pr-3.5 py-2.5 border rounded-2xl text-xs sm:text-sm bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-colors ${
+                      fpFieldErrors.phone ? "border-rose-400 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-200 focus:border-emerald-600"
                     }`}
-                    placeholder="+91 98765 43210"
+                    placeholder="10-digit mobile number"
                   />
                 </div>
                 {fpFieldErrors.phone && (
-                  <p className="text-[11px] text-rose-600 mt-1 flex items-center font-medium">
+                  <p className="text-[11px] text-rose-600 mt-1 flex items-center font-semibold">
                     <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                     {fpFieldErrors.phone}
                   </p>
@@ -528,11 +688,11 @@ export default function LoginPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Date of Birth (For Identity Verification) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                  Date of Birth (For Identity Match) <span className="text-rose-500">*</span>
                 </label>
-                <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <div className="relative rounded-2xl">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <Calendar className="h-4 w-4" />
                   </div>
                   <input
@@ -547,13 +707,13 @@ export default function LoginPage() {
                       const check = validateDob(fpDob);
                       if (!check.isValid) setFpFieldErrors(prev => ({ ...prev, dob: check.error || "" }));
                     }}
-                    className={`appearance-none block w-full pl-10 px-3 py-2.5 border rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 transition-colors ${
-                      fpFieldErrors.dob ? "border-rose-400 focus:ring-rose-200" : "border-gray-300 focus:ring-emerald-200 focus:border-emerald-600"
+                    className={`block w-full pl-10 pr-3.5 py-2.5 border rounded-2xl text-xs sm:text-sm bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 transition-colors ${
+                      fpFieldErrors.dob ? "border-rose-400 focus:ring-rose-200" : "border-gray-200 focus:ring-emerald-200 focus:border-emerald-600"
                     }`}
                   />
                 </div>
                 {fpFieldErrors.dob && (
-                  <p className="text-[11px] text-rose-600 mt-1 flex items-center font-medium">
+                  <p className="text-[11px] text-rose-600 mt-1 flex items-center font-semibold">
                     <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                     {fpFieldErrors.dob}
                   </p>
@@ -562,17 +722,17 @@ export default function LoginPage() {
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                     New Password <span className="text-rose-500">*</span>
                   </label>
                   {fpNewPassword && (
-                    <span className="text-[10px] font-bold text-gray-600">
+                    <span className="text-[10px] font-bold text-emerald-700">
                       Strength: {fpStrength.strengthLabel}
                     </span>
                   )}
                 </div>
-                <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <div className="relative rounded-2xl">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <Lock className="h-4 w-4" />
                   </div>
                   <input
@@ -583,14 +743,14 @@ export default function LoginPage() {
                       setFpNewPassword(e.target.value);
                       if (fpFieldErrors.password) setFpFieldErrors(prev => ({ ...prev, password: "" }));
                     }}
-                    className="appearance-none block w-full pl-10 pr-10 px-3 py-2.5 border border-gray-300 rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-600"
-                    placeholder="Enter strict new password"
+                    className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-2xl text-xs sm:text-sm bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-600"
+                    placeholder="Create strong new password"
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <button
                       type="button"
                       onClick={() => setShowFpNewPassword(!showFpNewPassword)}
-                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1"
                     >
                       {showFpNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -598,17 +758,17 @@ export default function LoginPage() {
                 </div>
 
                 {fpNewPassword && (
-                  <div className="grid grid-cols-2 gap-1 pt-1.5 text-[11px]">
-                    <span className={fpStrength.rules.minLength ? "text-emerald-700 font-semibold" : "text-gray-400"}>
+                  <div className="grid grid-cols-2 gap-1 pt-1.5 text-[10px]">
+                    <span className={fpStrength.rules.minLength ? "text-emerald-700 font-bold" : "text-gray-400"}>
                       • 8+ characters
                     </span>
-                    <span className={fpStrength.rules.hasUppercase && fpStrength.rules.hasLowercase ? "text-emerald-700 font-semibold" : "text-gray-400"}>
+                    <span className={fpStrength.rules.hasUppercase && fpStrength.rules.hasLowercase ? "text-emerald-700 font-bold" : "text-gray-400"}>
                       • Upper &amp; lower
                     </span>
-                    <span className={fpStrength.rules.hasNumber ? "text-emerald-700 font-semibold" : "text-gray-400"}>
+                    <span className={fpStrength.rules.hasNumber ? "text-emerald-700 font-bold" : "text-gray-400"}>
                       • Number (0-9)
                     </span>
-                    <span className={fpStrength.rules.hasSpecial ? "text-emerald-700 font-semibold" : "text-gray-400"}>
+                    <span className={fpStrength.rules.hasSpecial ? "text-emerald-700 font-bold" : "text-gray-400"}>
                       • Symbol (!@#$)
                     </span>
                   </div>
@@ -617,7 +777,7 @@ export default function LoginPage() {
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                     Confirm New Password <span className="text-rose-500">*</span>
                   </label>
                   {fpConfirmPassword && (
@@ -626,8 +786,8 @@ export default function LoginPage() {
                     </span>
                   )}
                 </div>
-                <div className="relative rounded-md shadow-xs">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                <div className="relative rounded-2xl">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
                     <Lock className="h-4 w-4" />
                   </div>
                   <input
@@ -635,14 +795,14 @@ export default function LoginPage() {
                     required
                     value={fpConfirmPassword}
                     onChange={(e) => setFpConfirmPassword(e.target.value)}
-                    className="appearance-none block w-full pl-10 pr-10 px-3 py-2.5 border border-gray-300 rounded-xl sm:text-sm bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-600"
-                    placeholder="Re-enter new password"
+                    className="block w-full pl-10 pr-10 py-2.5 border border-gray-200 rounded-2xl text-xs sm:text-sm bg-gray-50 text-gray-900 focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-200 focus:border-emerald-600"
+                    placeholder="Confirm new password"
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <button
                       type="button"
                       onClick={() => setShowFpConfirmPassword(!showFpConfirmPassword)}
-                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                      className="text-gray-400 hover:text-gray-600 focus:outline-none transition-colors p-1"
                     >
                       {showFpConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
@@ -651,7 +811,7 @@ export default function LoginPage() {
               </div>
 
               {fpFieldErrors.password && (
-                <p className="text-[11px] text-rose-600 flex items-center font-medium">
+                <p className="text-[11px] text-rose-600 flex items-center font-semibold">
                   <AlertCircle className="w-3 h-3 mr-1 shrink-0" />
                   {fpFieldErrors.password}
                 </p>
@@ -663,7 +823,7 @@ export default function LoginPage() {
                   whileTap={{ scale: 0.99 }}
                   type="submit"
                   disabled={isLoading || fpSuccess || !fpStrength.isValid || !fpMatch}
-                  className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  className="w-full py-3 px-4 rounded-2xl shadow-md text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-emerald-700 to-teal-800 hover:from-emerald-800 hover:to-teal-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-600 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                 >
                   {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Verify & Reset Password"}
                 </motion.button>
@@ -674,7 +834,7 @@ export default function LoginPage() {
                     setValidationError(null);
                     setFpFieldErrors({});
                   }}
-                  className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-xl shadow-xs text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-colors"
+                  className="w-full py-2.5 px-4 border border-gray-200 rounded-2xl text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-colors cursor-pointer"
                 >
                   Back to Sign In
                 </button>
@@ -682,23 +842,18 @@ export default function LoginPage() {
             </form>
           )}
 
+          {/* Footer badge */}
+          <div className="mt-6 pt-4 border-t border-gray-100 flex items-center justify-center space-x-2 text-[11px] text-gray-400 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+            <span>Encrypted Session</span>
+            <span>•</span>
+            <span>Kerala Agricultural Network</span>
+          </div>
+
         </div>
 
-        {/* Minimal clean live status badge */}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          className="mt-6 flex items-center justify-center space-x-3 text-xs text-gray-500 font-medium"
-        >
-          <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            End-to-End Encrypted Session
-          </span>
-          <span>•</span>
-          <span>Kerala Smart Agriculture</span>
-        </motion.div>
-      </motion.div>
+      </div>
+
     </div>
   );
 }
