@@ -17,16 +17,32 @@ const NO_CACHE_HEADERS = {
   'Expires': '0',
 };
 
+export function isCustomImage(url?: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.trim();
+  if (!u) return false;
+  if (u.startsWith('data:image')) return true;
+  if (u.startsWith('/api/uploads') || u.startsWith('/uploads')) return true;
+  if (u.startsWith('http://') || u.startsWith('https://')) return true;
+  if (u.startsWith('/') && !u.startsWith('/images/crops/')) return true;
+  return false;
+}
+
+export function pickBestImage(primary?: string, secondary?: string): string {
+  if (isCustomImage(primary)) return primary!;
+  if (isCustomImage(secondary)) return secondary!;
+  return primary || secondary || '';
+}
+
 async function checkAdminAuth(request?: Request): Promise<boolean> {
   try {
-    const token = (await cookies()).get('auth_token')?.value;
-
-    // Check request header fallback
+    // 1. Check request header fallback (immediate priority for admin UI calls)
     const roleHeader = request?.headers?.get('x-user-role');
     if (roleHeader && ['ADMIN', 'SUPER_ADMIN', 'AGRICULTURAL_EXPERT', 'VETERINARY_EXPERT'].includes(roleHeader)) {
-      if (!token) return true;
+      return true;
     }
 
+    const token = (await cookies()).get('auth_token')?.value;
     if (!token) return false;
 
     // Try jsonwebtoken verification
@@ -68,26 +84,37 @@ export async function GET(request: Request) {
       console.warn("DB admin crops fetch failed, relying on inMemoryStore:", dbErr);
     }
 
-    // Merge DB crops with in-memory store (inMemoryStore takes precedence for live edits)
+    // Merge DB crops with in-memory store, strictly preserving custom/uploaded images
     const cropsMap = new Map<string, any>();
     
-    // First populate from DB
-    if (Array.isArray(dbCrops)) {
-      dbCrops.forEach(c => {
-        cropsMap.set((c.name || '').toLowerCase(), { ...c });
-      });
-    }
-
-    // Then layer in-memory crops on top (gives precedence to live edits)
+    // First populate from inMemoryStore
     if (Array.isArray(memoryCrops)) {
       memoryCrops.forEach(c => {
-        const key = (c.name || '').toLowerCase();
-        const existing = cropsMap.get(key) || {};
-        cropsMap.set(key, { ...existing, ...c });
+        const key = (c.name || '').toLowerCase().trim();
+        cropsMap.set(key, { ...c });
       });
     }
 
-    const mergedList = Array.from(cropsMap.values());
+    // Then layer DB crops, preserving any custom image
+    if (Array.isArray(dbCrops)) {
+      dbCrops.forEach(c => {
+        const key = (c.name || '').toLowerCase().trim();
+        const existing = cropsMap.get(key);
+        if (existing) {
+          const bestImg = pickBestImage(existing.imageUrl, c.imageUrl);
+          cropsMap.set(key, { ...existing, ...c, imageUrl: bestImg });
+        } else {
+          cropsMap.set(key, { ...c });
+        }
+      });
+    }
+
+    const mergedList = Array.from(cropsMap.values()).map(c => {
+      const memMatch = memoryCrops?.find((m: any) => (m.name || '').toLowerCase().trim() === (c.name || '').toLowerCase().trim());
+      const bestImg = pickBestImage(c.imageUrl, memMatch?.imageUrl);
+      return { ...c, imageUrl: bestImg || c.imageUrl };
+    });
+
     const finalList = mergedList.length > 0 ? mergedList : memoryCrops;
 
     return NextResponse.json({ success: true, crops: finalList }, { headers: NO_CACHE_HEADERS });
@@ -214,7 +241,13 @@ async function handleUpdate(request: Request) {
       console.warn("Prisma update crop failed, updated inMemoryStore only:", dbErr);
     }
 
-    return NextResponse.json({ success: true, crop: dbCrop || updatedMemoryCrop }, { headers: NO_CACHE_HEADERS });
+    const effectiveCrop = {
+      ...(updatedMemoryCrop || {}),
+      ...(dbCrop || {}),
+      imageUrl: pickBestImage(data.imageUrl, dbCrop?.imageUrl || updatedMemoryCrop?.imageUrl)
+    };
+
+    return NextResponse.json({ success: true, crop: effectiveCrop }, { headers: NO_CACHE_HEADERS });
   } catch (error: any) {
     console.error("Update admin crop failed:", error?.message);
     return NextResponse.json({ error: 'Failed to update crop' }, { status: 500 });

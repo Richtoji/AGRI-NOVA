@@ -16,6 +16,23 @@ const NO_CACHE_HEADERS = {
 
 const JWT_SECRET = (process.env.JWT_SECRET || 'super_secure_production_ready_secret_12345').trim();
 
+function isCustomImage(url?: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.trim();
+  if (!u) return false;
+  if (u.startsWith('data:image')) return true;
+  if (u.startsWith('/api/uploads') || u.startsWith('/uploads')) return true;
+  if (u.startsWith('http://') || u.startsWith('https://')) return true;
+  if (u.startsWith('/') && !u.startsWith('/images/crops/')) return true;
+  return false;
+}
+
+function pickBestImage(primary?: string, secondary?: string): string {
+  if (isCustomImage(primary)) return primary!;
+  if (isCustomImage(secondary)) return secondary!;
+  return primary || secondary || '';
+}
+
 
 async function getUser() {
   if (!JWT_SECRET) return null;
@@ -70,10 +87,11 @@ export async function GET(request: Request) {
         const knowledge = getCropKnowledge(cropName);
         const memCrop = inMemoryStore.getCropProfileByName(cropName);
 
-        if (memCrop && c.cropProfile) {
-          if (memCrop.imageUrl) c.cropProfile.imageUrl = memCrop.imageUrl;
-          if (memCrop.expectedYield) c.cropProfile.expectedYield = memCrop.expectedYield;
-          if (memCrop.growingPeriod) c.cropProfile.growingPeriod = memCrop.growingPeriod;
+        if (c.cropProfile) {
+          const bestImg = pickBestImage(memCrop?.imageUrl, c.cropProfile.imageUrl);
+          c.cropProfile.imageUrl = bestImg || `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`;
+          if (memCrop?.expectedYield) c.cropProfile.expectedYield = memCrop.expectedYield;
+          if (memCrop?.growingPeriod) c.cropProfile.growingPeriod = memCrop.growingPeriod;
         }
 
         if (!c.cropProfile?.cultivationGuide || !c.cropProfile.cultivationGuide.cultivationStages || c.cropProfile.cultivationGuide.cultivationStages.length === 0) {
@@ -161,22 +179,24 @@ export async function POST(request: Request) {
     if (!targetProfile) {
       const finalCropName = cropName || (cropProfileId && cropProfileId.length < 30 ? cropProfileId : 'Coconut');
       const knowledge = getCropKnowledge(finalCropName);
+      const memCrop = inMemoryStore.getCropProfileByName(finalCropName);
+      const customImg = pickBestImage(memCrop?.imageUrl);
 
       try {
         targetProfile = await (prisma as any).cropProfile.create({
           data: {
             name: finalCropName,
-            category: knowledge.category,
+            category: memCrop?.category || knowledge.category,
             scientificName: knowledge.scientificName,
             description: knowledge.description,
             climateRequirements: knowledge.climateRequirements,
             soilRequirements: knowledge.soilRequirements,
-            expectedYield: knowledge.expectedYield || 'Good Yield',
-            growingPeriod: knowledge.growingPeriod || 'Seasonal',
+            expectedYield: memCrop?.expectedYield || knowledge.expectedYield || 'Good Yield',
+            growingPeriod: memCrop?.growingPeriod || knowledge.growingPeriod || 'Seasonal',
             waterRequirement: typeof knowledge.waterRequirement === 'number' ? knowledge.waterRequirement : 3.0,
-            fertilizer: knowledge.fertilizer || 'Balanced Fertilizer',
-            pesticide: knowledge.pesticide || 'Neem oil formulation',
-            imageUrl: `/images/crops/${finalCropName.toLowerCase().replace(/\s+/g, '-')}.jpg`
+            fertilizer: memCrop?.fertilizer || knowledge.fertilizer || 'Balanced Fertilizer',
+            pesticide: memCrop?.pesticide || knowledge.pesticide || 'Neem oil formulation',
+            imageUrl: customImg || `/images/crops/${finalCropName.toLowerCase().replace(/\s+/g, '-')}.jpg`
           }
         });
       } catch (createErr) {

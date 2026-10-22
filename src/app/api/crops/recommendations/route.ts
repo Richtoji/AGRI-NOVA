@@ -13,6 +13,23 @@ const NO_CACHE_HEADERS = {
   'Expires': '0',
 };
 
+function isCustomImage(url?: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.trim();
+  if (!u) return false;
+  if (u.startsWith('data:image')) return true;
+  if (u.startsWith('/api/uploads') || u.startsWith('/uploads')) return true;
+  if (u.startsWith('http://') || u.startsWith('https://')) return true;
+  if (u.startsWith('/') && !u.startsWith('/images/crops/')) return true;
+  return false;
+}
+
+function pickBestImage(primary?: string, secondary?: string): string {
+  if (isCustomImage(primary)) return primary!;
+  if (isCustomImage(secondary)) return secondary!;
+  return primary || secondary || '';
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const latStr = searchParams.get("latitude") || searchParams.get("lat");
@@ -85,7 +102,8 @@ export async function GET(request: Request) {
       
       const knowledge = getCropKnowledge(cropName);
 
-      const effectiveImageUrl = memProfile?.imageUrl || dbProfile?.imageUrl || `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`;
+      const bestImg = pickBestImage(memProfile?.imageUrl, dbProfile?.imageUrl);
+      const effectiveImageUrl = bestImg || `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`;
       const effectiveYield = memProfile?.expectedYield || dbProfile?.expectedYield || knowledge.expectedYield;
       const effectivePeriod = memProfile?.growingPeriod || dbProfile?.growingPeriod || knowledge.growingPeriod;
       const effectiveWater = memProfile?.waterRequirement ?? dbProfile?.waterRequirement ?? knowledge.waterRequirement;
@@ -132,6 +150,7 @@ export async function GET(request: Request) {
     const recs = topCrops.map(name => {
       const memProfile = inMemoryStore.getCropProfileByName(name);
       const k = getCropKnowledge(name);
+      const fallbackBestImg = pickBestImage(memProfile?.imageUrl);
       return {
         id: memProfile?.id || `profile_${name.toLowerCase().replace(/\s+/g, '_')}`,
         name,
@@ -142,7 +161,7 @@ export async function GET(request: Request) {
         waterRequirement: memProfile?.waterRequirement ?? k.waterRequirement,
         fertilizer: memProfile?.fertilizer || k.fertilizer,
         pesticide: memProfile?.pesticide || k.pesticide,
-        image: memProfile?.imageUrl || `/images/crops/${name.toLowerCase().replace(/\s+/g, '-')}.jpg`,
+        image: fallbackBestImg || `/images/crops/${name.toLowerCase().replace(/\s+/g, '-')}.jpg`,
         zoneName: defaultZone.name,
         elevation: 15
       };

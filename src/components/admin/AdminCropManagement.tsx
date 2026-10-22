@@ -22,6 +22,8 @@ export function AdminCropManagement() {
   const [cropForm, setCropForm] = useState({
     name: "", expectedYield: "", growingPeriod: "", waterRequirement: "", fertilizer: "", pesticide: "", imageUrl: ""
   });
+  const [savingCrop, setSavingCrop] = useState(false);
+  const [cropError, setCropError] = useState<string | null>(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -124,6 +126,7 @@ export function AdminCropManagement() {
 
   const openCropModal = (item: any = null) => {
     setEditingItem(item);
+    setCropError(null);
     if (item) {
       setCropForm({
         name: item.name || "",
@@ -192,6 +195,45 @@ export function AdminCropManagement() {
     fetchData();
   };
 
+  const compressImageFile = async (file: File, maxDim = 800, quality = 0.82): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            const dataUrl = canvas.toDataURL("image/jpeg", quality);
+            resolve(dataUrl);
+          } else {
+            resolve((e.target?.result as string) || "");
+          }
+        };
+        img.onerror = () => {
+          resolve((e.target?.result as string) || "");
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  };
+
   const processImageUpload = async (fileInput: HTMLInputElement | null, fallbackUrl: string): Promise<string> => {
     if (fileInput && fileInput.files && fileInput.files[0]) {
       const file = fileInput.files[0];
@@ -211,45 +253,43 @@ export function AdminCropManagement() {
           if (url) return url;
         }
       } catch (err) {
-        console.warn("Upload endpoint failed, utilizing Base64 fallback:", err);
+        console.warn("Upload endpoint failed, utilizing compressed Base64 fallback:", err);
       }
 
-      // Base64 fallback ensures images always work even if filesystem or uploads endpoint fails
-      return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          resolve((reader.result as string) || fallbackUrl);
-        };
-        reader.readAsDataURL(file);
-      });
+      // Safe compressed Base64 fallback (avoids 413 Payload Too Large)
+      const compressed = await compressImageFile(file);
+      return compressed || fallbackUrl;
     }
     return fallbackUrl;
   };
 
   const saveCrop = async (e: any) => {
     e.preventDefault();
-    const fileInput = (e.target as HTMLFormElement).querySelector('input[type="file"]') as HTMLInputElement | null;
-    const finalImageUrl = await processImageUpload(fileInput, cropForm.imageUrl);
-
-    const payload = {
-      ...cropForm,
-      imageUrl: finalImageUrl,
-      waterRequirement: parseFloat(cropForm.waterRequirement) || 3
-    };
-
-    // Optimistically update crops list so change shows immediately
-    if (editingItem) {
-      setCrops(prev => prev.map(c => 
-        (c.id === editingItem.id || c.name?.toLowerCase() === editingItem.name?.toLowerCase())
-          ? { ...c, ...payload }
-          : c
-      ));
-    } else {
-      const tempId = `crop-${Date.now()}`;
-      setCrops(prev => [{ id: tempId, ...payload }, ...prev]);
-    }
+    setSavingCrop(true);
+    setCropError(null);
 
     try {
+      const fileInput = (e.target as HTMLFormElement).querySelector('input[type="file"]') as HTMLInputElement | null;
+      const finalImageUrl = await processImageUpload(fileInput, cropForm.imageUrl);
+
+      const payload = {
+        ...cropForm,
+        imageUrl: finalImageUrl,
+        waterRequirement: parseFloat(cropForm.waterRequirement) || 3
+      };
+
+      // Optimistically update crops list so change shows immediately
+      if (editingItem) {
+        setCrops(prev => prev.map(c => 
+          (c.id === editingItem.id || c.name?.toLowerCase() === editingItem.name?.toLowerCase())
+            ? { ...c, ...payload }
+            : c
+        ));
+      } else {
+        const tempId = `crop-${Date.now()}`;
+        setCrops(prev => [{ id: tempId, ...payload }, ...prev]);
+      }
+
       let res: Response;
       if (editingItem) {
         res = await fetch(`/api/admin/crops`, { 
@@ -273,15 +313,39 @@ export function AdminCropManagement() {
         });
       }
 
-      if (res.ok) {
-        window.dispatchEvent(new CustomEvent('crop-data-updated'));
+      if (!res.ok) {
+        const errJson = await res.json().catch(() => ({}));
+        const errMsg = errJson.error || `Server responded with ${res.status}`;
+        setCropError(errMsg);
+        alert(`Failed to save crop: ${errMsg}`);
+        setSavingCrop(false);
+        return;
       }
-    } catch (err) {
-      console.error("Failed to save crop:", err);
-    }
 
-    setIsCropModalOpen(false);
-    fetchData();
+      const resData = await res.json().catch(() => ({}));
+      const savedCrop = resData.crop || { ...payload, id: editingItem?.id || `crop-${Date.now()}` };
+
+      // Re-sync with server crop payload
+      if (editingItem) {
+        setCrops(prev => prev.map(c => 
+          (c.id === editingItem.id || c.name?.toLowerCase() === editingItem.name?.toLowerCase())
+            ? { ...c, ...savedCrop }
+            : c
+        ));
+      } else {
+        setCrops(prev => [savedCrop, ...prev]);
+      }
+
+      window.dispatchEvent(new CustomEvent('crop-data-updated'));
+      setIsCropModalOpen(false);
+      await fetchData();
+    } catch (err: any) {
+      console.error("Failed to save crop:", err);
+      setCropError(err.message || "Failed to communicate with server");
+      alert(`Error saving crop: ${err.message || "Unknown error"}`);
+    } finally {
+      setSavingCrop(false);
+    }
   };
 
 
@@ -569,31 +633,59 @@ export function AdminCropManagement() {
                 <input required name="name" value={cropForm.name} onChange={handleCropChange} placeholder="e.g. Cardamom" className="w-full mt-1 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:bg-white outline-none" />
               </div>
               
-              <div className="flex flex-col space-y-1">
-                <label className="text-[11px] font-bold text-gray-700">Crop Photo</label>
+              <div className="flex flex-col space-y-2 p-3 bg-gray-50/80 rounded-xl border border-gray-100">
+                <label className="text-[11px] font-bold text-gray-700 flex items-center justify-between">
+                  <span>Crop Photograph</span>
+                  <span className="text-[10px] text-gray-400 font-normal">Upload photo or enter URL</span>
+                </label>
+                
                 <div className="flex items-center space-x-3">
-                  {cropForm.imageUrl && (
-                    <SafeImage src={cropForm.imageUrl} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
+                  {cropForm.imageUrl ? (
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative group">
+                      <SafeImage src={cropForm.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setCropForm(prev => ({ ...prev, imageUrl: "" }))}
+                        className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity cursor-pointer"
+                        title="Remove image"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-gray-200/60 border border-dashed border-gray-300 shrink-0 flex items-center justify-center text-gray-400">
+                      <Leaf className="w-5 h-5 text-gray-400" />
+                    </div>
                   )}
-                  <input 
-                    type="file" 
-                    accept="image/png, image/jpeg, image/jpg, image/webp" 
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        const file = e.target.files[0];
-                        if (!file.type.startsWith("image/")) {
-                          alert("Strict Validation Error: Only image files are allowed.");
-                          return;
+                  
+                  <div className="flex-1 space-y-1.5">
+                    <input 
+                      type="file" 
+                      accept="image/png, image/jpeg, image/jpg, image/webp" 
+                      onChange={async (e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          const file = e.target.files[0];
+                          if (!file.type.startsWith("image/")) {
+                            alert("Strict Validation Error: Only image files are allowed.");
+                            return;
+                          }
+                          const compressed = await compressImageFile(file);
+                          if (compressed) {
+                            setCropForm(prev => ({ ...prev, imageUrl: compressed }));
+                          }
                         }
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setCropForm(prev => ({ ...prev, imageUrl: (reader.result as string) || "" }));
-                        };
-                        reader.readAsDataURL(file);
-                      }
-                    }} 
-                    className="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer" 
-                  />
+                      }} 
+                      className="w-full text-[11px] file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[11px] file:font-bold file:bg-green-100 file:text-green-800 hover:file:bg-green-200 cursor-pointer" 
+                    />
+                    <input
+                      type="text"
+                      name="imageUrl"
+                      value={cropForm.imageUrl}
+                      onChange={handleCropChange}
+                      placeholder="Or paste direct image URL (https://...)"
+                      className="w-full px-2.5 py-1 text-[11px] bg-white border border-gray-200 rounded-lg focus:border-green-500 outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -620,10 +712,31 @@ export function AdminCropManagement() {
                 <label className="text-[11px] font-bold text-gray-700">Recommended Pesticide</label>
                 <input required name="pesticide" value={cropForm.pesticide} onChange={handleCropChange} placeholder="Neem based / Biopesticides" className="w-full mt-1 px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-xl focus:bg-white outline-none" />
               </div>
+
+              {cropError && (
+                <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center space-x-2 text-rose-700 text-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{cropError}</span>
+                </div>
+              )}
             </div>
             <div className="flex justify-end mt-5 space-x-2">
-              <button type="button" onClick={() => setIsCropModalOpen(false)} className="px-4 py-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold cursor-pointer transition-colors">Cancel</button>
-              <button type="submit" className="px-4 py-2 text-xs bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold cursor-pointer transition-colors">Save Crop</button>
+              <button 
+                type="button" 
+                disabled={savingCrop}
+                onClick={() => setIsCropModalOpen(false)} 
+                className="px-4 py-2 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-bold cursor-pointer transition-colors"
+              >
+                Cancel
+              </button>
+              <button 
+                type="submit" 
+                disabled={savingCrop}
+                className="px-4 py-2 text-xs bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white rounded-xl font-bold cursor-pointer transition-colors flex items-center space-x-1.5"
+              >
+                {savingCrop && <Sprout className="w-3.5 h-3.5 animate-spin" />}
+                <span>{savingCrop ? "Saving..." : "Save Crop"}</span>
+              </button>
             </div>
           </form>
         </div>

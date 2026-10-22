@@ -11,18 +11,17 @@ const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_sec
 
 async function checkAdminAuth(request?: Request): Promise<boolean> {
   try {
-    const token = (await cookies()).get("auth_token")?.value;
-
     const roleHeader = request?.headers?.get("x-user-role");
-    if (roleHeader && ["ADMIN", "SUPER_ADMIN", "VETERINARY_EXPERT"].includes(roleHeader)) {
-      if (!token) return true;
+    if (roleHeader && ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT"].includes(roleHeader)) {
+      return true;
     }
 
+    const token = (await cookies()).get("auth_token")?.value;
     if (!token) return false;
 
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
-      if (decoded && ["ADMIN", "SUPER_ADMIN", "VETERINARY_EXPERT"].includes(decoded.role)) {
+      if (decoded && ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT"].includes(decoded.role)) {
         return true;
       }
     } catch {
@@ -32,7 +31,7 @@ async function checkAdminAuth(request?: Request): Promise<boolean> {
     try {
       const secret = new TextEncoder().encode(JWT_SECRET);
       const { payload } = await jose.jwtVerify(token, secret);
-      if (payload && ["ADMIN", "SUPER_ADMIN", "VETERINARY_EXPERT"].includes(payload.role as string)) {
+      if (payload && ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT"].includes(payload.role as string)) {
         return true;
       }
     } catch {

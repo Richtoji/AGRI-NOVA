@@ -12,6 +12,23 @@ const NO_CACHE_HEADERS = {
   'Expires': '0',
 };
 
+function isCustomImage(url?: string): boolean {
+  if (!url || typeof url !== 'string') return false;
+  const u = url.trim();
+  if (!u) return false;
+  if (u.startsWith('data:image')) return true;
+  if (u.startsWith('/api/uploads') || u.startsWith('/uploads')) return true;
+  if (u.startsWith('http://') || u.startsWith('https://')) return true;
+  if (u.startsWith('/') && !u.startsWith('/images/crops/')) return true;
+  return false;
+}
+
+function pickBestImage(primary?: string, secondary?: string): string {
+  if (isCustomImage(primary)) return primary!;
+  if (isCustomImage(secondary)) return secondary!;
+  return primary || secondary || '';
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const cropProfileId = searchParams.get('cropProfileId');
@@ -55,7 +72,8 @@ export async function GET(request: Request) {
     const memCrop = inMemoryStore.getCropProfileByName(effectiveCropName);
     const knowledge = getCropKnowledge(effectiveCropName);
 
-    const resolvedImageUrl = memCrop?.imageUrl || profile?.imageUrl || `/images/crops/${effectiveCropName.toLowerCase().replace(/\s+/g, '-')}.jpg`;
+    const bestImg = pickBestImage(memCrop?.imageUrl, profile?.imageUrl);
+    const resolvedImageUrl = bestImg || `/images/crops/${effectiveCropName.toLowerCase().replace(/\s+/g, '-')}.jpg`;
 
     // If no guide found in DB, construct full rich guide object from knowledge base
     if (!guide) {

@@ -1748,29 +1748,62 @@ export const inMemoryStore = {
   },
 
   getCropProfiles() {
-    return globalStore.cropProfiles || CROP_PROFILES_ARRAY;
+    if (!globalStore.cropProfiles || globalStore.cropProfiles.length === 0) {
+      globalStore.cropProfiles = CROP_PROFILES_ARRAY.map(c => ({ ...c }));
+    }
+    return globalStore.cropProfiles;
   },
 
   getCropProfileByName(name: string) {
     if (!name) return null;
     const clean = name.trim().toLowerCase();
-    return (globalStore.cropProfiles || []).find((c: any) => 
+    const crops = this.getCropProfiles();
+
+    // 1. Exact id or name match
+    let match = crops.find((c: any) => 
       (c.name || '').toLowerCase() === clean || (c.id || '').toLowerCase() === clean
-    ) || null;
+    );
+    if (match) return match;
+
+    // 2. Common aliases & partial matching
+    const aliases: Record<string, string[]> = {
+      "pepper": ["black pepper"],
+      "black pepper": ["pepper"],
+      "paddy": ["rice"],
+      "rice": ["paddy"],
+      "tapioca": ["cassava"],
+      "cassava": ["tapioca"],
+      "cardamom": ["green cardamom", "small cardamom"],
+      "plantain": ["banana"],
+      "banana": ["plantain"],
+      "areca": ["arecanut"],
+      "arecanut": ["areca"]
+    };
+
+    const cleanAliases = aliases[clean] || [];
+    match = crops.find((c: any) => {
+      const cName = (c.name || '').toLowerCase();
+      return cleanAliases.includes(cName) || cName.includes(clean) || clean.includes(cName);
+    });
+
+    return match || null;
   },
 
   updateCropProfile(idOrName: string, data: any) {
     const clean = (idOrName || '').trim().toLowerCase();
     const nameClean = (data?.name || '').trim().toLowerCase();
-    if (!globalStore.cropProfiles) {
-      globalStore.cropProfiles = [];
-    }
+    const crops = this.getCropProfiles();
 
-    let existing = globalStore.cropProfiles.find((c: any) => 
+    let existing = crops.find((c: any) => 
       (c.id && c.id.toLowerCase() === clean) ||
       (c.name && c.name.toLowerCase() === clean) ||
       (nameClean && c.name && c.name.toLowerCase() === nameClean)
     );
+
+    // If not found directly, check aliases
+    if (!existing) {
+      existing = this.getCropProfileByName(idOrName) || (nameClean ? this.getCropProfileByName(nameClean) : null);
+    }
 
     if (!existing) {
       existing = {
@@ -1785,7 +1818,7 @@ export const inMemoryStore = {
         imageUrl: data.imageUrl || `/images/crops/${(data.name || 'crop').toLowerCase().replace(/\s+/g, '-')}.jpg`,
         ...data
       };
-      globalStore.cropProfiles.push(existing);
+      crops.push(existing);
     } else {
       Object.assign(existing, data);
     }
