@@ -270,7 +270,13 @@ export function getBreedsForDistrict(district: string | null | undefined, allBre
   const matched = allBreeds.filter((rec) => {
     const loc = (rec.location || "").toLowerCase();
     if (loc.includes(d)) return true;
-    if (loc.includes("all kerala") || loc.includes("kerala")) return true;
+    if (
+      loc.includes("all") ||
+      loc.includes("all kerala") ||
+      loc.includes("all regions") ||
+      loc.includes("all districts") ||
+      loc.includes("kerala")
+    ) return true;
     if (loc.includes("central kerala") && ["kottayam", "ernakulam", "alappuzha", "idukki", "thrissur"].includes(d)) return true;
     if (loc.includes("malabar") && ["kozhikode", "kannur", "malappuram", "kasaragod", "wayanad"].includes(d)) return true;
     if (loc.includes("north kerala") && ["kasaragod", "kannur"].includes(d)) return true;

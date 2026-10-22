@@ -1245,16 +1245,26 @@ export const inMemoryStore = {
     return newRecord;
   },
 
-  updateRegionalLivestock(id: string, data: any): RegionalLivestockRecord | null {
+  updateRegionalLivestock(id: string, data: any): RegionalLivestockRecord {
     const idClean = (id || "").toLowerCase();
     const distClean = (data.district || "").toLowerCase();
-    const reg = globalStore.regionalLivestock.find((r: RegionalLivestockRecord) => 
+    let reg = globalStore.regionalLivestock.find((r: RegionalLivestockRecord) => 
       r.id === id || 
       (idClean && r.id.toLowerCase() === idClean) ||
       (idClean && r.district.toLowerCase() === idClean) ||
       (distClean && r.district.toLowerCase() === distClean)
     );
-    if (!reg) return null;
+    if (!reg) {
+      reg = {
+        id: id || `reg-${Date.now()}`,
+        district: data.district || "Kerala District",
+        primaryLivestock: data.primaryLivestock || "Dairy Cattle & Goats",
+        focusAreas: data.focusAreas || "Sustainable livestock development",
+        climateSuitability: data.climateSuitability || "Optimal tropical climate with regular veterinary care.",
+        imageUrl: data.imageUrl || "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=600"
+      };
+      globalStore.regionalLivestock.push(reg);
+    }
     Object.assign(reg, data);
     return reg;
   },
@@ -1277,6 +1287,8 @@ export const inMemoryStore = {
     const filtered = globalStore.livestockRecommendations.filter((rec: LivestockRecommendationRecord) => {
       const loc = rec.location.toLowerCase();
       return loc.includes(clean) || 
+        loc.includes("all") ||
+        loc.includes("all regions") ||
         loc.includes("all kerala") ||
         (loc.includes("central kerala") && ["kottayam", "ernakulam", "alappuzha", "idukki", "thrissur"].some(d => clean.includes(d))) ||
         (loc.includes("malabar") && ["kozhikode", "kannur", "malappuram", "kasaragod", "wayanad"].some(d => clean.includes(d))) ||
@@ -1302,16 +1314,28 @@ export const inMemoryStore = {
     return newBreed;
   },
 
-  updateLivestockRecommendation(id: string, data: any): LivestockRecommendationRecord | null {
+  updateLivestockRecommendation(id: string, data: any): LivestockRecommendationRecord {
     const idClean = (id || "").toLowerCase();
     const nameClean = (data.breedName || "").toLowerCase();
-    const breed = globalStore.livestockRecommendations.find((b: LivestockRecommendationRecord) => 
+    let breed = globalStore.livestockRecommendations.find((b: LivestockRecommendationRecord) => 
       b.id === id || 
       (idClean && b.id.toLowerCase() === idClean) ||
       (idClean && b.breedName.toLowerCase() === idClean) ||
       (nameClean && b.breedName.toLowerCase() === nameClean)
     );
-    if (!breed) return null;
+    if (!breed) {
+      breed = {
+        id: id || `rec-${Date.now()}`,
+        breedName: data.breedName || "Livestock Breed",
+        expectedYield: data.expectedYield || "N/A",
+        fatContent: data.fatContent || "N/A",
+        maintenanceLevel: data.maintenanceLevel || "Medium",
+        location: data.location || "All Kerala",
+        category: data.category || "Cattle",
+        imageUrl: data.imageUrl || "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=500"
+      };
+      globalStore.livestockRecommendations.push(breed);
+    }
     Object.assign(breed, data);
     return breed;
   },

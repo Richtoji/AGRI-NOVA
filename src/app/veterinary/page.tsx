@@ -44,7 +44,7 @@ import {
 
 export default function VeterinaryPage() {
   const { currentUser, currentRole } = useAuthRole();
-  const isAdmin = currentRole === "ADMIN" || currentUser?.role === "ADMIN";
+  const isAdmin = currentRole === "ADMIN" || currentUser?.role === "ADMIN" || currentRole === "VETERINARY_EXPERT" || currentUser?.role === "VETERINARY_EXPERT" || currentRole === "SUPER_ADMIN" || currentUser?.role === "SUPER_ADMIN";
   const isBuyer = currentRole === "BUYER" || currentUser?.role === "BUYER";
 
   // Farmer booking modal states
@@ -63,17 +63,25 @@ export default function VeterinaryPage() {
   const [locationCoords, setLocationCoords] = useState<{lat: number, lng: number} | null>(null);
 
   // Admin states
-  const [adminTab, setAdminTab] = useState<"bookings" | "breeds">("bookings");
+  const [adminTab, setAdminTab] = useState<"bookings" | "breeds" | "preview">("bookings");
   const [adminAppointments, setAdminAppointments] = useState<any[]>([]);
   const [loadingAppointments, setLoadingAppointments] = useState(false);
   const [appointmentSearch, setAppointmentSearch] = useState("");
   const [appointmentStatusFilter, setAppointmentStatusFilter] = useState("ALL");
 
   const fetchRecs = React.useCallback(async () => {
+    setLoadingRecs(true);
     try {
+      const cacheBust = Date.now();
       const [resLivestock, resRegions] = await Promise.all([
-        fetch("/api/admin/livestock-recommendations"),
-        fetch("/api/admin/regional-livestock")
+        fetch(`/api/admin/livestock-recommendations?t=${cacheBust}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" }
+        }),
+        fetch(`/api/admin/regional-livestock?t=${cacheBust}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" }
+        })
       ]);
       
       if (resLivestock.ok) {
@@ -273,11 +281,11 @@ export default function VeterinaryPage() {
 
         {/* ADMIN TAB NAVIGATION */}
         {isAdmin && (
-          <div className="flex border-b border-gray-200 gap-4">
+          <div className="flex border-b border-gray-200 gap-4 overflow-x-auto">
             <button
               type="button"
               onClick={() => setAdminTab("bookings")}
-              className={`pb-3 px-2 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer border-b-2 ${
+              className={`pb-3 px-2 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer border-b-2 whitespace-nowrap ${
                 adminTab === "bookings"
                   ? "border-emerald-800 text-emerald-900"
                   : "border-transparent text-gray-500 hover:text-gray-900"
@@ -289,7 +297,7 @@ export default function VeterinaryPage() {
             <button
               type="button"
               onClick={() => setAdminTab("breeds")}
-              className={`pb-3 px-2 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer border-b-2 ${
+              className={`pb-3 px-2 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer border-b-2 whitespace-nowrap ${
                 adminTab === "breeds"
                   ? "border-emerald-800 text-emerald-900"
                   : "border-transparent text-gray-500 hover:text-gray-900"
@@ -297,6 +305,18 @@ export default function VeterinaryPage() {
             >
               <Stethoscope className="w-4 h-4" />
               <span>Livestock Breeds &amp; Regional Database</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAdminTab("preview")}
+              className={`pb-3 px-2 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer border-b-2 whitespace-nowrap ${
+                adminTab === "preview"
+                  ? "border-emerald-800 text-emerald-900"
+                  : "border-transparent text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-emerald-600" />
+              <span>Farmer Recommender Preview</span>
             </button>
           </div>
         )}
@@ -477,12 +497,51 @@ export default function VeterinaryPage() {
         {isAdmin && adminTab === "breeds" && (
           <div className="space-y-6">
             <AdminLivestockManagement onUpdate={fetchRecs} />
+
+            {/* Quick Live Preview Switcher Button */}
+            <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-800 text-white rounded-xl">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-gray-900 text-sm">Want to see how your updates look to farmers?</h4>
+                  <p className="text-xs text-gray-600">Preview the live district recommender and breed cards with your saved changes.</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAdminTab("preview")}
+                className="px-4 py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl shadow-xs cursor-pointer transition-colors whitespace-nowrap flex items-center gap-1.5"
+              >
+                <span>Open Live Farmer Recommender Preview</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         )}
 
-        {/* FARMER VIEW */}
-        {!isAdmin && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* FARMER VIEW & ADMIN LIVE PREVIEW */}
+        {(!isAdmin || (isAdmin && adminTab === "preview")) && (
+          <div className="space-y-4">
+            {isAdmin && adminTab === "preview" && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between shadow-xs">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span className="text-xs font-bold text-amber-900">
+                    Live Farmer Recommender Preview: Select any of the 14 Kerala districts below to view real-time regional profiles and breed varieties.
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setAdminTab("breeds")}
+                  className="text-xs font-bold text-emerald-800 hover:underline cursor-pointer shrink-0 ml-3"
+                >
+                  &larr; Back to Management
+                </button>
+              </div>
+            )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
 
               {/* Smart Location-Based Recommendation */}
@@ -811,6 +870,7 @@ export default function VeterinaryPage() {
 
             </div>
           </div>
+        </div>
         )}
 
       </div>
