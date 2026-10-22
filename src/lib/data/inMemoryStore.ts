@@ -121,6 +121,26 @@ export interface DeliveryTaskRecord {
   order?: any;
 }
 
+export interface RegionalLivestockRecord {
+  id: string;
+  district: string;
+  primaryLivestock: string;
+  focusAreas: string;
+  climateSuitability?: string;
+  imageUrl?: string;
+}
+
+export interface LivestockRecommendationRecord {
+  id: string;
+  breedName: string;
+  expectedYield: string;
+  fatContent: string;
+  maintenanceLevel: string;
+  location: string;
+  imageUrl?: string;
+  category?: string;
+}
+
 // Global persistent in-memory store across Next.js requests in the same Node runtime
 const globalStore = (global as any).__AGRINOVA_STORE__ || {
   users: [...rawSeedData.users],
@@ -382,7 +402,213 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
       }
     }
   ] as DeliveryTaskRecord[],
-  cultivations: new Map<string, any[]>()
+  cultivations: new Map<string, any[]>(),
+  regionalLivestock: [
+    {
+      id: "reg-01",
+      district: "Thiruvananthapuram",
+      primaryLivestock: "Crossbred Dairy Cows (Jersey x HF), Malabari Goats, Broiler & Layer Poultry, Commercial Rabbits",
+      focusAreas: "Extensive dairy cooperatives, organized urban milk supply, organized backyard poultry & meat rabbit farms.",
+      climateSuitability: "Coastal & midland tropical humid; requires well-ventilated housing and regular ectoparasite prevention.",
+      imageUrl: "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=600"
+    },
+    {
+      id: "reg-02",
+      district: "Kollam",
+      primaryLivestock: "Crossbred Dairy Cows, Malabari Goats, Kuttanad & Vigova Ducks, Murrah Buffaloes",
+      focusAreas: "Wetland duck rearing in backwaters, peri-urban dairy farming, and fodder cultivation along paddy bunds.",
+      climateSuitability: "High humidity coastal belt; excellent for waterfowl and crossbred cattle with shaded loose housing.",
+      imageUrl: "https://images.unsplash.com/photo-1524024973431-2ad916746881?w=600"
+    },
+    {
+      id: "reg-03",
+      district: "Pathanamthitta",
+      primaryLivestock: "High-Yielding Dairy Cattle, Swamp & River Buffaloes, Malabari Goats, Upper Kuttanad Ducks",
+      focusAreas: "Dairy farming in midland tracts, Upper Kuttanad duck grazing, and commercial silage feeding units.",
+      climateSuitability: "Midland & foot-hill climate with heavy monsoon; elevated slatted floor housing recommended for goats.",
+      imageUrl: "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=600"
+    },
+    {
+      id: "reg-04",
+      district: "Alappuzha",
+      primaryLivestock: "Kuttanad Ducks (Chara & Chemballi), Dwarf Vechur Cows, River Buffaloes, Crossbred Dairy Cattle",
+      focusAreas: "State capital for wetland duck farming (Kuttanad basin), duck-fish integrated farming, and flood-resilient dwarf cattle.",
+      climateSuitability: "Wetland & aquatic ecosystem below sea level; high natural water availability for duck swimming and forage.",
+      imageUrl: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=600"
+    },
+    {
+      id: "reg-05",
+      district: "Kottayam",
+      primaryLivestock: "Indigenous Vechur Cattle, Murrah Buffaloes, Kuttanad Ducks, Crossbred Dairy Cows, Commercial Piggery",
+      focusAreas: "Global conservation center of the ultra-resilient dwarf Vechur breed; extensive rubber-plantation integrated cattle grazing.",
+      climateSuitability: "Tropical humid midland; Vechur cows show outstanding natural immunity and high A2 medicinal milk quality.",
+      imageUrl: "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=600"
+    },
+    {
+      id: "reg-06",
+      district: "Idukki",
+      primaryLivestock: "Highland HF & Jersey Dairy Cattle, Large White Yorkshire Pigs, Boer & Malabari Cross Goats",
+      focusAreas: "High-altitude cool climate dairy belt (High Ranges); top milk yield per cow in Kerala with commercial temperate piggeries.",
+      climateSuitability: "Cool high-range climate (12°C - 24°C); ideal for exotic temperate breeds (Holstein Friesian) with low heat stress.",
+      imageUrl: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600"
+    },
+    {
+      id: "reg-07",
+      district: "Ernakulam",
+      primaryLivestock: "Commercial Broiler & Layer Poultry, Crossbred Dairy Cattle, Malabari Goats, Piggery Units",
+      focusAreas: "State-of-the-art commercial poultry and egg production hubs, automated peri-urban dairies, and meat processing supply chains.",
+      climateSuitability: "Central industrial-agricultural belt with high market access; closed bio-secure poultry housing highly recommended.",
+      imageUrl: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=600"
+    },
+    {
+      id: "reg-08",
+      district: "Thrissur",
+      primaryLivestock: "Murrah & Surti Buffaloes, Crossbred Dairy Cows, Malabari Goats, Pig Breeding Stations",
+      focusAreas: "Major agricultural buffalo and dairy cluster (Mannuthy Veterinary Hub); advanced animal genetics and commercial feed factories.",
+      climateSuitability: "Central plain and coastal basin; abundant paddy straw and agricultural by-products for ruminant feed.",
+      imageUrl: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=600"
+    },
+    {
+      id: "reg-09",
+      district: "Palakkad",
+      primaryLivestock: "Attappady Black Goats, Murrah Buffaloes, High-Yielding Dairy Cows, Kenguri Sheep, Backyard Poultry",
+      focusAreas: "Largest livestock population in Kerala; home to native Attappady Black drought-resistant goats and extensive dairy farming across the Palakkad Gap.",
+      climateSuitability: "Semi-arid tropical dry belt with higher daytime temperatures; native breeds (Attappady Black) thrive with minimal water.",
+      imageUrl: "https://images.unsplash.com/photo-1524024973431-2ad916746881?w=600"
+    },
+    {
+      id: "reg-10",
+      district: "Malappuram",
+      primaryLivestock: "Malabari Goats (Tellicherry), Commercial Broilers, Crossbred Dairy Cows, Buffaloes, Ducks",
+      focusAreas: "Largest goat population in South India; premier breeding hub for prolific Malabari twinning goats and commercial poultry.",
+      climateSuitability: "Midland tropical climate; slatted wooden floor housing for goats prevents foot rot during the South-West monsoon.",
+      imageUrl: "https://images.unsplash.com/photo-1527153857715-3908f2ae5e81?w=600"
+    },
+    {
+      id: "reg-11",
+      district: "Kozhikode",
+      primaryLivestock: "Malabari Goats, Commercial Layer & Country Chicken, Crossbred Dairy Cows, Meat Rabbits",
+      focusAreas: "Specialized Tellicherry/Malabari goat germplasm center, urban dairy cooperatives, and backyard quail and poultry production.",
+      climateSuitability: "Coastal tropical climate; elevated sheds with cross-ventilation provide optimal protection against coastal humidity.",
+      imageUrl: "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=600"
+    },
+    {
+      id: "reg-12",
+      district: "Wayanad",
+      primaryLivestock: "High-Altitude Dairy Cattle (HF x Jersey), Commercial Piggeries, Free-Range Country Poultry, Boer Goats",
+      focusAreas: "Cool hill-tract dairy production, coffee and tea plantation integrated dairy grazing, and commercial pork farming.",
+      climateSuitability: "Sub-tropical highland plateau (700m - 2100m elevation); minimal heat stress allows temperate dairy breeds to achieve peak genetic lactation.",
+      imageUrl: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=600"
+    },
+    {
+      id: "reg-13",
+      district: "Kannur",
+      primaryLivestock: "Malabari Goats, Crossbred Dairy Cows, Commercial Piggery, Japanese Quail & Broiler Poultry",
+      focusAreas: "Purebred Malabari goat conservation and pedigree record keeping, North Malabar commercial pig farming, and intensive poultry.",
+      climateSuitability: "Humid coastal-midland climate; regular vaccination against PPR in goats and FMD in cattle recommended.",
+      imageUrl: "https://images.unsplash.com/photo-1524024973431-2ad916746881?w=600"
+    },
+    {
+      id: "reg-14",
+      district: "Kasaragod",
+      primaryLivestock: "Kasaragod Dwarf Cattle, Malabari Goats, Backyard Poultry, Crossbred Dairy Cows",
+      focusAreas: "Native Kasaragod Dwarf cattle conservation (smallest cattle breed with high disease immunity and low maintenance), and zero-grazing dairy units.",
+      climateSuitability: "Northern coastal tropical belt; native dwarf cattle can graze on steep terrains and withstand monsoon rains without hoof damage.",
+      imageUrl: "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=600"
+    }
+  ] as RegionalLivestockRecord[],
+  livestockRecommendations: [
+    {
+      id: "rec-01",
+      breedName: "Vechur Cow (Indigenous Dwarf)",
+      expectedYield: "3 - 4 L/day (Medicinal A2 Milk)",
+      fatContent: "4.7% - 5.8%",
+      maintenanceLevel: "Extremely Low (High Heat & Disease Resistance)",
+      location: "Kottayam, Alappuzha, Pathanamthitta, Ernakulam & Central Kerala",
+      category: "Cattle",
+      imageUrl: "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=500"
+    },
+    {
+      id: "rec-02",
+      breedName: "Kasaragod Dwarf Cattle",
+      expectedYield: "2 - 3 L/day (Zero Grazing Tolerant)",
+      fatContent: "4.5% - 5.2%",
+      maintenanceLevel: "Very Low (Survives on local roughage)",
+      location: "Kasaragod, Kannur, Wayanad & North Kerala",
+      category: "Cattle",
+      imageUrl: "https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?w=500"
+    },
+    {
+      id: "rec-03",
+      breedName: "Malabari Goat (Tellicherry)",
+      expectedYield: "1.5 - 2.5 L/day (Prolific Twinning 80%+)",
+      fatContent: "3.8% - 4.5%",
+      maintenanceLevel: "Low to Moderate",
+      location: "Kozhikode, Kannur, Malappuram, Wayanad, Palakkad & All Kerala",
+      category: "Goat",
+      imageUrl: "https://images.unsplash.com/photo-1524024973431-2ad916746881?w=500"
+    },
+    {
+      id: "rec-04",
+      breedName: "Attappady Black Goat",
+      expectedYield: "1.0 - 1.5 L/day (Lean bronze meat, high heat tolerance)",
+      fatContent: "4.0% - 4.8%",
+      maintenanceLevel: "Very Low (Western Ghats Foothills)",
+      location: "Palakkad, Thrissur & Malappuram",
+      category: "Goat",
+      imageUrl: "https://images.unsplash.com/photo-1527153857715-3908f2ae5e81?w=500"
+    },
+    {
+      id: "rec-05",
+      breedName: "Murrah Buffalo",
+      expectedYield: "12 - 18 L/day (High Milk Fat & Solids)",
+      fatContent: "6.5% - 7.5%",
+      maintenanceLevel: "Moderate to High",
+      location: "Palakkad, Thrissur, Ernakulam & Kollam",
+      category: "Buffalo",
+      imageUrl: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=500"
+    },
+    {
+      id: "rec-06",
+      breedName: "Kuttanad Duck (Chara & Chemballi)",
+      expectedYield: "200 - 240 Eggs/Year (Post-harvest paddy feeder)",
+      fatContent: "Rich Yolk Lipids",
+      maintenanceLevel: "Low (Paddy field grazer)",
+      location: "Alappuzha, Kottayam, Pathanamthitta & Kollam",
+      category: "Duck",
+      imageUrl: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=500"
+    },
+    {
+      id: "rec-07",
+      breedName: "Highland Crossbred Dairy Cow (HF x Jersey)",
+      expectedYield: "16 - 22 L/day (High Commercial Output)",
+      fatContent: "3.8% - 4.2%",
+      maintenanceLevel: "Moderate (Cool Hill Environment)",
+      location: "Idukki, Wayanad & Highland Tracts",
+      category: "Cattle",
+      imageUrl: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=500"
+    },
+    {
+      id: "rec-08",
+      breedName: "Large White Yorkshire Cross Pig",
+      expectedYield: "Litter size 10-12 (80kg at 7 months)",
+      fatContent: "Lean pork with high feed conversion",
+      maintenanceLevel: "Moderate (Hygienic Pens)",
+      location: "Idukki, Wayanad, Kottayam, Thrissur & Ernakulam",
+      category: "Pig",
+      imageUrl: "https://images.unsplash.com/photo-1516467508483-a7212febe31a?w=500"
+    },
+    {
+      id: "rec-09",
+      breedName: "Gramalakshmi / BV-380 Layer Poultry",
+      expectedYield: "200 - 230 Brown Eggs/Year",
+      fatContent: "Nutritious Country Eggs",
+      maintenanceLevel: "Very Low (Backyard scavenging)",
+      location: "Thiruvananthapuram, Kollam, Ernakulam & All Kerala",
+      category: "Poultry",
+      imageUrl: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=500"
+    }
+  ] as LivestockRecommendationRecord[]
 };
 (global as any).__AGRINOVA_STORE__ = globalStore;
 
@@ -982,6 +1208,104 @@ export const inMemoryStore = {
     };
     globalStore.vetConsultations.unshift(newConsultation);
     return newConsultation;
+  },
+
+  // REGIONAL LIVESTOCK & LIVESTOCK RECOMMENDATIONS
+  getRegionalLivestock(district?: string): RegionalLivestockRecord[] {
+    if (!district) return globalStore.regionalLivestock;
+    const clean = district.trim().toLowerCase();
+    const found = globalStore.regionalLivestock.filter((r: RegionalLivestockRecord) => 
+      r.district.toLowerCase() === clean || 
+      r.district.toLowerCase().includes(clean) || 
+      clean.includes(r.district.toLowerCase())
+    );
+    return found.length > 0 ? found : globalStore.regionalLivestock;
+  },
+
+  getRegionalLivestockByDistrict(district: string): RegionalLivestockRecord | null {
+    if (!district) return null;
+    const clean = district.trim().toLowerCase();
+    return globalStore.regionalLivestock.find((r: RegionalLivestockRecord) => 
+      r.district.toLowerCase() === clean || 
+      r.district.toLowerCase().includes(clean) || 
+      clean.includes(r.district.toLowerCase())
+    ) || null;
+  },
+
+  addRegionalLivestock(data: any): RegionalLivestockRecord {
+    const newRecord: RegionalLivestockRecord = {
+      id: `reg-${Date.now()}`,
+      district: data.district,
+      primaryLivestock: data.primaryLivestock,
+      focusAreas: data.focusAreas,
+      climateSuitability: data.climateSuitability || "Optimal tropical climate with regular veterinary care.",
+      imageUrl: data.imageUrl || "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=600"
+    };
+    globalStore.regionalLivestock.push(newRecord);
+    return newRecord;
+  },
+
+  updateRegionalLivestock(id: string, data: any): RegionalLivestockRecord | null {
+    const reg = globalStore.regionalLivestock.find((r: RegionalLivestockRecord) => r.id === id);
+    if (!reg) return null;
+    Object.assign(reg, data);
+    return reg;
+  },
+
+  deleteRegionalLivestock(id: string): boolean {
+    const idx = globalStore.regionalLivestock.findIndex((r: RegionalLivestockRecord) => r.id === id);
+    if (idx > -1) {
+      globalStore.regionalLivestock.splice(idx, 1);
+      return true;
+    }
+    return false;
+  },
+
+  getLivestockRecommendations(location?: string): LivestockRecommendationRecord[] {
+    if (!location) return globalStore.livestockRecommendations;
+    const clean = location.trim().toLowerCase();
+    const filtered = globalStore.livestockRecommendations.filter((rec: LivestockRecommendationRecord) => {
+      const loc = rec.location.toLowerCase();
+      return loc.includes(clean) || 
+        loc.includes("all kerala") ||
+        (loc.includes("central kerala") && ["kottayam", "ernakulam", "alappuzha", "idukki", "thrissur"].some(d => clean.includes(d))) ||
+        (loc.includes("malabar") && ["kozhikode", "kannur", "malappuram", "kasaragod", "wayanad"].some(d => clean.includes(d))) ||
+        (loc.includes("north kerala") && ["kasaragod", "kannur"].some(d => clean.includes(d))) ||
+        (loc.includes("south kerala") && ["thiruvananthapuram", "kollam", "pathanamthitta"].some(d => clean.includes(d))) ||
+        (loc.includes("highland") && ["idukki", "wayanad"].some(d => clean.includes(d)));
+    });
+    return filtered.length > 0 ? filtered : globalStore.livestockRecommendations;
+  },
+
+  addLivestockRecommendation(data: any): LivestockRecommendationRecord {
+    const newBreed: LivestockRecommendationRecord = {
+      id: `rec-${Date.now()}`,
+      breedName: data.breedName,
+      expectedYield: data.expectedYield,
+      fatContent: data.fatContent,
+      maintenanceLevel: data.maintenanceLevel,
+      location: data.location,
+      imageUrl: data.imageUrl || "https://images.unsplash.com/photo-1546445317-29f4545e9d53?w=500",
+      category: data.category || "Cattle"
+    };
+    globalStore.livestockRecommendations.push(newBreed);
+    return newBreed;
+  },
+
+  updateLivestockRecommendation(id: string, data: any): LivestockRecommendationRecord | null {
+    const breed = globalStore.livestockRecommendations.find((b: LivestockRecommendationRecord) => b.id === id);
+    if (!breed) return null;
+    Object.assign(breed, data);
+    return breed;
+  },
+
+  deleteLivestockRecommendation(id: string): boolean {
+    const idx = globalStore.livestockRecommendations.findIndex((b: LivestockRecommendationRecord) => b.id === id);
+    if (idx > -1) {
+      globalStore.livestockRecommendations.splice(idx, 1);
+      return true;
+    }
+    return false;
   },
 
   // DELIVERY TASKS

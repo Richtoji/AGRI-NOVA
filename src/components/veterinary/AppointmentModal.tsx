@@ -5,13 +5,14 @@ import { useAuthRole } from '@/lib/context/AuthRoleContext';
 interface AppointmentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultAnimal?: string;
 }
 
-export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
+export function AppointmentModal({ isOpen, onClose, defaultAnimal }: AppointmentModalProps) {
   const { currentRole, currentUser } = useAuthRole();
   const [formData, setFormData] = useState({
-    name: '',
-    animal: '',
+    name: currentUser?.name || '',
+    animal: defaultAnimal || '',
     date: '',
     time: '',
     symptoms: ''
@@ -19,6 +20,15 @@ export function AppointmentModal({ isOpen, onClose }: AppointmentModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (defaultAnimal) {
+      setFormData(prev => ({ ...prev, animal: defaultAnimal }));
+    }
+    if (currentUser?.name && !formData.name) {
+      setFormData(prev => ({ ...prev, name: currentUser.name }));
+    }
+  }, [defaultAnimal, currentUser]);
 
   const isRestricted = currentRole === "BUYER" || currentUser?.role === "BUYER" || currentRole === "ADMIN" || currentUser?.role === "ADMIN";
   if (!isOpen || isRestricted) return null;

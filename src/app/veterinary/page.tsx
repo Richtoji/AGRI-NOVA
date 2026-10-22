@@ -33,6 +33,14 @@ import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { AdminLivestockManagement } from "@/components/admin/AdminLivestockManagement";
 import { SafeImage } from "@/components/ui/SafeImage";
 import { AppointmentModal } from "@/components/veterinary/AppointmentModal";
+import { 
+  DEFAULT_REGIONAL_LIVESTOCK, 
+  DEFAULT_LIVESTOCK_BREEDS, 
+  KERALA_DISTRICTS, 
+  getBreedsForDistrict, 
+  LivestockBreedInfo, 
+  RegionalLivestockInfo 
+} from "@/data/livestockData";
 
 export default function VeterinaryPage() {
   const { currentUser, currentRole } = useAuthRole();
@@ -41,16 +49,17 @@ export default function VeterinaryPage() {
 
   // Farmer booking modal states
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
-  const [selectedBreed, setSelectedBreed] = useState<any | null>(null);
+  const [bookingAnimalBreed, setBookingAnimalBreed] = useState<string>("");
+  const [selectedBreed, setSelectedBreed] = useState<LivestockBreedInfo | any | null>(null);
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [regionalAnalysis, setRegionalAnalysis] = useState<any[]>([]);
-  const [loadingRecs, setLoadingRecs] = useState(true);
+  const [recommendations, setRecommendations] = useState<LivestockBreedInfo[]>(DEFAULT_LIVESTOCK_BREEDS);
+  const [regionalAnalysis, setRegionalAnalysis] = useState<RegionalLivestockInfo[]>(DEFAULT_REGIONAL_LIVESTOCK);
+  const [loadingRecs, setLoadingRecs] = useState(false);
   
   // Location-based recommendation state
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
-  const [userDistrict, setUserDistrict] = useState<string | null>(null);
+  const [userDistrict, setUserDistrict] = useState<string>("Palakkad");
   const [locationCoords, setLocationCoords] = useState<{lat: number, lng: number} | null>(null);
 
   // Admin states
@@ -90,12 +99,16 @@ export default function VeterinaryPage() {
         
         if (resLivestock.ok) {
           const data = await resLivestock.json();
-          setRecommendations(data.recommendations || []);
+          if (data.recommendations && data.recommendations.length > 0) {
+            setRecommendations(data.recommendations);
+          }
         }
         
         if (resRegions.ok) {
           const data = await resRegions.json();
-          setRegionalAnalysis(data.regions || []);
+          if (data.regions && data.regions.length > 0) {
+            setRegionalAnalysis(data.regions);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch recommendations", err);
@@ -131,15 +144,17 @@ export default function VeterinaryPage() {
             const matchedRegion = regionalAnalysis.find(r => 
               locality.toLowerCase().includes(r.district.toLowerCase()) || 
               r.district.toLowerCase().includes(locality.toLowerCase())
+            ) || DEFAULT_REGIONAL_LIVESTOCK.find(r => 
+              locality.toLowerCase().includes(r.district.toLowerCase()) || 
+              r.district.toLowerCase().includes(locality.toLowerCase())
             );
             
             if (matchedRegion) {
               setUserDistrict(matchedRegion.district);
             } else {
-              const defaultCluster = regionalAnalysis.length > 0 ? regionalAnalysis[0].district : "Palakkad";
-              setUserDistrict(defaultCluster);
+              setUserDistrict("Palakkad");
               if (locality) {
-                setLocationError(`Detected region: ${locality}. Showing regional agricultural cluster data (${defaultCluster}).`);
+                setLocationError(`Detected region: ${locality}. Showing regional agricultural cluster data (Palakkad).`);
               }
             }
           } else {
@@ -160,7 +175,19 @@ export default function VeterinaryPage() {
     );
   };
 
-  const recommendedRegionData = userDistrict ? regionalAnalysis.find(r => r.district === userDistrict) : null;
+  const recommendedRegionData = React.useMemo(() => {
+    if (!userDistrict) return null;
+    const lower = userDistrict.trim().toLowerCase();
+    return (
+      regionalAnalysis.find(r => r.district.toLowerCase() === lower || r.district.toLowerCase().includes(lower)) ||
+      DEFAULT_REGIONAL_LIVESTOCK.find(r => r.district.toLowerCase() === lower || r.district.toLowerCase().includes(lower)) ||
+      null
+    );
+  }, [userDistrict, regionalAnalysis]);
+
+  const displayRecommendations = React.useMemo(() => {
+    return getBreedsForDistrict(userDistrict, recommendations);
+  }, [userDistrict, recommendations]);
 
   // Filter admin appointments
   const filteredAppointments = adminAppointments.filter(apt => {
@@ -450,20 +477,56 @@ export default function VeterinaryPage() {
             <div className="lg:col-span-2 space-y-6">
 
               {/* Smart Location-Based Recommendation */}
-              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+              <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-xs relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
                   <Target className="w-32 h-32 text-gray-900" />
                 </div>
                 <div className="relative z-10">
-                  <h2 className="text-xl font-black text-gray-900 flex items-center mb-2">
-                    <MapPin className="w-5 h-5 mr-2 text-gray-900" />
-                    Smart Livestock Recommender
-                  </h2>
-                  <p className="text-gray-500 text-sm mb-6 max-w-lg">
-                    Select your district or detect your farm's location to get AI-driven livestock recommendations perfectly suited for your local climate and geography.
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+                    <h2 className="text-xl font-black text-gray-900 flex items-center">
+                      <MapPin className="w-5 h-5 mr-2 text-emerald-700" />
+                      District-Wise Livestock Recommender
+                    </h2>
+                    <span className="text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-0.5 rounded-full self-start sm:self-auto">
+                      All 14 Kerala Districts
+                    </span>
+                  </div>
+                  <p className="text-gray-500 text-sm mb-4 max-w-xl">
+                    Select any Kerala district below or auto-detect your farm's GPS coordinates to get livestock profiles and certified breeds tailored for your local climate.
                   </p>
+
+                  {/* Quick District Selector Chips */}
+                  <div className="mb-4">
+                    <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                      <span>Quick Select District:</span>
+                      <span className="text-emerald-700 font-semibold">{userDistrict} selected</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+                      {KERALA_DISTRICTS.map((district) => {
+                        const isActive = userDistrict === district;
+                        return (
+                          <button
+                            key={district}
+                            type="button"
+                            onClick={() => {
+                              setUserDistrict(district);
+                              setLocationCoords(null);
+                              setLocationError(null);
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                              isActive
+                                ? "bg-emerald-800 text-white shadow-xs ring-2 ring-emerald-800/20"
+                                : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+                            }`}
+                          >
+                            {district}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                   
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-1">
                     <select 
                       value={userDistrict || ""}
                       onChange={(e) => {
@@ -471,79 +534,79 @@ export default function VeterinaryPage() {
                           setUserDistrict(e.target.value);
                           setLocationCoords(null);
                           setLocationError(null);
-                        } else {
-                          setUserDistrict(null);
                         }
                       }}
-                      className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-gray-900/10 flex-1 max-w-xs"
+                      className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-800/10 flex-1 max-w-xs cursor-pointer"
                     >
-                      <option value="">Select your district manually...</option>
-                      {[
-                        "Thiruvananthapuram", "Kollam", "Pathanamthitta", "Alappuzha", 
-                        "Kottayam", "Idukki", "Ernakulam", "Thrissur", "Palakkad", 
-                        "Malappuram", "Kozhikode", "Wayanad", "Kannur", "Kasaragod"
-                      ].map(district => (
-                        <option key={district} value={district}>{district}</option>
+                      {KERALA_DISTRICTS.map(district => (
+                        <option key={district} value={district}>{district} District</option>
                       ))}
                     </select>
-                    
-                    <div className="flex items-center justify-center">
-                      <span className="text-gray-400 font-bold text-xs uppercase mx-2">or</span>
-                    </div>
 
                     <button 
                       type="button"
                       onClick={detectLocationAndRecommend}
                       disabled={isLocating}
-                      className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-sm flex items-center justify-center disabled:opacity-70 cursor-pointer"
+                      className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center disabled:opacity-70 cursor-pointer text-sm"
                     >
                       {isLocating ? (
                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Locating...</>
                       ) : (
-                        <><Target className="w-4 h-4 mr-2" /> Auto Detect Location</>
+                        <><Target className="w-4 h-4 mr-2 text-emerald-400" /> Auto Detect Farm GPS</>
                       )}
                     </button>
                   </div>
                   
                   {locationError && (
-                    <div className="mt-4 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 text-sm font-semibold flex items-center">
-                      {locationError}
-                      <button onClick={detectLocationAndRecommend} className="ml-auto underline hover:text-rose-700">Retry</button>
-                    </div>
-                  )}
-                  
-                  {userDistrict && !recommendedRegionData && !isLocating && (
-                    <div className="mt-4 p-3 rounded-xl bg-amber-50 border border-amber-100 text-amber-700 text-sm font-semibold flex items-center">
-                      No specific data for {userDistrict} yet. Please check back later.
+                    <div className="mt-4 p-3 rounded-xl bg-rose-50 border border-rose-100 text-rose-600 text-xs font-semibold flex items-center justify-between">
+                      <span>{locationError}</span>
+                      <button onClick={detectLocationAndRecommend} className="underline hover:text-rose-800 ml-2">Retry</button>
                     </div>
                   )}
                   
                   {recommendedRegionData && (
-                    <div className="mt-6 bg-gray-50 border border-gray-100 rounded-xl p-5">
-                      <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-3">
-                        <div className="flex items-center text-gray-500 font-mono text-xs">
-                          <MapPin className="w-3.5 h-3.5 mr-1 text-gray-400" />
-                          {locationCoords ? `${locationCoords.lat.toFixed(4)}° N, ${locationCoords.lng.toFixed(4)}° E` : ''}
+                    <div className="mt-5 bg-gradient-to-br from-gray-50 to-emerald-50/20 border border-gray-200/80 rounded-2xl p-5 shadow-xs">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200/80 gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                          <h3 className="text-base font-black text-gray-900">
+                            {recommendedRegionData.district} Livestock Agro-Profile
+                          </h3>
                         </div>
-                        <h3 className="text-lg font-black text-gray-900">
-                          {recommendedRegionData.district} Region Profile
-                        </h3>
+                        <div className="flex items-center text-gray-500 font-mono text-[11px]">
+                          <MapPin className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+                          {locationCoords ? `${locationCoords.lat.toFixed(4)}° N, ${locationCoords.lng.toFixed(4)}° E` : `${recommendedRegionData.district}, Kerala`}
+                        </div>
                       </div>
-                      <div className="flex flex-col md:flex-row gap-6 mt-4">
+
+                      <div className="flex flex-col md:flex-row gap-5 mt-4">
                         {recommendedRegionData.imageUrl && (
                           <div className="md:w-1/3 flex-shrink-0">
-                            <img src={recommendedRegionData.imageUrl} alt={recommendedRegionData.district} className="w-full h-40 object-cover rounded-xl border border-gray-200 shadow-sm" />
+                            <img 
+                              src={recommendedRegionData.imageUrl} 
+                              alt={recommendedRegionData.district} 
+                              className="w-full h-44 object-cover rounded-xl border border-gray-200 shadow-xs" 
+                            />
                           </div>
                         )}
-                        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="flex-1 space-y-3.5">
                           <div>
-                            <p className="text-gray-500 text-xs uppercase font-bold mb-1">Ideal Livestock Profile</p>
-                            <p className="text-gray-900 font-bold">{recommendedRegionData.primaryLivestock}</p>
+                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">Ideal Livestock Species</p>
+                            <p className="text-gray-900 font-bold text-sm leading-snug">{recommendedRegionData.primaryLivestock}</p>
                           </div>
                           <div>
-                            <p className="text-gray-500 text-xs uppercase font-bold mb-1">Regional Strategic Focus</p>
-                            <p className="text-gray-600 text-sm leading-relaxed">{recommendedRegionData.focusAreas}</p>
+                            <p className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">Regional Strategic Focus</p>
+                            <p className="text-gray-600 text-xs leading-relaxed">{recommendedRegionData.focusAreas}</p>
                           </div>
+                          {recommendedRegionData.climateSuitability && (
+                            <div className="p-3 bg-white/80 rounded-xl border border-emerald-100">
+                              <p className="text-emerald-800 text-[10px] uppercase font-bold tracking-wider mb-0.5 flex items-center gap-1">
+                                <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                                Climate Suitability &amp; Housing Protocol
+                              </p>
+                              <p className="text-gray-700 text-xs leading-relaxed">{recommendedRegionData.climateSuitability}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -552,16 +615,33 @@ export default function VeterinaryPage() {
               </div>
               
               {/* Breed Recommendation */}
-              <h2 className="text-lg font-black text-gray-900">Recommended Breeds for Your Region</h2>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pt-2">
+                <div>
+                  <h2 className="text-lg font-black text-gray-900 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-emerald-600" />
+                    Recommended Breeds for {userDistrict}
+                  </h2>
+                  <p className="text-xs text-gray-500">
+                    Showing {displayRecommendations.length} certified climate-adapted livestock varieties for {userDistrict}
+                  </p>
+                </div>
+                {userDistrict && (
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
+                    {userDistrict} Regional Cluster
+                  </span>
+                )}
+              </div>
               
               {loadingRecs ? (
                 <div className="text-sm text-gray-500 animate-pulse">Loading recommended breeds...</div>
-              ) : recommendations.length === 0 ? (
-                <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-xl">No specific recommendations for your region yet.</div>
+              ) : displayRecommendations.length === 0 ? (
+                <div className="text-sm text-gray-500 bg-gray-50 p-6 rounded-2xl border border-gray-100 text-center">
+                  No specific breed recommendations found for this district.
+                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {recommendations.map(rec => (
-                    <div key={rec.id} className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col shadow-sm">
+                  {displayRecommendations.map(rec => (
+                    <div key={rec.id} className="bg-white border border-gray-200 rounded-2xl overflow-hidden flex flex-col shadow-xs hover:shadow-md transition-shadow">
                       <div className="h-48 relative bg-gray-50">
                         {rec.imageUrl && (
                           <SafeImage 
@@ -570,35 +650,61 @@ export default function VeterinaryPage() {
                             className="w-full h-full object-cover"
                           />
                         )}
-                        <span className="absolute top-3 left-3 px-2 py-1 bg-white/90 backdrop-blur-sm rounded text-[10px] font-bold text-gray-800 border border-gray-200 shadow-sm uppercase">
+                        <span className="absolute top-3 left-3 px-2.5 py-1 bg-white/95 backdrop-blur-sm rounded-lg text-[10px] font-bold text-gray-900 border border-gray-200 shadow-xs uppercase">
+                          {rec.category || "Livestock"}
+                        </span>
+                        <span className="absolute bottom-3 left-3 px-2 py-0.5 bg-emerald-900/90 text-white backdrop-blur-sm rounded-md text-[10px] font-semibold max-w-[90%] truncate">
                           {rec.location}
                         </span>
                       </div>
-                      <div className="p-5 flex-1 flex flex-col">
-                        <h3 className="text-lg font-black text-gray-900">{rec.breedName}</h3>
-                        <div className="mt-4 space-y-3 flex-1 text-sm">
-                          <div className="flex justify-between border-b border-gray-100 pb-2">
-                            <span className="text-gray-500 flex items-center"><Droplets className="w-4 h-4 mr-2 text-blue-500" /> Expected Yield</span>
-                            <span className="font-bold text-gray-900">{rec.expectedYield}</span>
-                          </div>
-                          <div className="flex justify-between border-b border-gray-100 pb-2">
-                            <span className="text-gray-500 flex items-center"><Activity className="w-4 h-4 mr-2 text-gray-700" /> Fat Content</span>
-                            <span className="font-bold text-gray-900">{rec.fatContent}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500 flex items-center"><Beaker className="w-4 h-4 mr-2 text-amber-500" /> Maintenance</span>
-                            <span className="font-bold text-gray-900">{rec.maintenanceLevel}</span>
+                      <div className="p-5 flex-1 flex flex-col justify-between">
+                        <div>
+                          <h3 className="text-base font-black text-gray-900 leading-snug">{rec.breedName}</h3>
+                          {rec.description && (
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2 leading-relaxed">
+                              {rec.description}
+                            </p>
+                          )}
+                          <div className="mt-4 space-y-2.5 text-xs">
+                            <div className="flex justify-between border-b border-gray-100 pb-2">
+                              <span className="text-gray-500 flex items-center"><Droplets className="w-3.5 h-3.5 mr-1.5 text-blue-500" /> Expected Yield</span>
+                              <span className="font-bold text-gray-900">{rec.expectedYield}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-gray-100 pb-2">
+                              <span className="text-gray-500 flex items-center"><Activity className="w-3.5 h-3.5 mr-1.5 text-rose-500" /> Fat / Quality</span>
+                              <span className="font-bold text-gray-900">{rec.fatContent}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-gray-500 flex items-center"><Beaker className="w-3.5 h-3.5 mr-1.5 text-amber-500" /> Maintenance</span>
+                              <span className="font-bold text-gray-900">{rec.maintenanceLevel}</span>
+                            </div>
                           </div>
                         </div>
-                        <button 
-                          type="button"
-                          onClick={() => setSelectedBreed(rec)}
-                          className="mt-5 w-full py-2 bg-gray-50 hover:bg-emerald-50 text-gray-800 hover:text-emerald-900 font-bold text-sm rounded-lg transition-colors border border-gray-200 hover:border-emerald-200 cursor-pointer flex items-center justify-center space-x-1"
-                          title="View comprehensive breed characteristics, yield statistics, and health guidelines"
-                        >
-                          <span>View Full Details</span>
-                          <ChevronRight className="w-4 h-4 ml-1" />
-                        </button>
+
+                        <div className="mt-5 pt-3 border-t border-gray-100 flex items-center gap-2">
+                          <button 
+                            type="button"
+                            onClick={() => setSelectedBreed(rec)}
+                            className="flex-1 py-2 bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-xs rounded-xl transition-colors border border-gray-200 cursor-pointer flex items-center justify-center space-x-1"
+                          >
+                            <span>Characteristics</span>
+                            <ChevronRight className="w-3.5 h-3.5 ml-1 text-gray-500" />
+                          </button>
+                          {!isAdmin && !isBuyer && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setBookingAnimalBreed(rec.breedName);
+                                setIsBookingModalOpen(true);
+                              }}
+                              className="px-3 py-2 bg-emerald-800 hover:bg-emerald-900 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                              title="Book vet consultation for this breed"
+                            >
+                              <Stethoscope className="w-3.5 h-3.5" />
+                              <span>Consult Vet</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -704,7 +810,11 @@ export default function VeterinaryPage() {
       {!isAdmin && !isBuyer && (
         <AppointmentModal 
           isOpen={isBookingModalOpen} 
-          onClose={() => setIsBookingModalOpen(false)} 
+          onClose={() => {
+            setIsBookingModalOpen(false);
+            setBookingAnimalBreed("");
+          }}
+          defaultAnimal={bookingAnimalBreed}
         />
       )}
 
@@ -809,6 +919,7 @@ export default function VeterinaryPage() {
                 <button
                   type="button"
                   onClick={() => {
+                    setBookingAnimalBreed(selectedBreed.breedName);
                     setSelectedBreed(null);
                     setIsBookingModalOpen(true);
                   }}
