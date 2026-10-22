@@ -69,6 +69,33 @@ export default function VeterinaryPage() {
   const [appointmentSearch, setAppointmentSearch] = useState("");
   const [appointmentStatusFilter, setAppointmentStatusFilter] = useState("ALL");
 
+  const fetchRecs = React.useCallback(async () => {
+    try {
+      const [resLivestock, resRegions] = await Promise.all([
+        fetch("/api/admin/livestock-recommendations"),
+        fetch("/api/admin/regional-livestock")
+      ]);
+      
+      if (resLivestock.ok) {
+        const data = await resLivestock.json();
+        if (data.recommendations && data.recommendations.length > 0) {
+          setRecommendations(data.recommendations);
+        }
+      }
+      
+      if (resRegions.ok) {
+        const data = await resRegions.json();
+        if (data.regions && data.regions.length > 0) {
+          setRegionalAnalysis(data.regions);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch recommendations", err);
+    } finally {
+      setLoadingRecs(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (isAdmin) {
       // Fetch all appointments for Admin audit view
@@ -87,37 +114,19 @@ export default function VeterinaryPage() {
         }
       };
       fetchAdminAppointments();
-      return;
     }
 
-    const fetchRecs = async () => {
-      try {
-        const [resLivestock, resRegions] = await Promise.all([
-          fetch("/api/admin/livestock-recommendations"),
-          fetch("/api/admin/regional-livestock")
-        ]);
-        
-        if (resLivestock.ok) {
-          const data = await resLivestock.json();
-          if (data.recommendations && data.recommendations.length > 0) {
-            setRecommendations(data.recommendations);
-          }
-        }
-        
-        if (resRegions.ok) {
-          const data = await resRegions.json();
-          if (data.regions && data.regions.length > 0) {
-            setRegionalAnalysis(data.regions);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch recommendations", err);
-      } finally {
-        setLoadingRecs(false);
-      }
-    };
+    // Always fetch live recommendations and regional profiles for all users
     fetchRecs();
-  }, [isAdmin]);
+
+    const handleLivestockUpdated = () => {
+      fetchRecs();
+    };
+    window.addEventListener("livestock-data-updated", handleLivestockUpdated);
+    return () => {
+      window.removeEventListener("livestock-data-updated", handleLivestockUpdated);
+    };
+  }, [isAdmin, fetchRecs]);
 
   const detectLocationAndRecommend = () => {
     setIsLocating(true);
@@ -467,7 +476,7 @@ export default function VeterinaryPage() {
         {/* ADMIN VIEW: LIVESTOCK MANAGEMENT TAB */}
         {isAdmin && adminTab === "breeds" && (
           <div className="space-y-6">
-            <AdminLivestockManagement />
+            <AdminLivestockManagement onUpdate={fetchRecs} />
           </div>
         )}
 
@@ -582,7 +591,7 @@ export default function VeterinaryPage() {
                       <div className="flex flex-col md:flex-row gap-5 mt-4">
                         {recommendedRegionData.imageUrl && (
                           <div className="md:w-1/3 flex-shrink-0">
-                            <img 
+                            <SafeImage 
                               src={recommendedRegionData.imageUrl} 
                               alt={recommendedRegionData.district} 
                               className="w-full h-44 object-cover rounded-xl border border-gray-200 shadow-xs" 

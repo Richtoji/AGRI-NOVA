@@ -5,7 +5,7 @@ import * as jose from 'jose';
 import { inMemoryStore } from '@/lib/data/inMemoryStore';
 
 const prisma = new PrismaClient();
-const JWT_SECRET = process.env.JWT_SECRET || 'agrinova_fallback_jwt_secret_production_key_32chars';
+const JWT_SECRET = (process.env.JWT_SECRET || 'super_secure_production_ready_secret_12345').trim();
 
 async function checkAdminAuth() {
   const token = (await cookies()).get('auth_token')?.value;
@@ -13,7 +13,7 @@ async function checkAdminAuth() {
   try {
     const secret = new TextEncoder().encode(JWT_SECRET);
     const { payload } = await jose.jwtVerify(token, secret);
-    return payload.role === 'ADMIN';
+    return payload.role === 'ADMIN' || payload.role === 'VETERINARY_EXPERT';
   } catch (err) {
     return false;
   }
@@ -24,21 +24,32 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const location = searchParams.get('location');
 
+    let dbRecs: any[] = [];
     try {
       const where = location ? { location: { contains: location, mode: 'insensitive' as any } } : {};
-      const recommendations = await prisma.livestockRecommendation.findMany({
+      dbRecs = await prisma.livestockRecommendation.findMany({
         where,
         orderBy: { createdAt: 'desc' }
       });
-      if (recommendations && recommendations.length > 0) {
-        return NextResponse.json({ success: true, recommendations });
-      }
     } catch (dbErr) {
-      console.warn('Prisma livestock recommendations fetch failed, falling back to inMemoryStore:', dbErr);
+      console.warn('Prisma livestock recommendations fetch failed:', dbErr);
     }
 
-    // Fallback to inMemoryStore
-    const recommendations = inMemoryStore.getLivestockRecommendations(location || undefined);
+    const memRecs = inMemoryStore.getLivestockRecommendations(location || undefined);
+    
+    // Merge: In-memory store has live updates; merge dbRecs if not in memRecs
+    const mergedMap = new Map<string, any>();
+    for (const m of memRecs) {
+      mergedMap.set(m.breedName.toLowerCase(), m);
+      if (m.id) mergedMap.set(m.id, m);
+    }
+    for (const d of dbRecs) {
+      const key = (d.breedName || '').toLowerCase();
+      if (!mergedMap.has(key) && !mergedMap.has(d.id)) {
+        mergedMap.set(key || d.id, d);
+      }
+    }
+    const recommendations = Array.from(new Set(mergedMap.values()));
     return NextResponse.json({ success: true, recommendations });
   } catch (error) {
     console.error('Failed to fetch livestock recommendations:', error);
@@ -53,74 +64,87 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { breedName, location, expectedYield, fatContent, maintenanceLevel, imageUrl, category } = body;
 
+    let rec: any = null;
     try {
-      const rec = await prisma.livestockRecommendation.create({
+      rec = await prisma.livestockRecommendation.create({
         data: { breedName, location, expectedYield, fatContent, maintenanceLevel, imageUrl }
       });
-      inMemoryStore.addLivestockRecommendation({
-        ...rec,
-        category: category || "Cattle"
-      });
-      return NextResponse.json({ success: true, recommendation: rec });
     } catch (dbErr) {
       console.warn('Prisma create recommendation failed, falling back to inMemoryStore:', dbErr);
-      const rec = inMemoryStore.addLivestockRecommendation({
-        breedName,
-        location,
-        expectedYield,
-        fatContent,
-        maintenanceLevel,
-        imageUrl,
-        category: category || "Cattle"
-      });
-      return NextResponse.json({ success: true, recommendation: rec });
     }
+
+    const memRec = inMemoryStore.addLivestockRecommendation({
+      id: rec?.id,
+      breedName,
+      location,
+      expectedYield,
+      fatContent,
+      maintenanceLevel,
+      imageUrl,
+      category: category || "Cattle"
+    });
+
+    return NextResponse.json({ success: true, recommendation: memRec || rec });
   } catch (error) {
     console.error('Failed to add livestock recommendation:', error);
     return NextResponse.json({ error: 'Unable to add.' }, { status: 500 });
   }
 }
 
-export async function PATCH(request: Request) {
+async function handleUpdate(request: Request) {
   try {
     if (!(await checkAdminAuth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     const body = await request.json();
     const { id, breedName, location, expectedYield, fatContent, maintenanceLevel, imageUrl, category } = body;
 
-    if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 });
+    if (!id && !breedName) return NextResponse.json({ error: 'ID or breedName required' }, { status: 400 });
 
+    const updateData: any = {
+      ...(breedName ? { breedName } : {}),
+      ...(location ? { location } : {}),
+      ...(expectedYield ? { expectedYield } : {}),
+      ...(fatContent ? { fatContent } : {}),
+      ...(maintenanceLevel ? { maintenanceLevel } : {}),
+      ...(imageUrl !== undefined ? { imageUrl } : {}),
+      ...(category ? { category } : {})
+    };
+
+    let updatedPrismaRec: any = null;
     try {
-      const rec = await prisma.livestockRecommendation.update({
-        where: { id },
-        data: { breedName, location, expectedYield, fatContent, maintenanceLevel, imageUrl }
-      });
-      inMemoryStore.updateLivestockRecommendation(id, {
-        breedName,
-        location,
-        expectedYield,
-        fatContent,
-        maintenanceLevel,
-        imageUrl,
-        category
-      });
-      return NextResponse.json({ success: true, recommendation: rec });
+      if (id) {
+        updatedPrismaRec = await prisma.livestockRecommendation.update({
+          where: { id },
+          data: {
+            ...(breedName ? { breedName } : {}),
+            ...(location ? { location } : {}),
+            ...(expectedYield ? { expectedYield } : {}),
+            ...(fatContent ? { fatContent } : {}),
+            ...(maintenanceLevel ? { maintenanceLevel } : {}),
+            ...(imageUrl !== undefined ? { imageUrl } : {})
+          }
+        });
+      }
     } catch (dbErr) {
       console.warn('Prisma update recommendation failed, updating inMemoryStore:', dbErr);
-      const updated = inMemoryStore.updateLivestockRecommendation(id, {
-        breedName,
-        location,
-        expectedYield,
-        fatContent,
-        maintenanceLevel,
-        imageUrl,
-        category
-      });
-      return NextResponse.json({ success: true, recommendation: updated });
     }
+
+    const updatedMem = inMemoryStore.updateLivestockRecommendation(id || breedName, updateData);
+    return NextResponse.json({ 
+      success: true, 
+      recommendation: updatedMem || updatedPrismaRec || { id, ...updateData } 
+    });
   } catch (error) {
     console.error('Failed to update livestock recommendation:', error);
     return NextResponse.json({ error: 'Unable to update.' }, { status: 500 });
   }
+}
+
+export async function PUT(request: Request) {
+  return handleUpdate(request);
+}
+
+export async function PATCH(request: Request) {
+  return handleUpdate(request);
 }
 
 export async function DELETE(request: Request) {

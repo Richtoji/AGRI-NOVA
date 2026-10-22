@@ -1246,14 +1246,24 @@ export const inMemoryStore = {
   },
 
   updateRegionalLivestock(id: string, data: any): RegionalLivestockRecord | null {
-    const reg = globalStore.regionalLivestock.find((r: RegionalLivestockRecord) => r.id === id);
+    const idClean = (id || "").toLowerCase();
+    const distClean = (data.district || "").toLowerCase();
+    const reg = globalStore.regionalLivestock.find((r: RegionalLivestockRecord) => 
+      r.id === id || 
+      (idClean && r.id.toLowerCase() === idClean) ||
+      (idClean && r.district.toLowerCase() === idClean) ||
+      (distClean && r.district.toLowerCase() === distClean)
+    );
     if (!reg) return null;
     Object.assign(reg, data);
     return reg;
   },
 
   deleteRegionalLivestock(id: string): boolean {
-    const idx = globalStore.regionalLivestock.findIndex((r: RegionalLivestockRecord) => r.id === id);
+    const idClean = (id || "").toLowerCase();
+    const idx = globalStore.regionalLivestock.findIndex((r: RegionalLivestockRecord) => 
+      r.id === id || (idClean && r.id.toLowerCase() === idClean) || (idClean && r.district.toLowerCase() === idClean)
+    );
     if (idx > -1) {
       globalStore.regionalLivestock.splice(idx, 1);
       return true;
@@ -1293,14 +1303,24 @@ export const inMemoryStore = {
   },
 
   updateLivestockRecommendation(id: string, data: any): LivestockRecommendationRecord | null {
-    const breed = globalStore.livestockRecommendations.find((b: LivestockRecommendationRecord) => b.id === id);
+    const idClean = (id || "").toLowerCase();
+    const nameClean = (data.breedName || "").toLowerCase();
+    const breed = globalStore.livestockRecommendations.find((b: LivestockRecommendationRecord) => 
+      b.id === id || 
+      (idClean && b.id.toLowerCase() === idClean) ||
+      (idClean && b.breedName.toLowerCase() === idClean) ||
+      (nameClean && b.breedName.toLowerCase() === nameClean)
+    );
     if (!breed) return null;
     Object.assign(breed, data);
     return breed;
   },
 
   deleteLivestockRecommendation(id: string): boolean {
-    const idx = globalStore.livestockRecommendations.findIndex((b: LivestockRecommendationRecord) => b.id === id);
+    const idClean = (id || "").toLowerCase();
+    const idx = globalStore.livestockRecommendations.findIndex((b: LivestockRecommendationRecord) => 
+      b.id === id || (idClean && b.id.toLowerCase() === idClean) || (idClean && b.breedName.toLowerCase() === idClean)
+    );
     if (idx > -1) {
       globalStore.livestockRecommendations.splice(idx, 1);
       return true;
