@@ -635,8 +635,8 @@ export const Topbar: React.FC = () => {
 
             {/* Notification Dropdown Card */}
             {isNotificationsOpen && (
-              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
-                <div className="p-4 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between">
+              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp max-h-[calc(100dvh-5rem)] flex flex-col">
+                <div className="p-4 bg-gradient-to-r from-emerald-800 to-teal-900 text-white flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-2">
                     <Bell className="w-4 h-4 text-emerald-300" />
                     <h3 className="text-xs font-black uppercase tracking-wider">Alerts &amp; Updates</h3>
@@ -664,7 +664,7 @@ export const Topbar: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                <div className="max-h-80 overflow-y-auto custom-scrollbar divide-y divide-gray-50 flex-1 min-h-0">
                   {notifications.length === 0 ? (
                     <div className="p-8 text-center text-gray-400 text-xs">
                       <CheckCheck className="w-8 h-8 mx-auto mb-2 text-emerald-500/60" />
@@ -715,7 +715,7 @@ export const Topbar: React.FC = () => {
                   )}
                 </div>
 
-                <div className="p-2.5 bg-gray-50 border-t border-gray-100 text-center">
+                <div className="p-2.5 bg-gray-50 border-t border-gray-100 text-center shrink-0">
                   <Link
                     href="/dashboard/farmer?tab=cultivation"
                     onClick={() => setIsNotificationsOpen(false)}
@@ -750,8 +750,8 @@ export const Topbar: React.FC = () => {
 
             {/* Messages Dropdown Card */}
             {isMessagesOpen && (
-              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
-                <div className="p-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-between">
+              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp max-h-[calc(100dvh-5rem)] flex flex-col">
+                <div className="p-4 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 text-white flex items-center justify-between shrink-0">
                   <div className="flex items-center space-x-2">
                     <MessageCircle className="w-4 h-4 text-emerald-400" />
                     <h3 className="text-xs font-black uppercase tracking-wider">Consultations</h3>
@@ -769,7 +769,7 @@ export const Topbar: React.FC = () => {
                   </button>
                 </div>
 
-                <div className="max-h-80 overflow-y-auto divide-y divide-gray-50">
+                <div className="max-h-80 overflow-y-auto custom-scrollbar divide-y divide-gray-50 flex-1 min-h-0">
                   {messages.map((item) => (
                     <div
                       key={item.id}
@@ -806,7 +806,7 @@ export const Topbar: React.FC = () => {
                   ))}
                 </div>
 
-                <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                <div className="p-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between shrink-0">
                   <Link
                     href="/veterinary"
                     onClick={() => setIsMessagesOpen(false)}
@@ -863,10 +863,10 @@ export const Topbar: React.FC = () => {
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
               </div>
               <div className="hidden sm:flex flex-col text-left">
-                <span className="text-xs font-bold text-gray-900 leading-tight group-hover:text-emerald-700 transition-colors">
+                <span className="text-xs font-bold text-gray-900 leading-tight group-hover:text-emerald-700 transition-colors truncate max-w-[100px] md:max-w-[140px] lg:max-w-[180px]">
                   Hi, {displayUserName}
                 </span>
-                <span className="text-[10px] text-gray-500 font-medium">
+                <span className="text-[10px] text-gray-500 font-medium truncate max-w-[100px] md:max-w-[140px]">
                   {roleLabel}
                 </span>
               </div>
@@ -875,10 +875,10 @@ export const Topbar: React.FC = () => {
 
             {/* Profile Dropdown Details Card */}
             {isProfileOpen && (
-              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp">
+              <div className="origin-top-right fixed sm:absolute right-3 sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-24px)] sm:w-96 max-w-sm bg-white rounded-3xl shadow-2xl border border-gray-100 z-50 overflow-hidden animate-scaleUp max-h-[calc(100dvh-5rem)] flex flex-col">
                 
                 {/* Header Profile Banner */}
-                <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 text-white p-4 relative overflow-hidden">
+                <div className="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 text-white p-4 relative overflow-hidden shrink-0">
                   <div className="absolute -top-8 -right-8 w-28 h-28 bg-emerald-500/20 rounded-full blur-xl pointer-events-none"></div>
                   
                   <div className="flex items-start justify-between relative z-10 mb-3">
@@ -927,116 +927,119 @@ export const Topbar: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Profile Details List */}
-                <div className="p-3 bg-gray-50/70 border-b border-gray-100 space-y-2 text-xs">
-                  
-                  {/* Phone Item */}
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
-                    <div className="flex items-center space-x-2.5 min-w-0">
+                {/* Scrollable details and actions */}
+                <div className="overflow-y-auto custom-scrollbar flex-1 min-h-0 divide-y divide-gray-100">
+                  {/* Profile Details List */}
+                  <div className="p-3 bg-gray-50/70 space-y-2 text-xs">
+                    
+                    {/* Phone Item */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                          <Phone className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="truncate">
+                          <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Phone</div>
+                          <div className="font-semibold text-gray-800 text-[11px] truncate">{displayPhone}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => handleCopy(displayPhone, "phone", e)}
+                        className="p-1.5 text-gray-400 hover:text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer shrink-0"
+                        title="Copy phone"
+                      >
+                        {copiedField === "phone" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-gray-400" />}
+                      </button>
+                    </div>
+
+                    {/* Email Item */}
+                    <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                          <Mail className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="truncate">
+                          <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Email</div>
+                          <div className="font-semibold text-gray-800 text-[11px] truncate">{displayEmail}</div>
+                        </div>
+                      </div>
+                      <button
+                        onClick={(e) => handleCopy(displayEmail, "email", e)}
+                        className="p-1.5 text-gray-400 hover:text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer shrink-0"
+                        title="Copy email"
+                      >
+                        {copiedField === "email" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-gray-400" />}
+                      </button>
+                    </div>
+
+                    {/* Location Item */}
+                    <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
                       <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                        <Phone className="w-3.5 h-3.5" />
+                        <MapPin className="w-3.5 h-3.5" />
                       </div>
                       <div className="truncate">
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Phone</div>
-                        <div className="font-semibold text-gray-800 text-[11px] truncate">{displayPhone}</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Agri Hub</div>
+                        <div className="font-semibold text-gray-800 text-[11px] truncate">{displayLocation}</div>
                       </div>
                     </div>
-                    <button
-                      onClick={(e) => handleCopy(displayPhone, "phone", e)}
-                      className="p-1.5 text-gray-400 hover:text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer shrink-0"
-                      title="Copy phone"
-                    >
-                      {copiedField === "phone" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-gray-400" />}
-                    </button>
-                  </div>
 
-                  {/* Email Item */}
-                  <div className="flex items-center justify-between p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
-                    <div className="flex items-center space-x-2.5 min-w-0">
+                    {/* Role Specific Farm / Holding Detail */}
+                    <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
                       <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                        <Mail className="w-3.5 h-3.5" />
+                        <Sprout className="w-3.5 h-3.5" />
                       </div>
                       <div className="truncate">
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Email</div>
-                        <div className="font-semibold text-gray-800 text-[11px] truncate">{displayEmail}</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{roleMeta.title}</div>
+                        <div className="font-semibold text-gray-800 text-[11px] truncate">{roleMeta.value}</div>
                       </div>
                     </div>
+
+                  </div>
+
+                  {/* Card Actions */}
+                  <div className="p-3 bg-white space-y-1 text-xs shrink-0">
+                    
+                    {/* View Full Profile Details Button */}
                     <button
-                      onClick={(e) => handleCopy(displayEmail, "email", e)}
-                      className="p-1.5 text-gray-400 hover:text-emerald-700 rounded-lg hover:bg-emerald-50 transition-colors cursor-pointer shrink-0"
-                      title="Copy email"
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        setIsProfileModalOpen(true);
+                      }}
+                      className="w-full flex items-center justify-between p-2 rounded-xl text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors font-semibold group cursor-pointer"
                     >
-                      {copiedField === "email" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 text-gray-400" />}
+                      <div className="flex items-center space-x-2.5">
+                        <User className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
+                        <span>View Full Profile Details</span>
+                      </div>
+                      <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-emerald-700" />
                     </button>
+
+                    {/* Manage Settings & Preferences Link */}
+                    <Link
+                      href="/dashboard/profile"
+                      onClick={() => setIsProfileOpen(false)}
+                      className="w-full flex items-center justify-between p-2 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors font-semibold group"
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <Settings className="w-4 h-4 text-gray-500 group-hover:rotate-45 transition-transform" />
+                        <span>Profile Settings &amp; Security</span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 font-medium">Edit</span>
+                    </Link>
+
+                    {/* Sign Out Button */}
+                    <button
+                      onClick={() => {
+                        setIsProfileOpen(false);
+                        logout();
+                      }}
+                      className="w-full flex items-center space-x-2.5 p-2 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors font-semibold cursor-pointer border-t border-gray-100 mt-1 pt-2"
+                    >
+                      <LogOut className="w-4 h-4 text-rose-500" />
+                      <span>Sign Out</span>
+                    </button>
+
                   </div>
-
-                  {/* Location Item */}
-                  <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                      <MapPin className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="truncate">
-                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Agri Hub</div>
-                      <div className="font-semibold text-gray-800 text-[11px] truncate">{displayLocation}</div>
-                    </div>
-                  </div>
-
-                  {/* Role Specific Farm / Holding Detail */}
-                  <div className="flex items-center space-x-2.5 p-2 rounded-xl bg-white border border-gray-100 shadow-2xs">
-                    <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                      <Sprout className="w-3.5 h-3.5" />
-                    </div>
-                    <div className="truncate">
-                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{roleMeta.title}</div>
-                      <div className="font-semibold text-gray-800 text-[11px] truncate">{roleMeta.value}</div>
-                    </div>
-                  </div>
-
-                </div>
-
-                {/* Card Actions */}
-                <div className="p-3 bg-white space-y-1 text-xs">
-                  
-                  {/* View Full Profile Details Button */}
-                  <button
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      setIsProfileModalOpen(true);
-                    }}
-                    className="w-full flex items-center justify-between p-2 rounded-xl text-gray-700 hover:bg-emerald-50 hover:text-emerald-900 transition-colors font-semibold group cursor-pointer"
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <User className="w-4 h-4 text-emerald-600 group-hover:scale-110 transition-transform" />
-                      <span>View Full Profile Details</span>
-                    </div>
-                    <ExternalLink className="w-3 h-3 text-gray-400 group-hover:text-emerald-700" />
-                  </button>
-
-                  {/* Manage Settings & Preferences Link */}
-                  <Link
-                    href="/dashboard/profile"
-                    onClick={() => setIsProfileOpen(false)}
-                    className="w-full flex items-center justify-between p-2 rounded-xl text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors font-semibold group"
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <Settings className="w-4 h-4 text-gray-500 group-hover:rotate-45 transition-transform" />
-                      <span>Profile Settings &amp; Security</span>
-                    </div>
-                    <span className="text-[10px] text-gray-400 font-medium">Edit</span>
-                  </Link>
-
-                  {/* Sign Out Button */}
-                  <button
-                    onClick={() => {
-                      setIsProfileOpen(false);
-                      logout();
-                    }}
-                    className="w-full flex items-center space-x-2.5 p-2 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors font-semibold cursor-pointer border-t border-gray-100 mt-1 pt-2"
-                  >
-                    <LogOut className="w-4 h-4 text-rose-500" />
-                    <span>Sign Out</span>
-                  </button>
-
                 </div>
 
               </div>
@@ -1200,60 +1203,60 @@ export const Topbar: React.FC = () => {
           <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl border border-gray-100 overflow-hidden my-auto animate-scaleUp max-h-[90vh] flex flex-col">
             
             {/* Modal Header */}
-            <div className="p-4 sm:p-5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
-              <div className="flex items-center space-x-2.5">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
-                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
+            <div className="p-3.5 sm:p-5 border-b border-gray-100 flex items-center justify-between shrink-0 bg-white">
+              <div className="flex items-center space-x-2.5 min-w-0">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100 shrink-0">
+                  <ShieldCheck className="w-4.5 h-4.5 sm:w-5 sm:h-5 text-emerald-600" />
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-gray-900">Agricultural Profile &amp; Identity Record</h3>
-                  <p className="text-[11px] text-gray-500">Official verified credentials, operational details &amp; credentials on AGRI-NOVA</p>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-black text-gray-900 truncate">Agricultural Profile &amp; Identity Record</h3>
+                  <p className="text-[10px] sm:text-[11px] text-gray-500 truncate">Official verified credentials &amp; operations on AGRI-NOVA</p>
                 </div>
               </div>
 
               <button
                 onClick={() => setIsProfileModalOpen(false)}
-                className="p-1.5 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors cursor-pointer"
+                className="p-1.5 text-gray-400 hover:text-gray-700 rounded-full hover:bg-gray-100 transition-colors cursor-pointer shrink-0 ml-2"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Scrollable Content */}
-            <div className="p-6 overflow-y-auto custom-scrollbar space-y-5 text-xs">
+            <div className="p-3.5 sm:p-6 overflow-y-auto custom-scrollbar space-y-4 sm:space-y-5 text-xs">
               
               {/* Hero Banner Card */}
-              <div className="rounded-2xl bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 text-white p-5 relative overflow-hidden shadow-sm">
+              <div className="rounded-2xl bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-900 text-white p-4 sm:p-5 relative overflow-hidden shadow-sm">
                 <div className="absolute -top-10 -right-10 w-36 h-36 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none"></div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
-                  <div className="flex items-center space-x-4">
-                    <div className="relative">
+                  <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
+                    <div className="relative shrink-0">
                       <img
                         src={displayAvatar}
                         alt={displayUserName}
-                        className="w-16 h-16 rounded-2xl object-cover border-2 border-white shadow-md shrink-0"
+                        className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-white shadow-md"
                       />
                       <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full"></span>
                     </div>
 
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <h2 className="text-lg font-black text-white">{displayUserName}</h2>
-                        <span className="text-[10px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                        <h2 className="text-base sm:text-lg font-black text-white truncate max-w-[200px] sm:max-w-none">{displayUserName}</h2>
+                        <span className="text-[10px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full shrink-0">
                           {roleLabel}
                         </span>
                       </div>
-                      <p className="text-[11px] text-emerald-100/90 font-medium mt-0.5">
+                      <p className="text-[11px] text-emerald-100/90 font-medium mt-0.5 truncate">
                         {displayEmail}
                       </p>
-                      <div className="flex items-center space-x-2 mt-2">
+                      <div className="flex items-center space-x-2 mt-2 flex-wrap gap-y-1">
                         <span className="text-[10px] font-bold bg-emerald-400/20 text-emerald-200 border border-emerald-300/30 px-2 py-0.5 rounded-md flex items-center space-x-1">
                           <CheckCircle2 className="w-3 h-3 text-emerald-300" />
                           <span>KYC {displayKyc}</span>
                         </span>
-                        <span className="text-[10px] font-semibold bg-emerald-950/40 text-emerald-200 px-2 py-0.5 rounded-md">
-                          Account ID: {displayId}
+                        <span className="text-[10px] font-semibold bg-emerald-950/40 text-emerald-200 px-2 py-0.5 rounded-md truncate max-w-[160px]">
+                          ID: {displayId}
                         </span>
                       </div>
                     </div>
@@ -1393,11 +1396,11 @@ export const Topbar: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between shrink-0">
+            <div className="p-3.5 sm:p-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 shrink-0">
               <Link
                 href="/dashboard/profile"
                 onClick={() => setIsProfileModalOpen(false)}
-                className="flex items-center space-x-2 px-4 py-2 bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs transition-colors"
+                className="flex items-center justify-center space-x-2 px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-800 border border-gray-200 rounded-xl font-bold text-xs transition-colors"
               >
                 <Settings className="w-4 h-4 text-gray-500" />
                 <span>Edit Full Profile &amp; Settings</span>
@@ -1405,7 +1408,7 @@ export const Topbar: React.FC = () => {
 
               <button
                 onClick={() => setIsProfileModalOpen(false)}
-                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white rounded-xl font-bold text-xs transition-colors cursor-pointer text-center"
               >
                 Close
               </button>
