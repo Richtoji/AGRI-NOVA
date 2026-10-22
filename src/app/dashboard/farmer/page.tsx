@@ -15,6 +15,8 @@ import { CropCultivationProgressModule } from "@/components/farmer/CropCultivati
 import { CultivationImageUpload } from "@/components/farmer/CultivationImageUpload";
 import { MyListings } from "@/components/marketplace/MyListings";
 import { getCropKnowledge } from "@/data/cropKnowledge";
+import { SafeImage } from "@/components/ui/SafeImage";
+
 import { 
   Home,
   Store,
@@ -136,13 +138,14 @@ function FarmerDashboardContent() {
   };
 
   const [cropRecommendations, setCropRecommendations] = useState<any[]>([]);
+
   const [cropZone, setCropZone] = useState<string>("");
   const [cropRecsError, setCropRecsError] = useState<string>("");
 
-  useEffect(() => {
+  const fetchCropRecommendations = () => {
     if (coordinates) {
       setCropRecsError("");
-      fetch(`/api/crops/recommendations?latitude=${coordinates.lat}&longitude=${coordinates.lng}`)
+      fetch(`/api/crops/recommendations?latitude=${coordinates.lat}&longitude=${coordinates.lng}&t=${Date.now()}`, { cache: 'no-store' })
         .then(res => res.json())
         .then(data => {
           if (data.recommendations) {
@@ -157,7 +160,21 @@ function FarmerDashboardContent() {
           setCropRecsError("Failed to communicate with server");
         });
     }
+  };
+
+  useEffect(() => {
+    fetchCropRecommendations();
   }, [coordinates]);
+
+  useEffect(() => {
+    const handleCropUpdated = () => {
+      fetchCropRecommendations();
+      fetchCultivations();
+    };
+    window.addEventListener("crop-data-updated", handleCropUpdated);
+    return () => window.removeEventListener("crop-data-updated", handleCropUpdated);
+  }, [coordinates]);
+
 
   const [isCropGuideOpen, setIsCropGuideOpen] = useState(false);
   const [isPlantAnyOpen, setIsPlantAnyOpen] = useState(false);
@@ -198,7 +215,7 @@ function FarmerDashboardContent() {
 
   const fetchCultivations = async (preferredId?: string) => {
     try {
-      const res = await fetch('/api/crops/cultivate');
+      const res = await fetch(`/api/crops/cultivate?t=${Date.now()}`, { cache: 'no-store' });
       const data = await res.json();
       if (data.success && data.cultivations) {
         setMyCultivations(data.cultivations);
@@ -1340,16 +1357,11 @@ function FarmerDashboardContent() {
                               </div>
                             </div>
                             <div className="w-20 h-20 rounded-lg ml-2 flex items-center justify-center overflow-hidden bg-gray-200 relative shrink-0">
-                              <img 
+                              <SafeImage 
                                 src={crop.image} 
                                 alt={crop.name} 
                                 className="w-full h-full object-cover z-10" 
-                                onError={(e) => { 
-                                  e.currentTarget.style.display = 'none'; 
-                                  e.currentTarget.nextElementSibling?.classList.remove('hidden'); 
-                                }} 
                               />
-                              <Sprout className="w-8 h-8 text-gray-400 absolute hidden z-0" />
                             </div>
                           </div>
                         </div>

@@ -608,9 +608,33 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
       category: "Poultry",
       imageUrl: "https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?w=500"
     }
-  ] as LivestockRecommendationRecord[]
+  ] as LivestockRecommendationRecord[],
+  cropProfiles: CROP_PROFILES_ARRAY.map((c, idx) => ({
+    id: c.id || `crop-${idx + 1}`,
+    name: c.name,
+    category: (c as any).category || "General Crop",
+    expectedYield: c.expectedYield,
+    growingPeriod: c.growingPeriod,
+    waterRequirement: c.waterRequirement,
+    fertilizer: c.fertilizer,
+    pesticide: c.pesticide,
+    imageUrl: c.imageUrl || `/images/crops/${c.name.toLowerCase().replace(/\s+/g, '-')}.jpg`
+  })) as any[]
 };
 (global as any).__AGRINOVA_STORE__ = globalStore;
+if (!globalStore.cropProfiles || globalStore.cropProfiles.length === 0) {
+  globalStore.cropProfiles = CROP_PROFILES_ARRAY.map((c, idx) => ({
+    id: c.id || `crop-${idx + 1}`,
+    name: c.name,
+    category: (c as any).category || "General Crop",
+    expectedYield: c.expectedYield,
+    growingPeriod: c.growingPeriod,
+    waterRequirement: c.waterRequirement,
+    fertilizer: c.fertilizer,
+    pesticide: c.pesticide,
+    imageUrl: c.imageUrl || `/images/crops/${c.name.toLowerCase().replace(/\s+/g, '-')}.jpg`
+  }));
+}
 
 // Ensure active seed user credentials in persistent globalStore
 const seedSync = [
@@ -1724,6 +1748,82 @@ export const inMemoryStore = {
   },
 
   getCropProfiles() {
-    return CROP_PROFILES_ARRAY;
+    return globalStore.cropProfiles || CROP_PROFILES_ARRAY;
+  },
+
+  getCropProfileByName(name: string) {
+    if (!name) return null;
+    const clean = name.trim().toLowerCase();
+    return (globalStore.cropProfiles || []).find((c: any) => 
+      (c.name || '').toLowerCase() === clean || (c.id || '').toLowerCase() === clean
+    ) || null;
+  },
+
+  updateCropProfile(idOrName: string, data: any) {
+    const clean = (idOrName || '').trim().toLowerCase();
+    const nameClean = (data?.name || '').trim().toLowerCase();
+    if (!globalStore.cropProfiles) {
+      globalStore.cropProfiles = [];
+    }
+
+    let existing = globalStore.cropProfiles.find((c: any) => 
+      (c.id && c.id.toLowerCase() === clean) ||
+      (c.name && c.name.toLowerCase() === clean) ||
+      (nameClean && c.name && c.name.toLowerCase() === nameClean)
+    );
+
+    if (!existing) {
+      existing = {
+        id: idOrName || `crop-${Date.now()}`,
+        name: data.name || "Crop",
+        category: data.category || "General Crop",
+        expectedYield: data.expectedYield || "Standard Yield",
+        growingPeriod: data.growingPeriod || "Seasonal",
+        waterRequirement: data.waterRequirement || 3,
+        fertilizer: data.fertilizer || "Organic Compost",
+        pesticide: data.pesticide || "Neem Oil",
+        imageUrl: data.imageUrl || `/images/crops/${(data.name || 'crop').toLowerCase().replace(/\s+/g, '-')}.jpg`,
+        ...data
+      };
+      globalStore.cropProfiles.push(existing);
+    } else {
+      Object.assign(existing, data);
+    }
+
+    return existing;
+  },
+
+  addCropProfile(data: any) {
+    if (!globalStore.cropProfiles) {
+      globalStore.cropProfiles = [];
+    }
+    const newCrop = {
+      id: data.id || `crop-${Date.now()}`,
+      name: data.name,
+      category: data.category || "General Crop",
+      expectedYield: data.expectedYield || "Standard Yield",
+      growingPeriod: data.growingPeriod || "Seasonal",
+      waterRequirement: data.waterRequirement || 3,
+      fertilizer: data.fertilizer || "Organic Compost",
+      pesticide: data.pesticide || "Neem Oil",
+      imageUrl: data.imageUrl || `/images/crops/${(data.name || 'crop').toLowerCase().replace(/\s+/g, '-')}.jpg`,
+      ...data
+    };
+    globalStore.cropProfiles.push(newCrop);
+    return newCrop;
+  },
+
+  deleteCropProfile(idOrName: string) {
+    if (!globalStore.cropProfiles) return false;
+    const clean = (idOrName || '').trim().toLowerCase();
+    const idx = globalStore.cropProfiles.findIndex((c: any) => 
+      (c.id && c.id.toLowerCase() === clean) ||
+      (c.name && c.name.toLowerCase() === clean)
+    );
+    if (idx > -1) {
+      globalStore.cropProfiles.splice(idx, 1);
+      return true;
+    }
+    return false;
   }
 };

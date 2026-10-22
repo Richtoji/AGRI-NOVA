@@ -27,8 +27,8 @@ export function AdminCropManagement() {
     setLoading(true);
     try {
       const [zonesRes, cropsRes] = await Promise.all([
-        fetch("/api/admin/zones"),
-        fetch("/api/admin/crops")
+        fetch(`/api/admin/zones?t=${Date.now()}`, { cache: "no-store" }),
+        fetch(`/api/admin/crops?t=${Date.now()}`, { cache: "no-store" })
       ]);
 
       if (zonesRes.ok) {
@@ -94,6 +94,12 @@ export function AdminCropManagement() {
 
   useEffect(() => {
     fetchData();
+
+    const handleUpdate = () => {
+      fetchData();
+    };
+    window.addEventListener("crop-data-updated", handleUpdate);
+    return () => window.removeEventListener("crop-data-updated", handleUpdate);
   }, []);
 
   // --- Handlers ---
@@ -136,8 +142,26 @@ export function AdminCropManagement() {
 
   const deleteItem = async (type: "zones" | "crops", id: string) => {
     if (!confirm(`Delete this ${type === "zones" ? "region" : "crop"}?`)) return;
-    const res = await fetch(`/api/admin/${type}?id=${id}`, { method: "DELETE" });
-    if (res.ok) fetchData();
+
+    if (type === "crops") {
+      setCrops(prev => prev.filter(c => c.id !== id));
+    } else {
+      setZones(prev => prev.filter(z => z.id !== id));
+    }
+
+    try {
+      const res = await fetch(`/api/admin/${type}?id=${id}`, { 
+        method: "DELETE",
+        credentials: "include",
+        headers: { "x-user-role": "ADMIN" }
+      });
+      if (res.ok && type === "crops") {
+        window.dispatchEvent(new CustomEvent('crop-data-updated'));
+      }
+    } catch (err) {
+      console.error(`Failed to delete ${type}:`, err);
+    }
+    fetchData();
   };
 
   const saveZone = async (e: any) => {
@@ -152,13 +176,15 @@ export function AdminCropManagement() {
     if (editingItem) {
       await fetch(`/api/admin/zones`, { 
         method: "PATCH", 
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-user-role": "ADMIN" },
+        credentials: "include",
         body: JSON.stringify({ id: editingItem.id, ...payload }) 
       });
     } else {
       await fetch(`/api/admin/zones`, { 
         method: "POST", 
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-user-role": "ADMIN" },
+        credentials: "include",
         body: JSON.stringify(payload) 
       });
     }
@@ -166,51 +192,98 @@ export function AdminCropManagement() {
     fetchData();
   };
 
-  const saveCrop = async (e: any) => {
-    e.preventDefault();
-    let finalImageUrl = cropForm.imageUrl;
-    
-    const fileInput = (e.target as HTMLFormElement).querySelector('input[type="file"]') as HTMLInputElement;
+  const processImageUpload = async (fileInput: HTMLInputElement | null, fallbackUrl: string): Promise<string> => {
     if (fileInput && fileInput.files && fileInput.files[0]) {
       const file = fileInput.files[0];
-      const formData = new FormData();
-      formData.append("file", file);
+      
+      // Try /api/upload
       try {
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
+        const uploadData = new FormData();
+        uploadData.append("file", file);
+        const uploadRes = await fetch("/api/upload", { 
+          method: "POST", 
+          body: uploadData,
+          credentials: "include",
+          headers: { "x-user-role": "ADMIN" }
         });
         if (uploadRes.ok) {
           const { url } = await uploadRes.json();
-          finalImageUrl = url;
+          if (url) return url;
         }
       } catch (err) {
-        console.error("Image upload failed", err);
+        console.warn("Upload endpoint failed, utilizing Base64 fallback:", err);
       }
+
+      // Base64 fallback ensures images always work even if filesystem or uploads endpoint fails
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          resolve((reader.result as string) || fallbackUrl);
+        };
+        reader.readAsDataURL(file);
+      });
     }
+    return fallbackUrl;
+  };
+
+  const saveCrop = async (e: any) => {
+    e.preventDefault();
+    const fileInput = (e.target as HTMLFormElement).querySelector('input[type="file"]') as HTMLInputElement | null;
+    const finalImageUrl = await processImageUpload(fileInput, cropForm.imageUrl);
 
     const payload = {
       ...cropForm,
       imageUrl: finalImageUrl,
       waterRequirement: parseFloat(cropForm.waterRequirement) || 3
     };
-    
+
+    // Optimistically update crops list so change shows immediately
     if (editingItem) {
-      await fetch(`/api/admin/crops`, { 
-        method: "PATCH", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editingItem.id, ...payload }) 
-      });
+      setCrops(prev => prev.map(c => 
+        (c.id === editingItem.id || c.name?.toLowerCase() === editingItem.name?.toLowerCase())
+          ? { ...c, ...payload }
+          : c
+      ));
     } else {
-      await fetch(`/api/admin/crops`, { 
-        method: "POST", 
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload) 
-      });
+      const tempId = `crop-${Date.now()}`;
+      setCrops(prev => [{ id: tempId, ...payload }, ...prev]);
     }
+
+    try {
+      let res: Response;
+      if (editingItem) {
+        res = await fetch(`/api/admin/crops`, { 
+          method: "PUT", 
+          headers: { 
+            "Content-Type": "application/json",
+            "x-user-role": "ADMIN"
+          },
+          credentials: "include",
+          body: JSON.stringify({ id: editingItem.id, ...payload }) 
+        });
+      } else {
+        res = await fetch(`/api/admin/crops`, { 
+          method: "POST", 
+          headers: { 
+            "Content-Type": "application/json",
+            "x-user-role": "ADMIN"
+          },
+          credentials: "include",
+          body: JSON.stringify(payload) 
+        });
+      }
+
+      if (res.ok) {
+        window.dispatchEvent(new CustomEvent('crop-data-updated'));
+      }
+    } catch (err) {
+      console.error("Failed to save crop:", err);
+    }
+
     setIsCropModalOpen(false);
     fetchData();
   };
+
 
   // Safe arrays for filtering
   const safeZones = Array.isArray(zones) ? zones : [];
@@ -500,7 +573,7 @@ export function AdminCropManagement() {
                 <label className="text-[11px] font-bold text-gray-700">Crop Photo</label>
                 <div className="flex items-center space-x-3">
                   {cropForm.imageUrl && (
-                    <img src={cropForm.imageUrl} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
+                    <SafeImage src={cropForm.imageUrl} alt="Preview" className="w-10 h-10 rounded-lg object-cover border border-gray-200" />
                   )}
                   <input 
                     type="file" 
@@ -512,7 +585,11 @@ export function AdminCropManagement() {
                           alert("Strict Validation Error: Only image files are allowed.");
                           return;
                         }
-                        setCropForm({ ...cropForm, imageUrl: URL.createObjectURL(file) });
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setCropForm(prev => ({ ...prev, imageUrl: (reader.result as string) || "" }));
+                        };
+                        reader.readAsDataURL(file);
                       }
                     }} 
                     className="w-full text-xs file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 cursor-pointer" 

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { X, Search, Leaf, Sprout, ArrowRight } from "lucide-react";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 interface PlantAnyCropModalProps {
   isOpen: boolean;
@@ -16,17 +17,33 @@ export function PlantAnyCropModal({ isOpen, onClose, onSelectCrop, onPlantCrop }
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All Crops");
 
+  const fetchCrops = () => {
+    setLoading(true);
+    fetch(`/api/crops?t=${Date.now()}`, { cache: 'no-store' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && Array.isArray(data.crops)) {
+          setCrops(data.crops);
+        }
+      })
+      .catch(err => console.error("Failed to load crops:", err))
+      .finally(() => setLoading(false));
+  };
+
   useEffect(() => {
-    if (isOpen && crops.length === 0) {
-      setLoading(true);
-      fetch('/api/crops')
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) setCrops(data.crops);
-        })
-        .finally(() => setLoading(false));
+    if (isOpen) {
+      fetchCrops();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      if (isOpen) fetchCrops();
+    };
+    window.addEventListener("crop-data-updated", handleUpdate);
+    return () => window.removeEventListener("crop-data-updated", handleUpdate);
+  }, [isOpen]);
+
 
   const categories = useMemo(() => {
     const cats = new Set(crops.map(c => c.category || "Uncategorized"));
@@ -102,7 +119,7 @@ export function PlantAnyCropModal({ isOpen, onClose, onSelectCrop, onPlantCrop }
                   <div className="flex items-center text-left mb-3">
                     <div className="w-12 h-12 rounded-xl bg-gray-100 mr-3 flex-shrink-0 overflow-hidden border border-gray-200">
                       {crop.imageUrl ? (
-                        <img src={crop.imageUrl} alt={crop.name} className="w-full h-full object-cover" />
+                        <SafeImage src={crop.imageUrl} alt={crop.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-green-600 bg-green-50"><Leaf className="w-5 h-5"/></div>
                       )}

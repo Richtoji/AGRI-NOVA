@@ -20,6 +20,7 @@ import {
   Clock
 } from "lucide-react";
 import { getCropKnowledge } from "@/data/cropKnowledge";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 interface PlantThisCropModalProps {
   isOpen: boolean;
@@ -152,7 +153,7 @@ export function PlantThisCropModal({
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center gap-4">
             <div className="w-16 h-16 rounded-xl overflow-hidden bg-gray-200 shrink-0 border border-gray-300 relative">
               {cropImage ? (
-                <img src={cropImage} alt={cropName} className="w-full h-full object-cover" />
+                <SafeImage src={cropImage} alt={cropName} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-green-600 bg-green-50">
                   <Sprout className="w-8 h-8" />

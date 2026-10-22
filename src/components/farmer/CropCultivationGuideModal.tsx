@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Sprout, Calendar, Droplets, ShieldAlert, Leaf, CheckCircle2, ChevronRight, AlertTriangle } from "lucide-react";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 interface CropCultivationGuideModalProps {
   isOpen: boolean;
@@ -21,7 +22,7 @@ export function CropCultivationGuideModal({ isOpen, onClose, cropName, isRecomme
   useEffect(() => {
     if (isOpen && cropName) {
       setLoading(true);
-      fetch(`/api/crops/guide?cropName=${encodeURIComponent(cropName)}`)
+      fetch(`/api/crops/guide?cropName=${encodeURIComponent(cropName)}&t=${Date.now()}`, { cache: 'no-store' })
         .then(res => res.json())
         .then(resData => {
           if (resData.success) {
@@ -47,7 +48,7 @@ export function CropCultivationGuideModal({ isOpen, onClose, cropName, isRecomme
         {/* Header */}
         <div className="relative h-48 bg-gray-100 rounded-t-2xl overflow-hidden shrink-0">
           {profile?.imageUrl ? (
-             <img src={profile.imageUrl} alt={cropName} className="w-full h-full object-cover" />
+             <SafeImage src={profile.imageUrl} alt={cropName} className="w-full h-full object-cover" />
           ) : (
              <div className="w-full h-full flex items-center justify-center bg-green-50 text-green-200">
                <Sprout className="w-24 h-24" />

@@ -3,8 +3,19 @@ import * as jose from 'jose';
 import { cookies } from 'next/headers';
 import { getCropKnowledge } from '@/data/cropKnowledge';
 import { prisma } from '@/lib/prisma';
+import { inMemoryStore } from '@/lib/data/inMemoryStore';
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+};
 
 const JWT_SECRET = (process.env.JWT_SECRET || 'super_secure_production_ready_secret_12345').trim();
+
 
 async function getUser() {
   if (!JWT_SECRET) return null;
@@ -26,11 +37,9 @@ async function getUser() {
   }
 }
 
-import { inMemoryStore } from '@/lib/data/inMemoryStore';
-
 export async function GET(request: Request) {
   const user = await getUser();
-  if (!user || user.role !== 'FARMER') return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+  if (!user || user.role !== 'FARMER') return NextResponse.json({ error: 'Unauthorized' }, { status: 403, headers: NO_CACHE_HEADERS });
 
   try {
     let rawCultivations = await (prisma as any).farmerCultivation.findMany({
@@ -59,6 +68,13 @@ export async function GET(request: Request) {
       const cultivations = rawCultivations.map((c: any) => {
         const cropName = c.cropProfile?.name || 'Crop';
         const knowledge = getCropKnowledge(cropName);
+        const memCrop = inMemoryStore.getCropProfileByName(cropName);
+
+        if (memCrop && c.cropProfile) {
+          if (memCrop.imageUrl) c.cropProfile.imageUrl = memCrop.imageUrl;
+          if (memCrop.expectedYield) c.cropProfile.expectedYield = memCrop.expectedYield;
+          if (memCrop.growingPeriod) c.cropProfile.growingPeriod = memCrop.growingPeriod;
+        }
 
         if (!c.cropProfile?.cultivationGuide || !c.cropProfile.cultivationGuide.cultivationStages || c.cropProfile.cultivationGuide.cultivationStages.length === 0) {
           c.cropProfile.cultivationGuide = {
@@ -80,14 +96,14 @@ export async function GET(request: Request) {
         return c;
       });
 
-      return NextResponse.json({ success: true, cultivations });
+      return NextResponse.json({ success: true, cultivations }, { headers: NO_CACHE_HEADERS });
     }
   } catch (error: any) {
     console.warn("Prisma fetch cultivations failed, using fallback:", error?.message);
   }
 
   const memoryCultivations = inMemoryStore.getCultivations(user.id);
-  return NextResponse.json({ success: true, cultivations: memoryCultivations });
+  return NextResponse.json({ success: true, cultivations: memoryCultivations }, { headers: NO_CACHE_HEADERS });
 }
 
 export async function POST(request: Request) {

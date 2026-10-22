@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { getCropKnowledge } from "@/data/cropKnowledge";
 import { CultivationImageUpload } from "@/components/farmer/CultivationImageUpload";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 interface CropCultivationProgressModuleProps {
   cultivations: any[];
@@ -231,7 +232,7 @@ export function CropCultivationProgressModule({
           <div className="flex items-center gap-3">
             <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0">
               {crop.imageUrl ? (
-                <img src={crop.imageUrl} alt={crop.name} className="w-full h-full object-cover" />
+                <SafeImage src={crop.imageUrl} alt={crop.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-green-600 bg-green-50">
                   <Sprout className="w-7 h-7" />

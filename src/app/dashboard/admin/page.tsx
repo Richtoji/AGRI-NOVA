@@ -35,6 +35,7 @@ import { AdminCropManagement } from "@/components/admin/AdminCropManagement";
 import { AdminSchemeManagement } from "@/components/admin/AdminSchemeManagement";
 import { ErrorBoundary } from "@/components/layout/ErrorBoundary";
 import { AdminCultivationMonitoring } from "@/components/admin/AdminCultivationMonitoring";
+import { SafeImage } from "@/components/ui/SafeImage";
 
 function AdminDashboardContent() {
   const router = useRouter();
@@ -413,7 +414,7 @@ function AdminDashboardContent() {
                         <div className="flex items-center space-x-3.5 min-w-0">
                           <div className="w-12 h-12 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
                             {c.cropProfile?.imageUrl ? (
-                              <img src={c.cropProfile.imageUrl} alt={c.cropProfile.name || c.cropName} className="w-full h-full object-cover" />
+                              <SafeImage src={c.cropProfile.imageUrl} alt={c.cropProfile.name || c.cropName} className="w-full h-full object-cover" />
                             ) : (
                               <Leaf className="w-6 h-6 text-emerald-600" />
                             )}

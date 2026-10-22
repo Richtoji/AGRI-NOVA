@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { getCropKnowledge } from "@/data/cropKnowledge";
 import { prisma } from "@/lib/prisma";
 import { KERALA_AGRO_CLIMATIC_ZONES, CROP_PROFILES, CROP_PROFILES_ARRAY } from "@/data/agroClimaticZones";
+import { inMemoryStore } from "@/lib/data/inMemoryStore";
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+const NO_CACHE_HEADERS = {
+  'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+};
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -9,7 +19,7 @@ export async function GET(request: Request) {
   const lngStr = searchParams.get("longitude") || searchParams.get("lon") || searchParams.get("lng");
 
   if (!latStr || !lngStr) {
-    return NextResponse.json({ error: "Missing latitude or longitude" }, { status: 400 });
+    return NextResponse.json({ error: "Missing latitude or longitude" }, { status: 400, headers: NO_CACHE_HEADERS });
   }
 
   try {
@@ -57,43 +67,36 @@ export async function GET(request: Request) {
     const zone = matchedZones[0] || KERALA_AGRO_CLIMATIC_ZONES[0];
     const topCrops = zone.majorCrops.slice(0, 2);
 
-    let cropProfiles: any[] = [];
+    let dbCropProfiles: any[] = [];
     try {
-      cropProfiles = await prisma.cropProfile.findMany({
+      dbCropProfiles = await (prisma as any).cropProfile.findMany({
         where: { name: { in: topCrops } }
       });
     } catch (e) {
-      cropProfiles = CROP_PROFILES_ARRAY.filter((p: any) => topCrops.includes(p.name));
+      dbCropProfiles = [];
     }
 
     const recommendations = topCrops.map((cropName: string) => {
-      let profile = cropProfiles.find(p => p.name === cropName);
+      // 1. Check inMemoryStore first (takes precedence for live admin updates/photos)
+      const memProfile = inMemoryStore.getCropProfileByName(cropName);
+      
+      // 2. Check DB profile
+      const dbProfile = dbCropProfiles.find(p => (p.name || '').toLowerCase() === cropName.toLowerCase());
+      
       const knowledge = getCropKnowledge(cropName);
 
-      if (!profile) {
-        profile = {
-          id: `profile_${cropName.toLowerCase().replace(/\s+/g, '_')}`,
-          name: cropName,
-          category: knowledge.category,
-          scientificName: knowledge.scientificName,
-          description: knowledge.description,
-          climateRequirements: knowledge.climateRequirements,
-          soilRequirements: knowledge.soilRequirements,
-          expectedYield: knowledge.expectedYield,
-          growingPeriod: knowledge.growingPeriod,
-          waterRequirement: knowledge.waterRequirement,
-          fertilizer: knowledge.fertilizer,
-          pesticide: knowledge.pesticide,
-          imageUrl: `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        } as any;
-      }
+      const effectiveImageUrl = memProfile?.imageUrl || dbProfile?.imageUrl || `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`;
+      const effectiveYield = memProfile?.expectedYield || dbProfile?.expectedYield || knowledge.expectedYield;
+      const effectivePeriod = memProfile?.growingPeriod || dbProfile?.growingPeriod || knowledge.growingPeriod;
+      const effectiveWater = memProfile?.waterRequirement ?? dbProfile?.waterRequirement ?? knowledge.waterRequirement;
+      const effectiveFertilizer = memProfile?.fertilizer || dbProfile?.fertilizer || knowledge.fertilizer;
+      const effectivePesticide = memProfile?.pesticide || dbProfile?.pesticide || knowledge.pesticide;
+      const effectiveId = memProfile?.id || dbProfile?.id || `profile_${cropName.toLowerCase().replace(/\s+/g, '_')}`;
       
       const isCashCrop = ["Rubber", "Cardamom", "Coffee", "Tea", "Black Pepper", "Cashew", "Arecanut"].includes(cropName);
       
       let metricLabel = isCashCrop ? "Expected Profit" : "Expected Yield";
-      let metricValue = profile.expectedYield || knowledge.expectedYield;
+      let metricValue = effectiveYield;
       let badgeLabel = isCashCrop ? "Maximum Profit" : "Maximum Yield";
       
       if (isCashCrop && !metricValue.includes("Lakh") && !metricValue.includes("₹")) {
@@ -101,16 +104,16 @@ export async function GET(request: Request) {
       }
 
       return {
-        id: profile.id,
+        id: effectiveId,
         name: cropName,
         badgeLabel,
         metricLabel,
         metricValue,
-        growingPeriod: profile.growingPeriod || knowledge.growingPeriod,
-        waterRequirement: profile.waterRequirement || knowledge.waterRequirement,
-        fertilizer: profile.fertilizer || knowledge.fertilizer,
-        pesticide: profile.pesticide || knowledge.pesticide,
-        image: profile.imageUrl || `/images/crops/${cropName.toLowerCase().replace(/\s+/g, '-')}.jpg`,
+        growingPeriod: effectivePeriod,
+        waterRequirement: effectiveWater,
+        fertilizer: effectiveFertilizer,
+        pesticide: effectivePesticide,
+        image: effectiveImageUrl,
         zoneName: zone.name,
         elevation: elevation
       };
@@ -120,26 +123,26 @@ export async function GET(request: Request) {
       zone: zone.name,
       elevation: elevation,
       recommendations
-    });
+    }, { headers: NO_CACHE_HEADERS });
 
   } catch (error) {
     console.error("Error generating crop recommendations:", error);
-    // Even in total catch block, return KERALA_AGRO_CLIMATIC_ZONES default recommendations
     const defaultZone = KERALA_AGRO_CLIMATIC_ZONES[0];
     const topCrops = defaultZone.majorCrops.slice(0, 2);
     const recs = topCrops.map(name => {
+      const memProfile = inMemoryStore.getCropProfileByName(name);
       const k = getCropKnowledge(name);
       return {
-        id: `profile_${name.toLowerCase().replace(/\s+/g, '_')}`,
+        id: memProfile?.id || `profile_${name.toLowerCase().replace(/\s+/g, '_')}`,
         name,
         badgeLabel: "Recommended Crop",
         metricLabel: "Expected Yield",
-        metricValue: k.expectedYield,
-        growingPeriod: k.growingPeriod,
-        waterRequirement: k.waterRequirement,
-        fertilizer: k.fertilizer,
-        pesticide: k.pesticide,
-        image: `/images/crops/${name.toLowerCase().replace(/\s+/g, '-')}.jpg`,
+        metricValue: memProfile?.expectedYield || k.expectedYield,
+        growingPeriod: memProfile?.growingPeriod || k.growingPeriod,
+        waterRequirement: memProfile?.waterRequirement ?? k.waterRequirement,
+        fertilizer: memProfile?.fertilizer || k.fertilizer,
+        pesticide: memProfile?.pesticide || k.pesticide,
+        image: memProfile?.imageUrl || `/images/crops/${name.toLowerCase().replace(/\s+/g, '-')}.jpg`,
         zoneName: defaultZone.name,
         elevation: 15
       };
@@ -149,6 +152,7 @@ export async function GET(request: Request) {
       zone: defaultZone.name,
       elevation: 15,
       recommendations: recs
-    });
+    }, { headers: NO_CACHE_HEADERS });
   }
 }
+
