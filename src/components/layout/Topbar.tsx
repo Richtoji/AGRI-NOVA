@@ -352,9 +352,9 @@ export const Topbar: React.FC = () => {
         ];
       case "BUYER":
         return [
-          { label: "Buyer Overview", href: "/dashboard/buyer", icon: Home },
-          { label: "Agri Marketplace", href: "/marketplace", icon: ShoppingBag },
-          { label: "My Orders & Escrow", href: "/dashboard/buyer", icon: ClipboardList },
+          { label: "Buyer Overview", href: "/dashboard/buyer?tab=overview", icon: Home },
+          { label: "Agri Marketplace", href: "/dashboard/buyer?tab=marketplace", icon: ShoppingBag },
+          { label: "My Orders & Escrow", href: "/dashboard/buyer?tab=orders", icon: ClipboardList },
           { label: "Full Account Profile", href: "/dashboard/profile", icon: User },
         ];
       case "EQUIPMENT_OWNER":

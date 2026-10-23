@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import { 
@@ -17,23 +18,24 @@ import {
   Eye, 
   RefreshCw, 
   Phone, 
-  Mail,
+  Mail, 
   FileText, 
   ChevronRight, 
   X, 
   Calendar, 
   Building2, 
-  ArrowUpRight,
-  TrendingUp,
-  AlertCircle,
-  Package,
-  Layers,
-  ThermometerSnowflake,
-  ExternalLink,
-  User
+  ArrowUpRight, 
+  TrendingUp, 
+  AlertCircle, 
+  Package, 
+  Layers, 
+  ThermometerSnowflake, 
+  ExternalLink, 
+  User 
 } from "lucide-react";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { MarketplaceFeed } from "@/components/marketplace/MarketplaceFeed";
 
 interface OrderItemData {
   id: string;
@@ -72,9 +74,24 @@ interface OrderData {
   deliveries?: DeliveryTaskData[];
 }
 
-export default function BuyerDashboard() {
+function BuyerDashboardContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+
   const { currentUser, openCart, addToCart } = useAuthRole();
-  const [activeTab, setActiveTab] = useState<"overview" | "orders" | "escrow" | "addresses">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "marketplace" | "orders" | "escrow" | "addresses">("overview");
+
+  useEffect(() => {
+    if (tabParam && ["overview", "marketplace", "orders", "escrow", "addresses"].includes(tabParam)) {
+      setActiveTab(tabParam as any);
+    }
+  }, [tabParam]);
+
+  const handleTabChange = (tab: "overview" | "marketplace" | "orders" | "escrow" | "addresses") => {
+    setActiveTab(tab);
+    router.push(`/dashboard/buyer?tab=${tab}`, { scroll: false });
+  };
   const [orders, setOrders] = useState<OrderData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -258,14 +275,15 @@ export default function BuyerDashboard() {
                 <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin text-gray-900" : ""}`} />
               </button>
 
-              <Link
-                href="/marketplace"
-                className="flex-1 sm:flex-initial px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1.5"
+              <button
+                type="button"
+                onClick={() => handleTabChange("marketplace")}
+                className="flex-1 sm:flex-initial px-4 py-2.5 bg-gray-900 hover:bg-gray-800 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
               >
                 <ShoppingBag className="w-4 h-4 mr-1" />
                 <span>Browse Marketplace</span>
                 <ArrowUpRight className="w-3.5 h-3.5 opacity-60" />
-              </Link>
+              </button>
             </div>
           </div>
 
@@ -345,7 +363,8 @@ export default function BuyerDashboard() {
           {/* ================= 3. SEGMENTED NAVIGATION TABS ================= */}
           <div className="flex border-b border-gray-200/80 gap-4 sm:gap-6 text-xs font-bold overflow-x-auto whitespace-nowrap">
             <button
-              onClick={() => setActiveTab("overview")}
+              type="button"
+              onClick={() => handleTabChange("overview")}
               className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
                 activeTab === "overview"
                   ? "border-gray-900 text-gray-900"
@@ -362,7 +381,24 @@ export default function BuyerDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab("orders")}
+              type="button"
+              onClick={() => handleTabChange("marketplace")}
+              className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
+                activeTab === "marketplace"
+                  ? "border-gray-900 text-gray-900"
+                  : "border-transparent text-gray-500 hover:text-gray-800"
+              }`}
+            >
+              <ShoppingBag className="w-4 h-4 text-emerald-600" />
+              <span>Agri Marketplace</span>
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] bg-emerald-100 text-emerald-800 font-bold">
+                Live
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabChange("orders")}
               className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
                 activeTab === "orders"
                   ? "border-gray-900 text-gray-900"
@@ -377,7 +413,8 @@ export default function BuyerDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab("escrow")}
+              type="button"
+              onClick={() => handleTabChange("escrow")}
               className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
                 activeTab === "escrow"
                   ? "border-gray-900 text-gray-900"
@@ -389,7 +426,8 @@ export default function BuyerDashboard() {
             </button>
 
             <button
-              onClick={() => setActiveTab("addresses")}
+              type="button"
+              onClick={() => handleTabChange("addresses")}
               className={`pb-3 transition-all flex items-center space-x-2 border-b-2 -mb-[1px] shrink-0 cursor-pointer ${
                 activeTab === "addresses"
                   ? "border-gray-900 text-gray-900"
@@ -400,6 +438,11 @@ export default function BuyerDashboard() {
               <span>Delivery Hubs</span>
             </button>
           </div>
+
+          {/* ================= TAB: MARKETPLACE ================= */}
+          {activeTab === "marketplace" && (
+            <MarketplaceFeed />
+          )}
 
           {/* ================= TAB 1: OVERVIEW & LIVE SHIPMENT ================= */}
           {activeTab === "overview" && (
@@ -623,12 +666,13 @@ export default function BuyerDashboard() {
                   <p className="text-xs text-gray-500 max-w-sm mx-auto">
                     All your previous agricultural shipments have been delivered and inspected. Explore the marketplace to initiate fresh farm procurements.
                   </p>
-                  <Link
-                    href="/marketplace"
-                    className="inline-flex items-center px-4 py-2 bg-gray-900 text-white font-bold text-xs rounded-xl hover:bg-gray-800 transition-colors mt-2"
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange("marketplace")}
+                    className="inline-flex items-center px-4 py-2 bg-gray-900 text-white font-bold text-xs rounded-xl hover:bg-gray-800 transition-colors mt-2 cursor-pointer"
                   >
                     Start Procurement
-                  </Link>
+                  </button>
                 </div>
               )}
 
@@ -640,8 +684,9 @@ export default function BuyerDashboard() {
                     <span>Recent Procurement Orders</span>
                   </h3>
                   <button
-                    onClick={() => setActiveTab("orders")}
-                    className="text-xs font-bold text-blue-600 hover:underline flex items-center"
+                    type="button"
+                    onClick={() => handleTabChange("orders")}
+                    className="text-xs font-bold text-blue-600 hover:underline flex items-center cursor-pointer"
                   >
                     <span>View All ({orders.length})</span>
                     <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
@@ -1115,5 +1160,18 @@ export default function BuyerDashboard() {
         </div>
       </AppLayout>
     </RouteGuard>
+  );
+}
+
+export default function BuyerDashboard() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+        <div className="w-12 h-12 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin" />
+        <p className="mt-4 text-sm font-semibold text-gray-500">Loading Buyer Module...</p>
+      </div>
+    }>
+      <BuyerDashboardContent />
+    </Suspense>
   );
 }

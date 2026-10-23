@@ -93,10 +93,10 @@ export const Sidebar: React.FC = () => {
         ];
       case "BUYER":
         return [
-          { label: "Dashboard", href: "/dashboard/buyer", icon: <Home className="w-4 h-4" /> },
-          { label: "Marketplace", href: "/marketplace", icon: <ShoppingBag className="w-4 h-4" /> },
+          { label: "Dashboard", href: "/dashboard/buyer?tab=overview", icon: <Home className="w-4 h-4" /> },
+          { label: "Marketplace", href: "/dashboard/buyer?tab=marketplace", icon: <ShoppingBag className="w-4 h-4" /> },
           { label: "Cart", action: toggleCart, icon: <ShoppingCart className="w-4 h-4" /> },
-          { label: "My Orders", href: "/dashboard/buyer", icon: <ClipboardList className="w-4 h-4" /> },
+          { label: "My Orders", href: "/dashboard/buyer?tab=orders", icon: <ClipboardList className="w-4 h-4" /> },
           { label: "Profile", href: "/dashboard/profile", icon: <User className="w-4 h-4" /> },
         ];
       case "EQUIPMENT_OWNER":
@@ -174,7 +174,7 @@ export const Sidebar: React.FC = () => {
               
               if (itemTab) {
                 // If it has a tab param, it's active if the current tab matches and pathname matches
-                isActive = pathname === itemUrl.pathname && currentTab === itemTab;
+                isActive = pathname === itemUrl.pathname && (currentTab === itemTab || (!searchParams.has('tab') && (itemTab === 'overview' || itemTab === 'dashboard')));
               } else if (item.label === 'Dashboard') {
                 // Dashboard is active if pathname matches and there's no tab or tab is 'dashboard'
                 isActive = pathname === item.href && (currentTab === 'dashboard' || !searchParams.has('tab'));
