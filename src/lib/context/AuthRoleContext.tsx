@@ -27,9 +27,9 @@ interface AuthRoleContextType {
   currentRole: RoleType;
   currentUser: UserProfile | null;
   isLoggedIn: boolean;
-  login: (email: string, password: string, role: RoleType) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string, role?: RoleType) => Promise<{ success: boolean; user?: any; error?: string }>;
   registerUser: (name: string, email: string, phone: string, role: RoleType, password?: string, confirmPassword?: string, roleMetadata?: string, avatarBase64?: string) => Promise<{ success: boolean; error?: string }>;
-  updateProfile: (name: string, email: string, phone: string, avatarBase64?: string) => Promise<{ success: boolean; error?: string }>;
+  updateProfile: (name: string, email: string, phone: string, avatarBase64?: string, avatarUrl?: string) => Promise<{ success: boolean; error?: string; user?: any }>;
   logout: () => Promise<void>;
   cartCount: number;
   cartItems: CartItem[];
@@ -218,20 +218,63 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  const updateProfile = async (name: string, email: string, phone: string, avatarBase64?: string) => {
+  // Global avatar update synchronization listener
+  useEffect(() => {
+    const handleAvatarBroadcast = (event: any) => {
+      const newAvatarUrl = event?.detail?.avatarUrl;
+      if (newAvatarUrl) {
+        setCurrentUser(prev => (prev ? { ...prev, avatarUrl: newAvatarUrl } : null));
+      }
+    };
+    if (typeof window !== "undefined") {
+      window.addEventListener("agri_nova_avatar_updated", handleAvatarBroadcast);
+    }
+    return () => {
+      if (typeof window !== "undefined") {
+        window.removeEventListener("agri_nova_avatar_updated", handleAvatarBroadcast);
+      }
+    };
+  }, []);
+
+  const updateProfile = async (
+    name: string,
+    email: string,
+    phone: string,
+    avatarBase64?: string,
+    avatarUrl?: string
+  ): Promise<{ success: boolean; error?: string; user?: any }> => {
     if (!currentUser) return { success: false, error: "Not logged in" };
     try {
+      const finalAvatar = avatarUrl || avatarBase64;
       const res = await fetch("/api/auth/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, phone, avatarBase64 })
+        body: JSON.stringify({
+          name,
+          email,
+          phone,
+          avatarBase64: avatarBase64 || avatarUrl,
+          avatarUrl: finalAvatar
+        })
       });
       const data = await res.json();
       if (!res.ok) {
         return { success: false, error: data.error || "Failed to update profile." };
       }
-      setCurrentUser(data.user);
-      return { success: true };
+      if (data.user) {
+        setCurrentUser(data.user);
+        try {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(
+              new CustomEvent("agri_nova_avatar_updated", {
+                detail: { avatarUrl: data.user.avatarUrl }
+              })
+            );
+            localStorage.setItem("agri_nova_user_avatar", data.user.avatarUrl || "");
+          }
+        } catch (_) {}
+      }
+      return { success: true, user: data.user };
     } catch (e) {
       return { success: false, error: "Network error." };
     }

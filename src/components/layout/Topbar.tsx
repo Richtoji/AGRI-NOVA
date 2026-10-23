@@ -859,6 +859,9 @@ export const Topbar: React.FC = () => {
                   src={displayAvatar}
                   alt={displayUserName}
                   className="w-8 h-8 rounded-full object-cover border border-gray-200 group-hover:ring-2 group-hover:ring-emerald-500 transition-all"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = defaultAvatar;
+                  }}
                 />
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
               </div>
@@ -905,6 +908,9 @@ export const Topbar: React.FC = () => {
                       src={displayAvatar}
                       alt={displayUserName}
                       className="w-12 h-12 rounded-2xl object-cover border-2 border-white shadow-md shrink-0"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = defaultAvatar;
+                      }}
                     />
                     <div className="min-w-0 flex-1">
                       <h4 className="text-sm font-black text-white truncate leading-tight">
@@ -1236,6 +1242,9 @@ export const Topbar: React.FC = () => {
                         src={displayAvatar}
                         alt={displayUserName}
                         className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover border-2 border-white shadow-md"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = defaultAvatar;
+                        }}
                       />
                       <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-400 border-2 border-white rounded-full"></span>
                     </div>
@@ -1457,6 +1466,9 @@ export const Topbar: React.FC = () => {
                   src={displayAvatar}
                   alt={displayUserName}
                   className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = defaultAvatar;
+                  }}
                 />
                 <div className="min-w-0">
                   <h4 className="text-xs font-bold text-gray-900 truncate">{displayUserName}</h4>

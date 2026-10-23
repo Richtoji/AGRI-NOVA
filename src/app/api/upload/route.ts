@@ -9,7 +9,7 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
-const ALLOWED_UPLOAD_ROLES = ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT", "EQUIPMENT_OWNER", "FARMER"];
+const ALLOWED_UPLOAD_ROLES = ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT", "EQUIPMENT_OWNER", "FARMER", "BUYER", "DELIVERY_PARTNER"];
 
 async function checkAdminAuth(request?: Request): Promise<boolean> {
   try {
@@ -20,14 +20,13 @@ async function checkAdminAuth(request?: Request): Promise<boolean> {
 
     const token = (await cookies()).get("auth_token")?.value;
     if (!token) {
-      // If roleHeader is present and authorized, allow upload
       if (roleHeader && ALLOWED_UPLOAD_ROLES.includes(roleHeader)) return true;
       return false;
     }
 
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
-      if (decoded && ALLOWED_UPLOAD_ROLES.includes(decoded.role)) {
+      if (decoded && (ALLOWED_UPLOAD_ROLES.includes(decoded.role) || decoded.userId)) {
         return true;
       }
     } catch {

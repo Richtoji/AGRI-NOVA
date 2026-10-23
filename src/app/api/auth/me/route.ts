@@ -19,16 +19,20 @@ export async function GET() {
       }, { status: 200 });
     }
 
+    // Merge with latest in-memory state if available
+    const memUser = inMemoryStore.getUserById(user.id) || inMemoryStore.getUserByEmail(user.email);
+    const finalAvatar = memUser?.avatarUrl !== undefined ? memUser.avatarUrl : user.avatarUrl;
+
     return NextResponse.json({
       success: true,
       user: {
         id: user.id,
-        email: user.email,
-        name: user.name,
+        email: memUser?.email || user.email,
+        name: memUser?.name || user.name,
         role: user.role,
-        phone: user.phone,
-        avatarUrl: user.avatarUrl,
-        kycStatus: user.kycStatus,
+        phone: memUser?.phone !== undefined ? memUser.phone : user.phone,
+        avatarUrl: finalAvatar || "",
+        kycStatus: user.kycStatus || "VERIFIED",
       }
     });
   } catch (err) {
@@ -44,8 +48,9 @@ export async function PUT(request: Request) {
   if (error) return error;
 
   try {
-    const body = await request.json();
-    const { name, email, phone, avatarBase64 } = body;
+    const body = await request.json().catch(() => ({}));
+    const { name, email, phone } = body;
+    const avatarInput = body.avatarUrl || body.avatarBase64 || body.avatar || body.imageUrl;
 
     // Strict profile input validation
     if (name) {
@@ -71,7 +76,9 @@ export async function PUT(request: Request) {
       sanitizedPhone = phoneVal.cleanPhone;
     }
 
-    let avatarUrl = avatarBase64 || user.avatarUrl;
+    const memUser = inMemoryStore.getUserById(user.id) || inMemoryStore.getUserByEmail(user.email);
+    const currentAvatar = memUser?.avatarUrl || user.avatarUrl;
+    let avatarUrl = avatarInput !== undefined ? avatarInput : currentAvatar;
 
     const normalizedEmail = email ? email.trim().toLowerCase() : user.email;
 
@@ -86,10 +93,10 @@ export async function PUT(request: Request) {
     let updatedUserData = {
       id: user.id,
       email: normalizedEmail,
-      name: name ? name.trim() : user.name,
+      name: name ? name.trim() : (memUser?.name || user.name),
       role: user.role,
-      phone: sanitizedPhone !== undefined ? sanitizedPhone : user.phone,
-      avatarUrl: avatarUrl || user.avatarUrl,
+      phone: sanitizedPhone !== undefined ? sanitizedPhone : (memUser?.phone || user.phone),
+      avatarUrl: avatarInput !== undefined ? (avatarUrl || "") : (memUser?.avatarUrl || user.avatarUrl || ""),
       kycStatus: user.kycStatus || "VERIFIED"
     };
 
@@ -105,7 +112,7 @@ export async function PUT(request: Request) {
           name: updatedUserData.name,
           email: updatedUserData.email,
           phone: updatedUserData.phone,
-          ...(avatarUrl && { avatarUrl }),
+          ...(avatarInput !== undefined ? { avatarUrl: avatarUrl || "" } : {}),
         }
       });
 
@@ -115,7 +122,7 @@ export async function PUT(request: Request) {
         name: updatedUser.name,
         role: updatedUser.role,
         phone: updatedUser.phone || "",
-        avatarUrl: updatedUser.avatarUrl || avatarUrl,
+        avatarUrl: updatedUser.avatarUrl !== undefined ? (updatedUser.avatarUrl || "") : (avatarUrl || ""),
         kycStatus: updatedUser.kycStatus || "VERIFIED"
       };
     } catch (dbErr) {

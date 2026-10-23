@@ -19,7 +19,10 @@ import {
   Loader2,
   Check,
   AlertCircle,
-  X
+  X,
+  Camera,
+  Trash2,
+  UploadCloud
 } from "lucide-react";
 import {
   validateFullName,
@@ -37,6 +40,7 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState(currentUser?.phone || "");
   const [email, setEmail] = useState(currentUser?.email || "");
   const [avatarBase64, setAvatarBase64] = useState<string>("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileSuccessMsg, setProfileSuccessMsg] = useState<string | null>(null);
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
@@ -47,6 +51,7 @@ export default function ProfilePage() {
       if (currentUser.name) setName(currentUser.name);
       if (currentUser.phone) setPhone(currentUser.phone);
       if (currentUser.email) setEmail(currentUser.email);
+      if (currentUser.avatarUrl && !avatarBase64) setAvatarBase64(currentUser.avatarUrl);
     }
   }, [currentUser]);
 
@@ -96,6 +101,141 @@ export default function ProfilePage() {
     return Object.keys(errors).length === 0;
   };
 
+  // Client-side image compression to ~320x320 JPEG (<30KB)
+  const compressAvatar = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxDim = 320;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxDim) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            }
+          } else {
+            if (height > maxDim) {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(e.target?.result as string);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.85));
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      alert("Strict Validation Error: Only image files (PNG, JPG, WEBP) are allowed.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Strict Validation Error: Image file must be under 10MB.");
+      return;
+    }
+
+    setAvatarUploading(true);
+    setProfileSuccessMsg(null);
+
+    try {
+      // 1. Compress client-side
+      const compressedDataUrl = await compressAvatar(file);
+      if (!compressedDataUrl) {
+        setAvatarUploading(false);
+        return;
+      }
+      setAvatarBase64(compressedDataUrl);
+
+      // 2. Try uploading via /api/upload
+      let savedUrl = compressedDataUrl;
+      try {
+        const blob = await (await fetch(compressedDataUrl)).blob();
+        const formData = new FormData();
+        formData.append("file", blob, `avatar_${Date.now()}.jpg`);
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        });
+        if (uploadRes.ok) {
+          const uploadData = await uploadRes.json();
+          if (uploadData.url) {
+            savedUrl = uploadData.url;
+          }
+        }
+      } catch (uploadErr) {
+        console.warn("Upload route fallback to compressed base64:", uploadErr);
+      }
+
+      // 3. Immediately persist profile with new avatar
+      const currentUserName = name || currentUser?.name || "User";
+      const currentUserEmail = email || currentUser?.email || "";
+      const currentUserPhone = phone || currentUser?.phone || "";
+
+      const res = await updateProfile(
+        currentUserName,
+        currentUserEmail,
+        currentUserPhone,
+        savedUrl,
+        savedUrl
+      );
+
+      if (res.success) {
+        setProfileSuccessMsg("Profile photo updated and saved across the entire website!");
+        setTimeout(() => setProfileSuccessMsg(null), 5000);
+      } else {
+        alert(res.error || "Could not save profile photo. Please try again.");
+      }
+    } catch (err: any) {
+      console.error("Avatar change error:", err);
+      alert("Error processing photo. Please try another image.");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    if (!confirm("Are you sure you want to reset your profile picture to default initials?")) return;
+    setAvatarUploading(true);
+    setAvatarBase64("");
+    const currentUserName = name || currentUser?.name || "User";
+    const currentUserEmail = email || currentUser?.email || "";
+    const currentUserPhone = phone || currentUser?.phone || "";
+    const resetAvatar = defaultAvatar;
+
+    const res = await updateProfile(
+      currentUserName,
+      currentUserEmail,
+      currentUserPhone,
+      resetAvatar,
+      resetAvatar
+    );
+    setAvatarUploading(false);
+    if (res.success) {
+      setProfileSuccessMsg("Profile photo reset to default initials!");
+      setTimeout(() => setProfileSuccessMsg(null), 4000);
+    }
+  };
+
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     setProfileSuccessMsg(null);
@@ -103,7 +243,8 @@ export default function ProfilePage() {
     if (!validateProfileForm()) return;
 
     setProfileLoading(true);
-    const result = await updateProfile(name, email, phone, avatarBase64);
+    const finalAvatar = avatarBase64 || currentUser?.avatarUrl;
+    const result = await updateProfile(name, email, phone, finalAvatar, finalAvatar);
     setProfileLoading(false);
 
     if (result.success) {
@@ -161,57 +302,136 @@ export default function ProfilePage() {
     <AppLayout>
       <div className="space-y-6">
 
-        {/* Header */}
-        <div className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
-          <div className="flex items-center space-x-4">
-            <div className="relative group">
-              <img
-                src={avatarBase64 || currentUser?.avatarUrl || defaultAvatar}
-                alt={name}
-                className="w-16 h-16 rounded-full object-cover border-2 border-white shadow-sm ring-2 ring-gray-100"
-              />
-              <label className="absolute inset-0 flex items-center justify-center bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity text-xs font-semibold">
-                Edit
-                <input
-                  type="file"
-                  accept="image/png, image/jpeg, image/jpg, image/webp"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      if (!file.type.startsWith("image/")) {
-                        alert("Strict Validation Error: Only image files (PNG, JPG, WEBP) are allowed.");
-                        return;
-                      }
-                      if (file.size > 5 * 1024 * 1024) {
-                        alert("Strict Validation Error: Image size cannot exceed 5 MB.");
-                        return;
-                      }
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setAvatarBase64(reader.result as string);
-                      };
-                      reader.readAsDataURL(file);
-                    }
+        {/* Header with Avatar and Actions */}
+        <div className="bg-white border border-gray-100 rounded-2xl p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+            {/* Interactive Avatar Container */}
+            <div className="relative group shrink-0">
+              <div className="relative w-20 h-20 rounded-2xl overflow-hidden border-2 border-emerald-500/20 shadow-md ring-4 ring-gray-50 bg-gray-100">
+                <img
+                  src={avatarBase64 || currentUser?.avatarUrl || defaultAvatar}
+                  alt={name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = defaultAvatar;
                   }}
                 />
+
+                {/* Uploading Spinner Overlay */}
+                {avatarUploading && (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex flex-col items-center justify-center text-white z-20 animate-fadeIn">
+                    <Loader2 className="w-5 h-5 animate-spin text-emerald-400 mb-1" />
+                    <span className="text-[10px] font-bold">Saving...</span>
+                  </div>
+                )}
+
+                {/* Hover overlay on desktop */}
+                {!avatarUploading && (
+                  <label
+                    htmlFor="profile-avatar-input"
+                    className="absolute inset-0 bg-black/40 text-white flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-10"
+                    title="Click to change profile photo"
+                  >
+                    <Camera className="w-5 h-5 mb-0.5 text-white" />
+                    <span className="text-[9px] font-bold uppercase tracking-wider">Change</span>
+                  </label>
+                )}
+              </div>
+
+              {/* Camera badge indicator */}
+              <label
+                htmlFor="profile-avatar-input"
+                className="absolute -bottom-1 -right-1 p-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-md border-2 border-white cursor-pointer transition-transform hover:scale-110 z-20"
+                title="Upload new profile picture"
+              >
+                <Camera className="w-3.5 h-3.5" />
               </label>
+
+              <input
+                id="profile-avatar-input"
+                type="file"
+                accept="image/png, image/jpeg, image/jpg, image/webp"
+                className="hidden"
+                disabled={avatarUploading}
+                onChange={handleAvatarFileChange}
+              />
             </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-2xl font-black text-gray-900 leading-tight mb-1">{name}</h1>
-                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">
+
+            {/* User Meta Information & Fast Actions */}
+            <div className="space-y-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="text-2xl font-black text-gray-900 leading-tight">{name || currentUser?.name || "User"}</h1>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-wide">
                   {currentUser?.role || "FARMER"}
                 </span>
+                <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center space-x-1">
+                  <ShieldCheck className="w-3.5 h-3.5 mr-0.5 text-emerald-600" />
+                  <span>KYC VERIFIED</span>
+                </span>
               </div>
-              <p className="text-xs text-gray-500">Manage your credentials, password security, and active sessions</p>
+              <p className="text-xs text-gray-500">
+                Manage your credentials, photo, phone, and account security
+              </p>
+
+              {/* Direct Avatar Action Buttons */}
+              <div className="flex items-center gap-2 pt-1">
+                <label
+                  htmlFor="profile-avatar-input"
+                  className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl text-xs font-semibold bg-gray-100 hover:bg-gray-200/80 text-gray-800 border border-gray-200 transition-colors cursor-pointer ${
+                    avatarUploading ? "opacity-50 pointer-events-none" : ""
+                  }`}
+                >
+                  <UploadCloud className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Change Photo</span>
+                </label>
+
+                {(avatarBase64 || currentUser?.avatarUrl) && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveAvatar}
+                    disabled={avatarUploading}
+                    className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-xl text-xs font-semibold text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 transition-colors cursor-pointer"
+                    title="Reset photo to default initials"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Reset</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
-          <span className="text-[10px] font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center space-x-1">
-            <ShieldCheck className="w-3.5 h-3.5 mr-1 text-emerald-600" />
-            KYC VERIFIED
-          </span>
+
+          {/* Persistent sync badge */}
+          <div className="hidden lg:flex flex-col items-end text-right">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Account Sync</span>
+            <div className="flex items-center space-x-1.5 text-xs text-emerald-600 font-semibold mt-0.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>All changes live on website</span>
+            </div>
+          </div>
         </div>
+
+        {/* Global Success Notification banner if triggered */}
+        {profileSuccessMsg && (
+          <div className="p-4 rounded-2xl bg-emerald-50/90 border border-emerald-200 text-emerald-900 flex items-center justify-between shadow-xs animate-fadeIn">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-emerald-950">Update Successful</p>
+                <p className="text-xs text-emerald-700">{profileSuccessMsg}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setProfileSuccessMsg(null)}
+              className="text-emerald-700 hover:text-emerald-900 p-1.5 rounded-lg hover:bg-emerald-100 transition-colors cursor-pointer"
+              title="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 

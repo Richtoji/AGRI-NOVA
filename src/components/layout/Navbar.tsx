@@ -162,6 +162,9 @@ export const Navbar: React.FC = () => {
                   src={currentUser.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || "User")}&background=f3f4f6&color=111827`}
                   alt={currentUser.name || "User"}
                   className="w-8 h-8 rounded-full object-cover border border-gray-100 shrink-0"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.name || "User")}&background=f3f4f6&color=111827`;
+                  }}
                 />
                 <div className="flex flex-col text-xs leading-tight whitespace-nowrap">
                   <span className="font-semibold text-gray-900 truncate max-w-[120px]">{currentUser.name || "User"}</span>
