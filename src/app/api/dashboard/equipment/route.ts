@@ -75,6 +75,17 @@ export async function POST(request: Request) {
         }
       });
 
+      inMemoryStore.addEquipment(userId, {
+        id: newEquipment.id,
+        name: name.trim(),
+        category: category.trim(),
+        dailyRate: Number(dailyRate),
+        hourlyRate: Number(hourlyRate),
+        imageUrl: imageUrl.trim(),
+        locationName: locationName.trim(),
+        available: available !== undefined ? available : true,
+      });
+
       return NextResponse.json({ success: true, equipment: newEquipment });
     } catch (dbErr) {
       const newEquipment = inMemoryStore.addEquipment(userId, {

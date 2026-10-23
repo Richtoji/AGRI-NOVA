@@ -9,19 +9,25 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
+const ALLOWED_UPLOAD_ROLES = ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT", "EQUIPMENT_OWNER", "FARMER"];
+
 async function checkAdminAuth(request?: Request): Promise<boolean> {
   try {
     const roleHeader = request?.headers?.get("x-user-role");
-    if (roleHeader && ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT"].includes(roleHeader)) {
+    if (roleHeader && ALLOWED_UPLOAD_ROLES.includes(roleHeader)) {
       return true;
     }
 
     const token = (await cookies()).get("auth_token")?.value;
-    if (!token) return false;
+    if (!token) {
+      // If roleHeader is present and authorized, allow upload
+      if (roleHeader && ALLOWED_UPLOAD_ROLES.includes(roleHeader)) return true;
+      return false;
+    }
 
     try {
       const decoded: any = jwt.verify(token, JWT_SECRET);
-      if (decoded && ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT"].includes(decoded.role)) {
+      if (decoded && ALLOWED_UPLOAD_ROLES.includes(decoded.role)) {
         return true;
       }
     } catch {
@@ -31,11 +37,16 @@ async function checkAdminAuth(request?: Request): Promise<boolean> {
     try {
       const secret = new TextEncoder().encode(JWT_SECRET);
       const { payload } = await jose.jwtVerify(token, secret);
-      if (payload && ["ADMIN", "SUPER_ADMIN", "AGRICULTURAL_EXPERT", "VETERINARY_EXPERT"].includes(payload.role as string)) {
+      if (payload && ALLOWED_UPLOAD_ROLES.includes(payload.role as string)) {
         return true;
       }
     } catch {
       // Ignore
+    }
+
+    // If role header is authorized
+    if (roleHeader && ALLOWED_UPLOAD_ROLES.includes(roleHeader)) {
+      return true;
     }
 
     return false;

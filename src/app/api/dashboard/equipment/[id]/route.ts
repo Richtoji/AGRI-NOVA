@@ -29,20 +29,25 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     const body = await request.json().catch(() => ({}));
     const { name, category, dailyRate, hourlyRate, imageUrl, locationName, available } = body;
 
+    const updateData: any = {
+      ...(name && { name: name.trim() }),
+      ...(category && { category: category.trim() }),
+      ...(dailyRate !== undefined && { dailyRate: Number(dailyRate) }),
+      ...(hourlyRate !== undefined && { hourlyRate: Number(hourlyRate) }),
+      ...(imageUrl && { imageUrl: imageUrl.trim() }),
+      ...(locationName && { locationName: locationName.trim() }),
+      ...(available !== undefined && { available: Boolean(available) }),
+    };
+
+    // Keep inMemoryStore always synchronized
+    const memoryUpdated = inMemoryStore.updateEquipment(id, userId, updateData);
+
     try {
       const existing = await prisma.equipment.findUnique({ where: { id } });
       if (existing) {
         const updatedEquipment = await prisma.equipment.update({
           where: { id },
-          data: {
-            ...(name && { name: name.trim() }),
-            ...(category && { category: category.trim() }),
-            ...(dailyRate && { dailyRate: Number(dailyRate) }),
-            ...(hourlyRate && { hourlyRate: Number(hourlyRate) }),
-            ...(imageUrl && { imageUrl: imageUrl.trim() }),
-            ...(locationName && { locationName: locationName.trim() }),
-            ...(available !== undefined && { available }),
-          }
+          data: updateData
         });
         return NextResponse.json({ success: true, equipment: updatedEquipment });
       }
@@ -50,7 +55,10 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       console.warn("DB equipment update failed, using inMemoryStore:", dbErr);
     }
 
-    const memoryUpdated = inMemoryStore.updateEquipment(id, userId, body);
+    if (!memoryUpdated) {
+      return NextResponse.json({ error: 'Equipment not found.' }, { status: 404 });
+    }
+
     return NextResponse.json({ success: true, equipment: memoryUpdated });
   } catch (error) {
     console.error('Failed to update equipment:', error);

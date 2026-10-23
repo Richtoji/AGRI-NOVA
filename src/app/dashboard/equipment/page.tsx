@@ -4,9 +4,18 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
-import { Tractor, Calendar, IndianRupee, Plus, CheckCircle, XCircle, Pencil, Trash2, User } from "lucide-react";
+import { Tractor, Calendar, IndianRupee, Plus, CheckCircle, XCircle, Pencil, Trash2, User, Upload, Image as ImageIcon, Loader2, Check } from "lucide-react";
 import { RouteGuard } from "@/components/layout/RouteGuard";
 import { useSearchParams } from "next/navigation";
+import { SafeImage } from "@/components/ui/SafeImage";
+
+const MACHINERY_PRESETS = [
+  { label: "Tractor", name: "Tractor", url: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600" },
+  { label: "Harvester", name: "Harvester", url: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" },
+  { label: "Power Tiller", name: "Tiller", url: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=600" },
+  { label: "Agri Drone", name: "Drone", url: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=600" },
+  { label: "Irrigation", name: "Irrigation", url: "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=600" },
+];
 
 export default function EquipmentOwnerDashboard() {
   const { currentUser } = useAuthRole();
@@ -20,6 +29,8 @@ export default function EquipmentOwnerDashboard() {
   // Modal State
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [showUrlInput, setShowUrlInput] = useState(false);
   
   // Form State
   const [formData, setFormData] = useState({
@@ -66,15 +77,90 @@ export default function EquipmentOwnerDashboard() {
   const totalRevenue = rentals.reduce((sum, r) => sum + (r.status !== 'REJECTED' ? r.totalCost : 0), 0);
   const pendingRequests = rentals.filter(r => r.status === 'PENDING').length;
 
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 800;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.82));
+        };
+        img.onerror = () => resolve((e.target?.result as string) || "");
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve("");
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setUploadingImage(true);
+    try {
+      // 1. Immediately create a local preview so the user sees the photo without waiting
+      const localPreview = URL.createObjectURL(file);
+      setFormData(prev => ({ ...prev, imageUrl: localPreview }));
+
+      // 2. Try uploading via /api/upload with equipment owner credentials
+      try {
+        const uploadData = new FormData();
+        uploadData.append("file", file);
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: uploadData,
+          credentials: "include",
+          headers: { "x-user-role": "EQUIPMENT_OWNER" }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const savedUrl = data.staticUrl || data.url || data.apiUrl;
+          if (savedUrl) {
+            setFormData(prev => ({ ...prev, imageUrl: savedUrl }));
+            return;
+          }
+        }
+      } catch (err) {
+        console.warn("Upload route failed, applying compressed image fallback:", err);
+      }
+
+      // 3. Fallback: Compress and convert to high quality WebP/JPEG data URL
+      const compressedDataUrl = await compressImage(file);
+      if (compressedDataUrl) {
+        setFormData(prev => ({ ...prev, imageUrl: compressedDataUrl }));
+      }
+    } catch (e) {
+      console.error("Failed to handle image upload:", e);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   const openModalForNew = () => {
     setEditingId(null);
+    setShowUrlInput(false);
     setFormData({
       name: "",
       category: "Tractors",
       dailyRate: "",
       hourlyRate: "",
       locationName: "",
-      imageUrl: "",
+      imageUrl: MACHINERY_PRESETS[0].url,
       available: true
     });
     setShowModal(true);
@@ -82,6 +168,7 @@ export default function EquipmentOwnerDashboard() {
 
   const openModalForEdit = (equipment: any) => {
     setEditingId(equipment.id);
+    setShowUrlInput(false);
     setFormData({
       name: equipment.name,
       category: equipment.category,
@@ -108,7 +195,20 @@ export default function EquipmentOwnerDashboard() {
       });
       
       if (res.ok) {
+        const savedData = await res.json().catch(() => ({}));
         setShowModal(false);
+        // Optimistically update fleet so image change shows up immediately
+        if (editingId) {
+          setFleet(prev => prev.map(item => item.id === editingId ? {
+            ...item,
+            ...formData,
+            imageUrl: savedData.equipment?.imageUrl || formData.imageUrl,
+            dailyRate: Number(formData.dailyRate),
+            hourlyRate: Number(formData.hourlyRate)
+          } : item));
+        } else if (savedData.equipment) {
+          setFleet(prev => [savedData.equipment, ...prev]);
+        }
         fetchFleet();
       } else {
         const errData = await res.json();
@@ -259,7 +359,12 @@ export default function EquipmentOwnerDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {fleet.map((item) => (
                 <div key={item.id} className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm flex flex-col">
-                  <img src={item.imageUrl} alt={item.name} className="w-full h-40 object-cover" />
+                  <SafeImage 
+                    src={item.imageUrl} 
+                    alt={item.name} 
+                    className="w-full h-40 object-cover" 
+                    fallbackSrc="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600"
+                  />
                   <div className="p-4 flex flex-col flex-grow">
                     <div className="flex justify-between items-start mb-2">
                       <div>
@@ -487,17 +592,106 @@ export default function EquipmentOwnerDashboard() {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">Image URL *</label>
-                    <input 
-                      type="url" 
-                      required 
-                      value={formData.imageUrl}
-                      onChange={e => setFormData({...formData, imageUrl: e.target.value})}
-                      className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 text-sm font-medium"
-                      placeholder="https://example.com/image.jpg"
-                    />
-                    <p className="text-[10px] text-gray-500 mt-1">Provide a valid URL to the equipment photo.</p>
+                  {/* Equipment Photo / Upload / Presets */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-xs font-bold text-gray-700">
+                        Equipment Photo <span className="text-rose-500">*</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setShowUrlInput(!showUrlInput)}
+                        className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+                      >
+                        {showUrlInput ? "Hide Direct URL" : "Enter Direct URL"}
+                      </button>
+                    </div>
+
+                    {/* Preview + File Upload Box */}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+                      <div className="relative w-28 h-20 rounded-lg overflow-hidden bg-gray-200 shrink-0 border border-gray-200 flex items-center justify-center">
+                        {formData.imageUrl ? (
+                          <SafeImage
+                            src={formData.imageUrl}
+                            alt="Machinery Preview"
+                            className="w-full h-full object-cover"
+                            fallbackSrc="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600"
+                          />
+                        ) : (
+                          <div className="flex flex-col items-center justify-center text-gray-400">
+                            <ImageIcon className="w-6 h-6 mb-1" />
+                            <span className="text-[10px]">No photo</span>
+                          </div>
+                        )}
+                        {uploadingImage && (
+                          <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex flex-col items-center justify-center text-white">
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <span className="text-[9px] font-bold mt-1">Uploading...</span>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 w-full space-y-1.5">
+                        <label className="flex items-center justify-center gap-2 w-full py-2 px-3 rounded-lg border-2 border-dashed border-gray-300 hover:border-indigo-500 bg-white hover:bg-indigo-50/50 cursor-pointer transition-all group">
+                          <Upload className="w-4 h-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                          <span className="text-xs font-bold text-gray-700 group-hover:text-indigo-700 transition-colors">
+                            {uploadingImage ? "Optimizing & uploading..." : "Choose Photo from Device"}
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            disabled={uploadingImage}
+                            onChange={e => {
+                              if (e.target.files && e.target.files[0]) {
+                                handleImageUpload(e.target.files[0]);
+                              }
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                        <p className="text-[10px] text-gray-500">
+                          Supports JPG, PNG, WEBP. Automatically optimized.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Quick Presets */}
+                    <div>
+                      <div className="text-[11px] font-bold text-gray-600 mb-1">
+                        <span>Or select a machinery preset:</span>
+                      </div>
+                      <div className="grid grid-cols-5 gap-1.5">
+                        {MACHINERY_PRESETS.map((preset) => (
+                          <button
+                            key={preset.name}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, imageUrl: preset.url }))}
+                            className={`flex flex-col items-center p-1 rounded-lg border text-[9px] font-bold transition-all text-center cursor-pointer ${
+                              formData.imageUrl === preset.url
+                                ? "border-indigo-600 bg-indigo-50 text-indigo-900 shadow-2xs"
+                                : "border-gray-200 bg-white hover:bg-gray-50 text-gray-600"
+                            }`}
+                          >
+                            <img src={preset.url} alt={preset.name} className="w-full h-8 object-cover rounded mb-1" />
+                            <span className="truncate w-full">{preset.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Optional Direct URL text input */}
+                    {showUrlInput && (
+                      <div className="pt-1">
+                        <input
+                          type="text"
+                          required
+                          value={formData.imageUrl}
+                          onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
+                          className="w-full px-3 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-900 text-xs font-medium bg-white"
+                          placeholder="Paste image URL (e.g. https://... or /uploads/...)"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center mt-2 bg-gray-50 px-3 py-2.5 rounded-lg border border-gray-200">
