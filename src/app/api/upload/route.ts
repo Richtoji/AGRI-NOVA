@@ -99,7 +99,7 @@ export async function POST(request: Request) {
 
     const staticUrl = `/uploads/${filename}`;
     const apiUrl = `/api/uploads/${filename}`;
-    return NextResponse.json({ success: true, url: staticUrl, staticUrl, apiUrl });
+    return NextResponse.json({ success: true, url: apiUrl, staticUrl, apiUrl });
   } catch (error) {
     console.error("Upload error:", error);
     return NextResponse.json({ error: "File upload failed." }, { status: 500 });

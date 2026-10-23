@@ -637,25 +637,28 @@ if (!globalStore.cropProfiles || globalStore.cropProfiles.length === 0) {
   }));
 }
 
-// Ensure active seed user credentials in persistent globalStore
-const seedSync = [
-  { id: "u-buyer-01", email: "Subin@gmail.com", name: "FreshBasket Supermarkets (Subin)", role: "BUYER" },
-  { id: "u-equipment-01", email: "equipment@agrinova.com", name: "Kisan Agro Rentals", role: "EQUIPMENT_OWNER" },
-  { id: "u-vet-01", email: "Vet@agrinova.com", name: "Dr. Ananya Sharma, DVM", role: "VETERINARY_EXPERT" },
-  { id: "u-admin-01", email: "admin@agrinova.com", name: "Enterprise Admin", role: "ADMIN" },
-  { id: "u-farmer-01", email: "farmer@agri-nova.com", name: "Rajesh Kumar", role: "FARMER" },
-  { id: "u-delivery-01", email: "delivery@agri-nova.com", name: "AgriExpress Logistics (Disabled)", role: "DELIVERY_PARTNER", disabled: true, status: "DISABLED", kycStatus: "REVOKED" }
-];
-for (const s of seedSync) {
-  const match = globalStore.users.find((u: any) => u.id === s.id || u.role === s.role);
-  if (match) {
-    match.email = s.email;
-    match.name = s.name;
-    match.role = s.role;
-    if ((s as any).disabled !== undefined) {
-      match.disabled = (s as any).disabled;
-      match.status = (s as any).status;
-      match.kycStatus = (s as any).kycStatus;
+// Ensure active seed user credentials in persistent globalStore once on initialization
+if (!globalStore.__seedInitialized) {
+  globalStore.__seedInitialized = true;
+  const seedSync = [
+    { id: "u-buyer-01", email: "Subin@gmail.com", name: "FreshBasket Supermarkets (Subin)", role: "BUYER" },
+    { id: "u-equipment-01", email: "equipment@agrinova.com", name: "Kisan Agro Rentals", role: "EQUIPMENT_OWNER" },
+    { id: "u-vet-01", email: "Vet@agrinova.com", name: "Dr. Ananya Sharma, DVM", role: "VETERINARY_EXPERT" },
+    { id: "u-admin-01", email: "admin@agrinova.com", name: "Enterprise Admin", role: "ADMIN" },
+    { id: "u-farmer-01", email: "farmer@agri-nova.com", name: "Rajesh Kumar", role: "FARMER" },
+    { id: "u-delivery-01", email: "delivery@agri-nova.com", name: "AgriExpress Logistics (Disabled)", role: "DELIVERY_PARTNER", disabled: true, status: "DISABLED", kycStatus: "REVOKED" }
+  ];
+  for (const s of seedSync) {
+    const match = globalStore.users.find((u: any) => u.id === s.id || u.role === s.role);
+    if (match && !match.__customUpdated) {
+      match.email = s.email;
+      match.name = s.name;
+      match.role = s.role;
+      if ((s as any).disabled !== undefined) {
+        match.disabled = (s as any).disabled;
+        match.status = (s as any).status;
+        match.kycStatus = (s as any).kycStatus;
+      }
     }
   }
 }
@@ -897,11 +900,11 @@ export const inMemoryStore = {
       user = globalStore.users.find((u: any) => u.role === data.role);
     }
     if (!user) {
-      user = { id: userId, ...data, kycStatus: "VERIFIED" };
+      user = { id: userId, ...data, kycStatus: "VERIFIED", __customUpdated: true };
       globalStore.users.push(user);
       return { success: true, user };
     }
-    Object.assign(user, data);
+    Object.assign(user, data, { __customUpdated: true });
     return { success: true, user };
   },
 

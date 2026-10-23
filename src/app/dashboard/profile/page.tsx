@@ -51,7 +51,7 @@ export default function ProfilePage() {
       if (currentUser.name) setName(currentUser.name);
       if (currentUser.phone) setPhone(currentUser.phone);
       if (currentUser.email) setEmail(currentUser.email);
-      if (currentUser.avatarUrl && !avatarBase64) setAvatarBase64(currentUser.avatarUrl);
+      if (currentUser.avatarUrl !== undefined) setAvatarBase64(currentUser.avatarUrl);
     }
   }, [currentUser]);
 
@@ -158,7 +158,7 @@ export default function ProfilePage() {
     setProfileSuccessMsg(null);
 
     try {
-      // 1. Compress client-side
+      // 1. Compress client-side to lightweight JPEG (<25KB)
       const compressedDataUrl = await compressAvatar(file);
       if (!compressedDataUrl) {
         setAvatarUploading(false);
@@ -166,25 +166,16 @@ export default function ProfilePage() {
       }
       setAvatarBase64(compressedDataUrl);
 
-      // 2. Try uploading via /api/upload
-      let savedUrl = compressedDataUrl;
+      // 2. Direct data URL guarantees 100% persistent display without server 404s
+      const savedUrl = compressedDataUrl;
+
+      // Also persist to /api/upload as supplementary static file
       try {
         const blob = await (await fetch(compressedDataUrl)).blob();
         const formData = new FormData();
         formData.append("file", blob, `avatar_${Date.now()}.jpg`);
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData
-        });
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          if (uploadData.url) {
-            savedUrl = uploadData.url;
-          }
-        }
-      } catch (uploadErr) {
-        console.warn("Upload route fallback to compressed base64:", uploadErr);
-      }
+        fetch("/api/upload", { method: "POST", body: formData }).catch(() => {});
+      } catch (_) {}
 
       // 3. Immediately persist profile with new avatar
       const currentUserName = name || currentUser?.name || "User";

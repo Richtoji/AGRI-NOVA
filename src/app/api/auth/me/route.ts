@@ -8,7 +8,15 @@ import { validateFullName, validateEmailWithDetails, validatePhoneWithDetails } 
 
 const JWT_SECRET = (process.env.JWT_SECRET || "super_secure_production_ready_secret_12345").trim();
 
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
+  const noCacheHeaders = {
+    "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+    "Pragma": "no-cache",
+    "Expires": "0"
+  };
+
   try {
     const { error, user } = await requireAuth();
     
@@ -16,7 +24,10 @@ export async function GET() {
       return NextResponse.json({
         success: false,
         user: null
-      }, { status: 200 });
+      }, { 
+        status: 200,
+        headers: noCacheHeaders
+      });
     }
 
     // Merge with latest in-memory state if available
@@ -34,12 +45,17 @@ export async function GET() {
         avatarUrl: finalAvatar || "",
         kycStatus: user.kycStatus || "VERIFIED",
       }
+    }, {
+      headers: noCacheHeaders
     });
   } catch (err) {
     return NextResponse.json({
       success: false,
       user: null
-    }, { status: 200 });
+    }, { 
+      status: 200,
+      headers: noCacheHeaders
+    });
   }
 }
 

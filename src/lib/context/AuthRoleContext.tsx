@@ -50,7 +50,15 @@ const AuthRoleContext = createContext<AuthRoleContextType | undefined>(undefined
 
 export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentRole, setCurrentRole] = useState<RoleType>("FARMER");
-  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("agri_nova_user_session");
+        if (saved) return JSON.parse(saved);
+      } catch (_) {}
+    }
+    return null;
+  });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -135,11 +143,19 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     const fetchSession = async () => {
       try {
-        const res = await fetch("/api/auth/me");
+        const res = await fetch(`/api/auth/me?_t=${Date.now()}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache, no-store, must-revalidate" }
+        });
         if (res.ok) {
           const data = await res.json();
           if (data && data.user) {
             setCurrentUser(data.user);
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem("agri_nova_user_session", JSON.stringify(data.user));
+              } catch (_) {}
+            }
             if (data.user.role) {
               setCurrentRole(data.user.role as RoleType);
             }
@@ -148,6 +164,12 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           } else {
             setCurrentUser(null);
             setIsLoggedIn(false);
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.removeItem("agri_nova_user_session");
+                localStorage.removeItem("agri_nova_user_avatar");
+              } catch (_) {}
+            }
           }
         }
       } catch (e) {
@@ -172,6 +194,11 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       }
       
       setCurrentUser(data.user);
+      if (typeof window !== "undefined" && data.user) {
+        try {
+          localStorage.setItem("agri_nova_user_session", JSON.stringify(data.user));
+        } catch (_) {}
+      }
       if (data.user?.role) {
         setCurrentRole(data.user.role as RoleType);
       }
@@ -218,20 +245,40 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   };
 
-  // Global avatar update synchronization listener
+  // Global avatar & profile update synchronization listeners
   useEffect(() => {
     const handleAvatarBroadcast = (event: any) => {
       const newAvatarUrl = event?.detail?.avatarUrl;
       if (newAvatarUrl) {
-        setCurrentUser(prev => (prev ? { ...prev, avatarUrl: newAvatarUrl } : null));
+        setCurrentUser(prev => {
+          if (!prev) return null;
+          const updated = { ...prev, avatarUrl: newAvatarUrl };
+          try {
+            localStorage.setItem("agri_nova_user_session", JSON.stringify(updated));
+          } catch (_) {}
+          return updated;
+        });
       }
     };
+
+    const handleProfileBroadcast = (event: any) => {
+      const updatedUser = event?.detail?.user;
+      if (updatedUser) {
+        setCurrentUser(updatedUser);
+        try {
+          localStorage.setItem("agri_nova_user_session", JSON.stringify(updatedUser));
+        } catch (_) {}
+      }
+    };
+
     if (typeof window !== "undefined") {
       window.addEventListener("agri_nova_avatar_updated", handleAvatarBroadcast);
+      window.addEventListener("agri_nova_profile_updated", handleProfileBroadcast);
     }
     return () => {
       if (typeof window !== "undefined") {
         window.removeEventListener("agri_nova_avatar_updated", handleAvatarBroadcast);
+        window.removeEventListener("agri_nova_profile_updated", handleProfileBroadcast);
       }
     };
   }, []);
@@ -265,12 +312,18 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setCurrentUser(data.user);
         try {
           if (typeof window !== "undefined") {
+            localStorage.setItem("agri_nova_user_session", JSON.stringify(data.user));
+            localStorage.setItem("agri_nova_user_avatar", data.user.avatarUrl || "");
             window.dispatchEvent(
               new CustomEvent("agri_nova_avatar_updated", {
                 detail: { avatarUrl: data.user.avatarUrl }
               })
             );
-            localStorage.setItem("agri_nova_user_avatar", data.user.avatarUrl || "");
+            window.dispatchEvent(
+              new CustomEvent("agri_nova_profile_updated", {
+                detail: { user: data.user }
+              })
+            );
           }
         } catch (_) {}
       }
@@ -285,6 +338,12 @@ export const AuthRoleProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     setIsLoggedIn(false);
     setCurrentUser(null);
     setCartItems([]);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.removeItem("agri_nova_user_session");
+        localStorage.removeItem("agri_nova_user_avatar");
+      } catch (_) {}
+    }
     window.location.href = "/auth/login";
   };
 
