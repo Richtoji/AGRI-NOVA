@@ -10,11 +10,11 @@ import { useSearchParams } from "next/navigation";
 import { SafeImage } from "@/components/ui/SafeImage";
 
 const MACHINERY_PRESETS = [
-  { label: "Tractor", name: "Tractor", url: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600" },
-  { label: "Harvester", name: "Harvester", url: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600" },
-  { label: "Power Tiller", name: "Tiller", url: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=600" },
-  { label: "Agri Drone", name: "Drone", url: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=600" },
-  { label: "Irrigation", name: "Irrigation", url: "https://images.unsplash.com/photo-1563514227147-6d2ff665a6a0?w=600" },
+  { label: "Tractor", name: "Tractor", url: "/images/equipment/tractor_mahindra_575.png" },
+  { label: "Harvester", name: "Harvester", url: "/images/equipment/harvester_kubota_dc68.jpg" },
+  { label: "Power Tiller", name: "Tiller", url: "/images/equipment/power_tiller.jpg" },
+  { label: "Agri Drone", name: "Drone", url: "/images/equipment/agri_drone.jpg" },
+  { label: "Irrigation", name: "Irrigation", url: "/images/equipment/irrigation_pump.jpg" },
 ];
 
 export default function EquipmentOwnerDashboard() {
@@ -672,7 +672,7 @@ export default function EquipmentOwnerDashboard() {
                                 : "border-gray-200 bg-white hover:bg-gray-50 text-gray-600"
                             }`}
                           >
-                            <img src={preset.url} alt={preset.name} className="w-full h-8 object-cover rounded mb-1" />
+                            <SafeImage src={preset.url} alt={preset.name} className="w-full h-8 object-cover rounded mb-1" />
                             <span className="truncate w-full">{preset.label}</span>
                           </button>
                         ))}

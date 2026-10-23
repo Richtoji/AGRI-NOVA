@@ -156,7 +156,7 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
       dailyRate: 2200,
       hourlyRate: 350,
       locationName: "Palakkad, Kerala",
-      imageUrl: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600",
+      imageUrl: "/images/equipment/tractor_mahindra_575.png",
       available: true,
       rating: 4.9,
       ownerName: "Kisan Agro Rentals"
@@ -169,7 +169,7 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
       dailyRate: 4800,
       hourlyRate: 650,
       locationName: "Kottayam, Kerala",
-      imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600",
+      imageUrl: "/images/equipment/harvester_kubota_dc68.jpg",
       available: true,
       rating: 4.8,
       ownerName: "Kisan Agro Rentals"
@@ -182,7 +182,7 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
       dailyRate: 1100,
       hourlyRate: 180,
       locationName: "Wayanad, Kerala",
-      imageUrl: "https://images.unsplash.com/photo-1589923188900-85dae523342b?w=600",
+      imageUrl: "/images/equipment/power_tiller.jpg",
       available: true,
       rating: 4.9,
       ownerName: "Kisan Agro Rentals"
@@ -195,7 +195,7 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
       dailyRate: 3500,
       hourlyRate: 800,
       locationName: "Idukki, Kerala",
-      imageUrl: "https://images.unsplash.com/photo-1508614589041-895b88991e3e?w=600",
+      imageUrl: "/images/equipment/agri_drone.jpg",
       available: true,
       rating: 5.0,
       ownerName: "Kisan Agro Rentals"
@@ -218,7 +218,7 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
         dailyRate: 2200,
         hourlyRate: 350,
         locationName: "Palakkad, Kerala",
-        imageUrl: "https://images.unsplash.com/photo-1592982537447-7440770cbfc9?w=600",
+        imageUrl: "/images/equipment/tractor_mahindra_575.png",
         available: true
       },
       farmer: {
@@ -250,7 +250,7 @@ const globalStore = (global as any).__AGRINOVA_STORE__ || {
         dailyRate: 4800,
         hourlyRate: 650,
         locationName: "Kottayam, Kerala",
-        imageUrl: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600",
+        imageUrl: "/images/equipment/harvester_kubota_dc68.jpg",
         available: true
       },
       farmer: {
