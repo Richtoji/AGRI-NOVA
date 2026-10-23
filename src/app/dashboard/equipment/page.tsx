@@ -9,14 +9,6 @@ import { RouteGuard } from "@/components/layout/RouteGuard";
 import { useSearchParams } from "next/navigation";
 import { SafeImage } from "@/components/ui/SafeImage";
 
-const MACHINERY_PRESETS = [
-  { label: "Tractor", name: "Tractor", url: "/images/equipment/tractor_mahindra_575.png" },
-  { label: "Harvester", name: "Harvester", url: "/images/equipment/harvester_kubota_dc68.jpg" },
-  { label: "Power Tiller", name: "Tiller", url: "/images/equipment/power_tiller.jpg" },
-  { label: "Agri Drone", name: "Drone", url: "/images/equipment/agri_drone.jpg" },
-  { label: "Irrigation", name: "Irrigation", url: "/images/equipment/irrigation_pump.jpg" },
-];
-
 export default function EquipmentOwnerDashboard() {
   const { currentUser } = useAuthRole();
   const searchParams = useSearchParams();
@@ -160,7 +152,7 @@ export default function EquipmentOwnerDashboard() {
       dailyRate: "",
       hourlyRate: "",
       locationName: "",
-      imageUrl: MACHINERY_PRESETS[0].url,
+      imageUrl: "/images/equipment/tractor_mahindra_575.png",
       available: true
     });
     setShowModal(true);
@@ -652,30 +644,6 @@ export default function EquipmentOwnerDashboard() {
                         <p className="text-[10px] text-gray-500">
                           Supports JPG, PNG, WEBP. Automatically optimized.
                         </p>
-                      </div>
-                    </div>
-
-                    {/* Quick Presets */}
-                    <div>
-                      <div className="text-[11px] font-bold text-gray-600 mb-1">
-                        <span>Or select a machinery preset:</span>
-                      </div>
-                      <div className="grid grid-cols-5 gap-1.5">
-                        {MACHINERY_PRESETS.map((preset) => (
-                          <button
-                            key={preset.name}
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, imageUrl: preset.url }))}
-                            className={`flex flex-col items-center p-1 rounded-lg border text-[9px] font-bold transition-all text-center cursor-pointer ${
-                              formData.imageUrl === preset.url
-                                ? "border-indigo-600 bg-indigo-50 text-indigo-900 shadow-2xs"
-                                : "border-gray-200 bg-white hover:bg-gray-50 text-gray-600"
-                            }`}
-                          >
-                            <SafeImage src={preset.url} alt={preset.name} className="w-full h-8 object-cover rounded mb-1" />
-                            <span className="truncate w-full">{preset.label}</span>
-                          </button>
-                        ))}
                       </div>
                     </div>
 
