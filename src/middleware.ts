@@ -36,8 +36,12 @@ export async function middleware(request: NextRequest) {
       if (pathname.startsWith("/dashboard/veterinary") && role !== "VETERINARY_EXPERT") {
         return NextResponse.redirect(new URL("/auth/login", request.url));
       }
-      if (pathname.startsWith("/dashboard/delivery") && role !== "DELIVERY_PARTNER") {
-        return NextResponse.redirect(new URL("/auth/login", request.url));
+      if (pathname.startsWith("/dashboard/delivery") || role === "DELIVERY_PARTNER") {
+        const response = NextResponse.redirect(new URL("/auth/login?error=account_disabled", request.url));
+        if (role === "DELIVERY_PARTNER") {
+          response.cookies.delete("auth_token");
+        }
+        return response;
       }
       if (pathname.startsWith("/dashboard/admin") && role !== "ADMIN") {
         return NextResponse.redirect(new URL("/auth/login", request.url));
@@ -78,10 +82,14 @@ export async function middleware(request: NextRequest) {
         const role = ((payload.role as string) || "").toUpperCase();
         let redirectPath = "/dashboard/farmer";
         if (role === "BUYER") redirectPath = "/dashboard/buyer";
-        if (role === "EQUIPMENT_OWNER") redirectPath = "/dashboard/equipment";
-        if (role === "VETERINARY_EXPERT") redirectPath = "/dashboard/veterinary";
-        if (role === "DELIVERY_PARTNER") redirectPath = "/dashboard/delivery";
-        if (role === "ADMIN") redirectPath = "/dashboard/admin";
+        else if (role === "EQUIPMENT_OWNER") redirectPath = "/dashboard/equipment";
+        else if (role === "VETERINARY_EXPERT") redirectPath = "/dashboard/veterinary";
+        else if (role === "DELIVERY_PARTNER") {
+          const res = NextResponse.next();
+          res.cookies.delete("auth_token");
+          return res;
+        }
+        else if (role === "ADMIN") redirectPath = "/dashboard/admin";
         
         return NextResponse.redirect(new URL(redirectPath, request.url));
       } catch (e) {

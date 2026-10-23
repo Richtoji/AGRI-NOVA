@@ -428,9 +428,9 @@ export default function LoginPage() {
                     </span>
                   </div>
 
-                  {/* 6 Role Pills in 1 compact grid */}
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-1">
-                    {(["FARMER", "BUYER", "ADMIN", "EQUIPMENT_OWNER", "VETERINARY_EXPERT", "DELIVERY_PARTNER"] as RoleType[]).map((r) => {
+                  {/* 5 Role Pills in 1 compact grid */}
+                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-1">
+                    {(["FARMER", "BUYER", "ADMIN", "EQUIPMENT_OWNER", "VETERINARY_EXPERT"] as RoleType[]).map((r) => {
                       const meta = ROLE_META[r];
                       const Icon = meta.icon;
                       const isSelected = selectedRole === r;
@@ -479,8 +479,6 @@ export default function LoginPage() {
                           setSelectedRole("EQUIPMENT_OWNER");
                         } else if (lower === "admin@agri-nova.com" || lower.startsWith("admin")) {
                           setSelectedRole("ADMIN");
-                        } else if (lower === "delivery@agri-nova.com" || lower.startsWith("delivery")) {
-                          setSelectedRole("DELIVERY_PARTNER");
                         } else if (lower === "farmer@agri-nova.com" || lower.startsWith("farmer")) {
                           setSelectedRole("FARMER");
                         }

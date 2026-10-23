@@ -77,6 +77,22 @@ export async function POST(request: Request) {
       );
     }
 
+    // Explicitly block disabled delivery user
+    if (
+      user.id === "u-delivery-01" ||
+      user.role === "DELIVERY_PARTNER" ||
+      user.disabled ||
+      user.status === "DISABLED" ||
+      user.kycStatus === "DISABLED" ||
+      user.kycStatus === "REVOKED" ||
+      normalizedEmail.startsWith("delivery@")
+    ) {
+      return NextResponse.json(
+        { error: "This delivery user account has been disabled by the administrator." },
+        { status: 403 }
+      );
+    }
+
     // 2. Verify Password First
     let isValidPassword = false;
 
@@ -91,8 +107,6 @@ export async function POST(request: Request) {
       "equipment@agri-nova.com": "Equipment@1",
       "vet@agrinova.com": "Vetagrinova@1",
       "vet@agri-nova.com": "Vetagrinova@1",
-      "delivery@agri-nova.com": "Driver@2026#Secure",
-      "delivery@agrinova.com": "Driver@2026#Secure",
       "admin@agrinova.com": "Admin@123",
       "admin@agri-nova.com": "Admin@123",
     };
@@ -102,7 +116,6 @@ export async function POST(request: Request) {
       "u-buyer-01": "Subin@123",
       "u-equipment-01": "Equipment@1",
       "u-vet-01": "Vetagrinova@1",
-      "u-delivery-01": "Driver@2026#Secure",
       "u-admin-01": "Admin@123",
     };
 

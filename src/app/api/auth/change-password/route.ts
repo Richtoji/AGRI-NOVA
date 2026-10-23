@@ -15,6 +15,13 @@ export async function POST(request: Request) {
       );
     }
 
+    if (user.id === 'u-delivery-01' || user.role === 'DELIVERY_PARTNER' || (user as any).disabled || (user as any).status === 'DISABLED' || (user as any).kycStatus === 'REVOKED') {
+      return NextResponse.json(
+        { error: "This user account has been disabled." },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json().catch(() => ({}));
     const { currentPassword, newPassword, confirmPassword } = body;
 
@@ -42,8 +49,6 @@ export async function POST(request: Request) {
       "equipment@agri-nova.com": "Equipment@1",
       "vet@agrinova.com": "Vetagrinova@1",
       "vet@agri-nova.com": "Vetagrinova@1",
-      "delivery@agri-nova.com": "Driver@2026#Secure",
-      "delivery@agrinova.com": "Driver@2026#Secure",
       "admin@agrinova.com": "Admin@123",
       "admin@agri-nova.com": "Admin@123",
     };
@@ -53,7 +58,6 @@ export async function POST(request: Request) {
       "u-buyer-01": "Subin@123",
       "u-equipment-01": "Equipment@1",
       "u-vet-01": "Vetagrinova@1",
-      "u-delivery-01": "Driver@2026#Secure",
       "u-admin-01": "Admin@123",
     };
 

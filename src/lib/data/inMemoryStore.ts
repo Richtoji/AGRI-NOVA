@@ -643,7 +643,7 @@ const seedSync = [
   { id: "u-vet-01", email: "Vet@agrinova.com", name: "Dr. Ananya Sharma, DVM", role: "VETERINARY_EXPERT" },
   { id: "u-admin-01", email: "admin@agrinova.com", name: "Enterprise Admin", role: "ADMIN" },
   { id: "u-farmer-01", email: "farmer@agri-nova.com", name: "Rajesh Kumar", role: "FARMER" },
-  { id: "u-delivery-01", email: "delivery@agri-nova.com", name: "AgriExpress Logistics", role: "DELIVERY_PARTNER" }
+  { id: "u-delivery-01", email: "delivery@agri-nova.com", name: "AgriExpress Logistics (Disabled)", role: "DELIVERY_PARTNER", disabled: true, status: "DISABLED", kycStatus: "REVOKED" }
 ];
 for (const s of seedSync) {
   const match = globalStore.users.find((u: any) => u.id === s.id || u.role === s.role);
@@ -651,6 +651,11 @@ for (const s of seedSync) {
     match.email = s.email;
     match.name = s.name;
     match.role = s.role;
+    if ((s as any).disabled !== undefined) {
+      match.disabled = (s as any).disabled;
+      match.status = (s as any).status;
+      match.kycStatus = (s as any).kycStatus;
+    }
   }
 }
 

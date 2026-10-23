@@ -40,11 +40,13 @@ export const rawSeedData = {
     {
       id: "u-delivery-01",
       email: "delivery@agri-nova.com",
-      name: "AgriExpress Logistics",
+      name: "AgriExpress Logistics (Disabled)",
       role: "DELIVERY_PARTNER",
       phone: "+91 98989 89898",
       avatarUrl: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150",
-      kycStatus: "VERIFIED"
+      kycStatus: "REVOKED",
+      status: "DISABLED",
+      disabled: true
     },
     {
       id: "u-admin-01",
