@@ -2,11 +2,13 @@ import { NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import path from 'path';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request, { params }: { params: Promise<{ filename: string }> }) {
   try {
     const { filename } = await params;
     // ensure no directory traversal
-    if (filename.includes('/') || filename.includes('..')) {
+    if (!filename || filename.includes('/') || filename.includes('..')) {
       return new NextResponse('Invalid filename', { status: 400 });
     }
     
@@ -23,7 +25,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ file
     else if (ext === '.webp') contentType = 'image/webp';
     else if (ext === '.svg') contentType = 'image/svg+xml';
     
-    return new NextResponse(fileBuffer, {
+    return new Response(new Uint8Array(fileBuffer), {
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'public, max-age=31536000, immutable',

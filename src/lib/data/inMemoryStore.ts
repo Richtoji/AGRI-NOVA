@@ -1830,6 +1830,15 @@ export const inMemoryStore = {
     if (!globalStore.cropProfiles) {
       globalStore.cropProfiles = [];
     }
+    const clean = (data.name || '').trim().toLowerCase();
+    const existing = globalStore.cropProfiles.find((c: any) => 
+      (c.name && c.name.toLowerCase() === clean) ||
+      (data.id && c.id && c.id.toLowerCase() === (data.id || '').toLowerCase())
+    );
+    if (existing) {
+      Object.assign(existing, data);
+      return existing;
+    }
     const newCrop = {
       id: data.id || `crop-${Date.now()}`,
       name: data.name,

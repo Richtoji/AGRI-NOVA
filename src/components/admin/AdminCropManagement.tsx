@@ -249,8 +249,9 @@ export function AdminCropManagement() {
           headers: { "x-user-role": "ADMIN" }
         });
         if (uploadRes.ok) {
-          const { url } = await uploadRes.json();
-          if (url) return url;
+          const data = await uploadRes.json();
+          if (data.staticUrl) return data.staticUrl;
+          if (data.url) return data.url;
         }
       } catch (err) {
         console.warn("Upload endpoint failed, utilizing compressed Base64 fallback:", err);
@@ -329,11 +330,12 @@ export function AdminCropManagement() {
       if (editingItem) {
         setCrops(prev => prev.map(c => 
           (c.id === editingItem.id || c.name?.toLowerCase() === editingItem.name?.toLowerCase())
-            ? { ...c, ...savedCrop }
+            ? { ...c, ...savedCrop, imageUrl: savedCrop.imageUrl || payload.imageUrl }
             : c
         ));
       } else {
-        setCrops(prev => [savedCrop, ...prev]);
+        const cleanName = (payload.name || '').toLowerCase().trim();
+        setCrops(prev => [{ ...savedCrop, imageUrl: savedCrop.imageUrl || payload.imageUrl }, ...prev.filter(c => (c.name || '').toLowerCase().trim() !== cleanName)]);
       }
 
       window.dispatchEvent(new CustomEvent('crop-data-updated'));
@@ -528,13 +530,11 @@ export function AdminCropManagement() {
                   <tr key={c.id} className="hover:bg-gray-50/60 transition-colors">
                     <td className="px-4 py-3.5 font-bold text-gray-900">
                       <div className="flex items-center space-x-2.5">
-                        {c.imageUrl ? (
-                          <SafeImage src={c.imageUrl} alt={c.name} className="w-8 h-8 rounded-lg object-cover border border-gray-100 shrink-0" />
-                        ) : (
-                          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0 border border-emerald-100">
-                            <Leaf className="w-4 h-4 text-emerald-600" />
-                          </div>
-                        )}
+                        <SafeImage 
+                          src={c.imageUrl} 
+                          alt={c.name} 
+                          className="w-9 h-9 rounded-xl object-cover border border-gray-100 shadow-xs shrink-0" 
+                        />
                         <span>{c.name}</span>
                       </div>
                     </td>
@@ -641,7 +641,7 @@ export function AdminCropManagement() {
                 
                 <div className="flex items-center space-x-3">
                   {cropForm.imageUrl ? (
-                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative group">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 shrink-0 relative group">
                       <SafeImage src={cropForm.imageUrl} alt="Preview" className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -649,12 +649,12 @@ export function AdminCropManagement() {
                         className="absolute inset-0 bg-black/50 text-white opacity-0 group-hover:opacity-100 flex items-center justify-center text-[10px] transition-opacity cursor-pointer"
                         title="Remove image"
                       >
-                        <X className="w-3.5 h-3.5" />
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <div className="w-12 h-12 rounded-xl bg-gray-200/60 border border-dashed border-gray-300 shrink-0 flex items-center justify-center text-gray-400">
-                      <Leaf className="w-5 h-5 text-gray-400" />
+                    <div className="w-14 h-14 rounded-xl bg-gray-200/60 border border-dashed border-gray-300 shrink-0 flex items-center justify-center text-gray-400">
+                      <Leaf className="w-6 h-6 text-gray-400" />
                     </div>
                   )}
                   
@@ -680,7 +680,7 @@ export function AdminCropManagement() {
                     <input
                       type="text"
                       name="imageUrl"
-                      value={cropForm.imageUrl}
+                      value={cropForm.imageUrl.startsWith("data:") ? "" : cropForm.imageUrl}
                       onChange={handleCropChange}
                       placeholder="Or paste direct image URL (https://...)"
                       className="w-full px-2.5 py-1 text-[11px] bg-white border border-gray-200 rounded-lg focus:border-green-500 outline-none"

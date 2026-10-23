@@ -19,10 +19,11 @@ function isCustomImage(url?: string): boolean {
   if (u.startsWith('/api/uploads') || u.startsWith('/uploads')) return true;
   if (u.startsWith('http://') || u.startsWith('https://')) return true;
   if (u.startsWith('/') && !u.startsWith('/images/crops/')) return true;
+  if (u === '/images/crops/arecanut.jpg' || u === '/images/crops/coconut.jpg') return true;
   return false;
 }
 
-function pickBestImage(primary?: string, secondary?: string): string {
+export function pickBestImage(primary?: string, secondary?: string): string {
   if (isCustomImage(primary)) return primary!;
   if (isCustomImage(secondary)) return secondary!;
   return primary || secondary || '';
@@ -40,39 +41,36 @@ export async function GET(request: Request) {
       console.warn("DB crop fetch failed, falling back to inMemoryStore:", error?.message);
     }
 
-    // Merge DB crops with inMemoryStore, strictly preserving custom/uploaded images
-    const cropsMap = new Map<string, any>();
+    const mergedMap = new Map<string, any>();
 
-    // First populate from inMemoryStore
-    if (Array.isArray(memoryCrops)) {
-      memoryCrops.forEach(c => {
-        const key = (c.name || '').toLowerCase().trim();
-        cropsMap.set(key, { ...c });
-      });
+    // In-memory store holds live session updates from Admin edits
+    for (const m of memoryCrops) {
+      const key = (m.name || '').toLowerCase().trim();
+      if (key) mergedMap.set(key, { ...m });
+      if (m.id) mergedMap.set((m.id || '').toLowerCase().trim(), { ...m });
     }
 
-    // Then layer DB crops, preserving any custom image
-    if (Array.isArray(dbCrops)) {
-      dbCrops.forEach(c => {
-        const key = (c.name || '').toLowerCase().trim();
-        const existing = cropsMap.get(key);
-        if (existing) {
-          const bestImg = pickBestImage(existing.imageUrl, c.imageUrl);
-          cropsMap.set(key, { ...existing, ...c, imageUrl: bestImg });
-        } else {
-          cropsMap.set(key, { ...c });
-        }
-      });
+    // Overlay DB crops: if in-memory has a custom image, keep it! If DB has an update or crop not in memory, merge it!
+    for (const d of dbCrops) {
+      const key = (d.name || '').toLowerCase().trim();
+      const idKey = (d.id || '').toLowerCase().trim();
+      const existing = mergedMap.get(key) || mergedMap.get(idKey);
+      
+      if (!existing) {
+        mergedMap.set(key || idKey, { ...d });
+      } else {
+        const memImg = existing.imageUrl;
+        const dbImg = d.imageUrl;
+        const finalImg = isCustomImage(memImg) ? memImg : (isCustomImage(dbImg) ? dbImg : (memImg || dbImg));
+        mergedMap.set(key, {
+          ...d,
+          ...existing,
+          imageUrl: finalImg
+        });
+      }
     }
 
-    const mergedList = Array.from(cropsMap.values()).map(c => {
-      const memMatch = memoryCrops?.find((m: any) => (m.name || '').toLowerCase().trim() === (c.name || '').toLowerCase().trim());
-      const bestImg = pickBestImage(c.imageUrl, memMatch?.imageUrl);
-      return { ...c, imageUrl: bestImg || c.imageUrl };
-    });
-
-    const finalList = mergedList.length > 0 ? mergedList : memoryCrops;
-
+    const finalList = Array.from(new Set(mergedMap.values()));
     return NextResponse.json({ success: true, crops: finalList }, { headers: NO_CACHE_HEADERS });
   } catch (err: any) {
     return NextResponse.json(
