@@ -164,9 +164,14 @@ export default function EquipmentPage() {
     setIsBooking(true);
     try {
       const totalCost = (selectedEq.dailyRate * days) + 850;
+      const reqHeaders: Record<string, string> = { "Content-Type": "application/json" };
+      if (currentUser?.id) reqHeaders["x-user-id"] = currentUser.id;
+      if (currentRole) reqHeaders["x-user-role"] = currentRole;
+
       const res = await fetch("/api/equipment/book", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: reqHeaders,
+        credentials: "include",
         body: JSON.stringify({
           equipmentId: selectedEq.id,
           startDate,

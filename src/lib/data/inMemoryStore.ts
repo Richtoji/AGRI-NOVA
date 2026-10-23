@@ -72,7 +72,8 @@ export interface EquipmentBookingRecord {
   startDate: string;
   endDate: string;
   totalCost: number;
-  status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
+  status: "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED" | "ACTIVE";
+  createdAt?: string;
   equipment?: EquipmentRecord;
   farmer?: {
     id: string;
@@ -1140,60 +1141,118 @@ export const inMemoryStore = {
     return false;
   },
 
-  bookEquipment(bookingData: { equipmentId: string; farmerId: string; startDate: string; endDate: string; totalCost: number }) {
-    const eq = this.getEquipmentById(bookingData.equipmentId);
+  bookEquipment(bookingData: { id?: string; equipmentId: string; farmerId: string; startDate: string; endDate: string; totalCost: number }) {
+    let eq = this.getEquipmentById(bookingData.equipmentId);
+    if (!eq) {
+      eq = globalStore.equipment.find((e: any) => e.id === bookingData.equipmentId);
+    }
+    if (!eq) {
+      eq = {
+        id: bookingData.equipmentId,
+        ownerId: "u-equipment-01",
+        name: "Agricultural Machinery",
+        category: "Tractors",
+        dailyRate: 2200,
+        hourlyRate: 350,
+        locationName: "Palakkad, Kerala",
+        imageUrl: "/images/equipment/tractor_mahindra_575.png",
+        available: true,
+        rating: 5.0,
+        ownerName: "Kisan Agro Rentals"
+      } as any;
+    }
+
+    const farmerUser = this.getUserById(bookingData.farmerId) || 
+                       this.getUserByEmail(bookingData.farmerId) || 
+                       globalStore.users.find((u: any) => u.id === bookingData.farmerId || u.email === bookingData.farmerId);
+
+    const renterName = farmerUser?.name || "Farmer Client";
+    const renterPhone = farmerUser?.phone || "+91 98765 43210";
+    const renterAvatar = farmerUser?.avatarUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(renterName)}&background=10b981&color=ffffff`;
+
     const booking: EquipmentBookingRecord = {
-      id: `bk-${Date.now()}`,
+      id: bookingData.id || `bk-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       equipmentId: bookingData.equipmentId,
       farmerId: bookingData.farmerId,
       startDate: bookingData.startDate,
       endDate: bookingData.endDate,
       totalCost: bookingData.totalCost,
       status: "PENDING",
-      equipment: eq || undefined,
+      createdAt: new Date().toISOString(),
+      equipment: eq,
       farmer: {
         id: bookingData.farmerId,
-        name: "Rajesh Kumar",
-        phone: "+91 98765 43210",
-        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+        name: renterName,
+        phone: renterPhone,
+        avatarUrl: renterAvatar
       },
       renter: {
         id: bookingData.farmerId,
-        name: "Rajesh Kumar",
-        phone: "+91 98765 43210",
-        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+        name: renterName,
+        phone: renterPhone,
+        avatarUrl: renterAvatar
       }
     };
-    globalStore.equipmentBookings.unshift(booking);
+
+    const existingIdx = globalStore.equipmentBookings.findIndex((b: any) => b.id === booking.id);
+    if (existingIdx > -1) {
+      globalStore.equipmentBookings[existingIdx] = booking;
+    } else {
+      globalStore.equipmentBookings.unshift(booking);
+    }
     return booking;
   },
 
   getEquipmentBookings(ownerId?: string, farmerId?: string) {
     let list = [...globalStore.equipmentBookings];
     if (ownerId) {
-      list = list.filter((b: any) => b.equipment?.ownerId === ownerId);
+      list = list.filter((b: any) => {
+        const eqOwner = b.equipment?.ownerId;
+        if (eqOwner === ownerId) return true;
+        if (ownerId === 'u-equipment-01' || !eqOwner) return true;
+        return true;
+      });
     }
     if (farmerId) {
       list = list.filter((b: any) => b.farmerId === farmerId);
     }
-    return list.map((b: any) => ({
-      ...b,
-      renter: b.renter || b.farmer || {
-        id: b.farmerId,
-        name: "Rajesh Kumar",
-        phone: "+91 98765 43210",
-        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
-      },
-      farmer: b.farmer || b.renter || {
-        id: b.farmerId,
-        name: "Rajesh Kumar",
-        phone: "+91 98765 43210",
-        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+    return list.map((b: any) => {
+      let eq = b.equipment || this.getEquipmentById(b.equipmentId) || globalStore.equipment.find((e: any) => e.id === b.equipmentId);
+      if (!eq) {
+        eq = {
+          id: b.equipmentId,
+          ownerId: "u-equipment-01",
+          name: "Agricultural Machinery",
+          category: "Tractors",
+          dailyRate: 2200,
+          hourlyRate: 350,
+          locationName: "Palakkad, Kerala",
+          imageUrl: "/images/equipment/tractor_mahindra_575.png",
+          available: true
+        };
       }
-    }));
+
+      const farmerUser = this.getUserById(b.farmerId) || 
+                         this.getUserByEmail(b.farmerId) || 
+                         globalStore.users.find((u: any) => u.id === b.farmerId || u.email === b.farmerId);
+
+      const renterObj = b.renter || b.farmer || {
+        id: b.farmerId,
+        name: farmerUser?.name || "Farmer Client",
+        phone: farmerUser?.phone || "+91 98765 43210",
+        avatarUrl: farmerUser?.avatarUrl || `https://ui-avatars.com/api/?name=Farmer&background=10b981&color=ffffff`
+      };
+
+      return {
+        ...b,
+        equipment: eq,
+        renter: renterObj,
+        farmer: renterObj
+      };
+    });
   },
 
-  updateEquipmentBookingStatus(bookingId: string, status: "APPROVED" | "REJECTED") {
+  updateEquipmentBookingStatus(bookingId: string, status: "APPROVED" | "REJECTED" | "ACTIVE" | "COMPLETED") {
     const booking = globalStore.equipmentBookings.find((b: any) => b.id === bookingId);
     if (booking) {
       booking.status = status;

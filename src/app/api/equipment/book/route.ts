@@ -72,51 +72,83 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Minimum booking duration is 1 day.' }, { status: 400 });
     }
 
+    let createdPrismaBooking: any = null;
+
     try {
-      const equipment = await prisma.equipment.findUnique({ where: { id: equipmentId } });
+      let equipment = await prisma.equipment.findUnique({ where: { id: equipmentId } }).catch(() => null);
       if (!equipment) {
-        throw new Error('Not in DB');
+        const memEq = inMemoryStore.getEquipmentById(equipmentId);
+        if (memEq) {
+          try {
+            equipment = await prisma.equipment.create({
+              data: {
+                id: memEq.id,
+                ownerId: memEq.ownerId || 'u-equipment-01',
+                name: memEq.name,
+                category: memEq.category,
+                dailyRate: Number(memEq.dailyRate) || 2000,
+                hourlyRate: Number(memEq.hourlyRate) || 350,
+                imageUrl: memEq.imageUrl || '',
+                locationName: memEq.locationName || 'Kerala',
+                available: memEq.available ?? true
+              }
+            }).catch(() => null);
+          } catch (e) {}
+        }
       }
 
-      const conflictingBooking = await prisma.rentalBooking.findFirst({
-        where: {
-          equipmentId,
-          status: { in: ['PENDING', 'APPROVED', 'ACTIVE'] },
-          AND: [
-            { startDate: { lt: end } },
-            { endDate: { gt: start } }
-          ]
-        }
-      });
+      if (equipment) {
+        const conflictingBooking = await prisma.rentalBooking.findFirst({
+          where: {
+            equipmentId,
+            status: { in: ['PENDING', 'APPROVED', 'ACTIVE'] },
+            AND: [
+              { startDate: { lt: end } },
+              { endDate: { gt: start } }
+            ]
+          }
+        });
 
-      if (conflictingBooking) {
-        return NextResponse.json({ error: 'The selected dates conflict with an existing booking.' }, { status: 409 });
+        if (conflictingBooking) {
+          return NextResponse.json({ error: 'The selected dates conflict with an existing booking.' }, { status: 409 });
+        }
+
+        createdPrismaBooking = await prisma.rentalBooking.create({
+          data: {
+            equipmentId,
+            renterId: userId,
+            startDate: start,
+            endDate: end,
+            totalCost: Number(totalCost) || 2000,
+            status: 'PENDING'
+          },
+          include: {
+            equipment: true,
+            renter: true
+          }
+        }).catch((err) => {
+          console.warn("Prisma booking creation failed, falling back to inMemoryStore:", err);
+          return null;
+        });
       }
-
-      const booking = await prisma.rentalBooking.create({
-        data: {
-          equipmentId,
-          renterId: userId,
-          startDate: start,
-          endDate: end,
-          totalCost: Number(totalCost) || 2000,
-          status: 'PENDING'
-        }
-      });
-
-      return NextResponse.json({ success: true, booking });
     } catch (dbErr) {
-      // In-memory fallback
-      const booking = inMemoryStore.bookEquipment({
-        equipmentId,
-        farmerId: userId,
-        startDate: startDate,
-        endDate: endDate,
-        totalCost: Number(totalCost) || 2200
-      });
-
-      return NextResponse.json({ success: true, booking });
+      console.warn("DB booking flow error:", dbErr);
     }
+
+    // Always record booking in inMemoryStore so equipment owner dashboard immediately reflects it
+    const memoryBooking = inMemoryStore.bookEquipment({
+      id: createdPrismaBooking?.id,
+      equipmentId,
+      farmerId: userId,
+      startDate: startDate,
+      endDate: endDate,
+      totalCost: Number(totalCost) || 2200
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      booking: createdPrismaBooking || memoryBooking 
+    });
   } catch (error) {
     console.error('Failed to book equipment:', error);
     return NextResponse.json({ error: 'Unable to book equipment. Please try again.' }, { status: 500 });

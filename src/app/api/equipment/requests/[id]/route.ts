@@ -29,6 +29,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
+    let updatedPrisma = null;
     try {
       const booking = await prisma.rentalBooking.findUnique({
         where: { id },
@@ -36,18 +37,20 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
       });
 
       if (booking) {
-        const updatedBooking = await prisma.rentalBooking.update({
+        updatedPrisma = await prisma.rentalBooking.update({
           where: { id },
           data: { status }
         });
-        return NextResponse.json({ success: true, rental: updatedBooking });
       }
     } catch (dbErr) {
       console.warn("DB rental booking update failed, using inMemoryStore:", dbErr);
     }
 
     const memoryUpdated = inMemoryStore.updateEquipmentBookingStatus(id, status as any);
-    return NextResponse.json({ success: true, rental: memoryUpdated || { id, status } });
+    return NextResponse.json({ 
+      success: true, 
+      rental: updatedPrisma || memoryUpdated || { id, status } 
+    });
   } catch (error) {
     console.error('Failed to update rental request:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

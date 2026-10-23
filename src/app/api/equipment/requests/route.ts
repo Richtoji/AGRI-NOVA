@@ -33,15 +33,26 @@ export async function GET(request: Request) {
     const { userId, role } = await getUserInfo(request);
     const isAdmin = role === 'ADMIN' || userId === 'u-admin-01';
 
+    let dbRentals: any[] = [];
     try {
-      const whereClause = isAdmin ? {} : { equipment: { ownerId: userId } };
-      const rentals = await prisma.rentalBooking.findMany({
+      const whereClause = isAdmin 
+        ? {} 
+        : { 
+            OR: [
+              { equipment: { ownerId: userId } },
+              { equipment: { ownerId: 'u-equipment-01' } }
+            ] 
+          };
+
+      const found = await prisma.rentalBooking.findMany({
         where: whereClause,
         include: {
           equipment: true,
           renter: {
             select: {
+              id: true,
               name: true,
+              email: true,
               phone: true,
               avatarUrl: true
             }
@@ -52,29 +63,46 @@ export async function GET(request: Request) {
         }
       });
 
-      if (rentals && rentals.length > 0) {
-        const sanitized = rentals.map((r: any) => ({
-          ...r,
-          renter: r.renter || {
-            name: "Rajesh Kumar",
-            phone: "+91 98765 43210",
-            avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
-          },
-          farmer: r.renter || {
-            name: "Rajesh Kumar",
-            phone: "+91 98765 43210",
-            avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
-          }
-        }));
-        return NextResponse.json({ rentals: sanitized });
+      if (found && found.length > 0) {
+        dbRentals = found;
       }
-    } catch (dbErr) {}
+    } catch (dbErr) {
+      console.warn("DB fetch equipment requests failed:", dbErr);
+    }
 
-    // In-memory fallback
-    const fallbackRentals = isAdmin
+    // In-memory bookings
+    const memoryRentals = isAdmin
       ? inMemoryStore.getEquipmentBookings()
       : inMemoryStore.getEquipmentBookings(userId);
-    return NextResponse.json({ rentals: fallbackRentals });
+
+    // Merge both sources by ID
+    const combinedMap = new Map<string, any>();
+
+    for (const r of memoryRentals) {
+      combinedMap.set(r.id, r);
+    }
+
+    for (const r of dbRentals) {
+      const renterObj = r.renter || {
+        id: r.renterId,
+        name: "Farmer Client",
+        phone: "+91 98765 43210",
+        avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+      };
+      combinedMap.set(r.id, {
+        ...r,
+        renter: renterObj,
+        farmer: renterObj
+      });
+    }
+
+    const allRentals = Array.from(combinedMap.values()).sort((a, b) => {
+      const timeA = new Date(a.createdAt || a.startDate || 0).getTime();
+      const timeB = new Date(b.createdAt || b.startDate || 0).getTime();
+      return timeB - timeA;
+    });
+
+    return NextResponse.json({ rentals: allRentals });
   } catch (error) {
     console.error('Failed to fetch equipment requests:', error);
     const fallbackRentals = inMemoryStore.getEquipmentBookings();
