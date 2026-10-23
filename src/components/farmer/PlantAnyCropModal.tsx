@@ -23,7 +23,14 @@ export function PlantAnyCropModal({ isOpen, onClose, onSelectCrop, onPlantCrop }
       .then(res => res.json())
       .then(data => {
         if (data.success && Array.isArray(data.crops)) {
-          setCrops(data.crops);
+          const cropDict: Record<string, any> = {};
+          for (const c of data.crops) {
+            const key = (c.name || '').toLowerCase().trim();
+            if (key && !cropDict[key]) {
+              cropDict[key] = c;
+            }
+          }
+          setCrops(Object.values(cropDict));
         }
       })
       .catch(err => console.error("Failed to load crops:", err))

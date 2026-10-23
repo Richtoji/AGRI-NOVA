@@ -1751,6 +1751,15 @@ export const inMemoryStore = {
     if (!globalStore.cropProfiles || globalStore.cropProfiles.length === 0) {
       globalStore.cropProfiles = CROP_PROFILES_ARRAY.map(c => ({ ...c }));
     }
+    const seen = new Set<string>();
+    const unique: any[] = [];
+    for (const c of globalStore.cropProfiles) {
+      const key = (c.name || '').toLowerCase().trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      unique.push(c);
+    }
+    globalStore.cropProfiles = unique;
     return globalStore.cropProfiles;
   },
 

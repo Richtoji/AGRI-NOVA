@@ -74,7 +74,21 @@ export function AdminCropManagement() {
           }));
         }
 
-        const normalizedCrops = cropList.map((c: any, idx: number) => ({
+        // Deduplicate strictly by normalized crop name
+        const cropDict: Record<string, any> = {};
+        for (const c of cropList) {
+          const key = (c.name || '').toLowerCase().trim();
+          if (!key) continue;
+          if (!cropDict[key]) {
+            cropDict[key] = c;
+          } else {
+            const existing = cropDict[key];
+            cropDict[key] = { ...existing, ...c, imageUrl: c.imageUrl || existing.imageUrl };
+          }
+        }
+        const deduplicatedList = Object.values(cropDict);
+
+        const normalizedCrops = deduplicatedList.map((c: any, idx: number) => ({
           ...c,
           id: c.id || `crop-${idx + 1}`,
           name: c.name || `Crop ${idx + 1}`,

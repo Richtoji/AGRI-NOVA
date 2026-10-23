@@ -43,21 +43,20 @@ export async function GET(request: Request) {
 
     const mergedMap = new Map<string, any>();
 
-    // In-memory store holds live session updates from Admin edits
+    // In-memory store holds live session updates from Admin edits (keyed strictly by normalized name)
     for (const m of memoryCrops) {
       const key = (m.name || '').toLowerCase().trim();
       if (key) mergedMap.set(key, { ...m });
-      if (m.id) mergedMap.set((m.id || '').toLowerCase().trim(), { ...m });
     }
 
     // Overlay DB crops: if in-memory has a custom image, keep it! If DB has an update or crop not in memory, merge it!
     for (const d of dbCrops) {
       const key = (d.name || '').toLowerCase().trim();
-      const idKey = (d.id || '').toLowerCase().trim();
-      const existing = mergedMap.get(key) || mergedMap.get(idKey);
+      if (!key) continue;
+      const existing = mergedMap.get(key);
       
       if (!existing) {
-        mergedMap.set(key || idKey, { ...d });
+        mergedMap.set(key, { ...d });
       } else {
         const memImg = existing.imageUrl;
         const dbImg = d.imageUrl;
@@ -70,7 +69,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const finalList = Array.from(new Set(mergedMap.values()));
+    const finalList = Array.from(mergedMap.values());
     return NextResponse.json({ success: true, crops: finalList }, { headers: NO_CACHE_HEADERS });
   } catch (err: any) {
     return NextResponse.json(
