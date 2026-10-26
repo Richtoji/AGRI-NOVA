@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useAuthRole, RoleType } from "@/lib/context/AuthRoleContext";
+import { useAuthRole } from "@/lib/context/AuthRoleContext";
 import {
   Sprout,
   Lock,
@@ -19,9 +19,6 @@ import {
   Eye,
   EyeOff,
   ShoppingBag,
-  Wrench,
-  HeartHandshake,
-  Truck,
   ShieldCheck,
   Sparkles,
   Award
@@ -34,64 +31,11 @@ import {
   evaluatePasswordStrength
 } from "@/lib/validation";
 
-interface RoleMeta {
-  label: string;
-  badgeClass: string;
-  pillColor: string;
-  icon: React.ElementType;
-}
-
-const ROLE_META: Record<RoleType, RoleMeta> = {
-  FARMER: {
-    label: "Farmer",
-    badgeClass: "bg-emerald-50 text-emerald-800 border-emerald-200",
-    pillColor: "hover:bg-emerald-50 hover:text-emerald-800 hover:border-emerald-300",
-    icon: Sprout
-  },
-  BUYER: {
-    label: "Buyer",
-    badgeClass: "bg-sky-50 text-sky-800 border-sky-200",
-    pillColor: "hover:bg-sky-50 hover:text-sky-800 hover:border-sky-300",
-    icon: ShoppingBag
-  },
-  EQUIPMENT_OWNER: {
-    label: "Equipment",
-    badgeClass: "bg-amber-50 text-amber-800 border-amber-200",
-    pillColor: "hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300",
-    icon: Wrench
-  },
-  VETERINARY_EXPERT: {
-    label: "Veterinary",
-    badgeClass: "bg-teal-50 text-teal-800 border-teal-200",
-    pillColor: "hover:bg-teal-50 hover:text-teal-800 hover:border-teal-300",
-    icon: HeartHandshake
-  },
-  DELIVERY_PARTNER: {
-    label: "Delivery",
-    badgeClass: "bg-orange-50 text-orange-800 border-orange-200",
-    pillColor: "hover:bg-orange-50 hover:text-orange-800 hover:border-orange-300",
-    icon: Truck
-  },
-  ADMIN: {
-    label: "Admin",
-    badgeClass: "bg-purple-50 text-purple-800 border-purple-200",
-    pillColor: "hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300",
-    icon: ShieldCheck
-  },
-  SUPER_ADMIN: {
-    label: "Super Admin",
-    badgeClass: "bg-purple-100 text-purple-900 border-purple-300",
-    pillColor: "hover:bg-purple-50 hover:text-purple-800 hover:border-purple-300",
-    icon: ShieldCheck
-  }
-};
-
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuthRole();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [selectedRole, setSelectedRole] = useState<RoleType>("FARMER");
   const [isLoading, setIsLoading] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -113,17 +57,16 @@ export default function LoginPage() {
   const fpStrength = evaluatePasswordStrength(fpNewPassword);
   const fpMatch = fpNewPassword.length > 0 && fpConfirmPassword.length > 0 && fpNewPassword === fpConfirmPassword;
 
-  const activeRole = ROLE_META[selectedRole] || ROLE_META.FARMER;
-  const ActiveRoleIcon = activeRole.icon;
-
-  const getRoleDashboardPath = (r: RoleType) => {
-    switch (r) {
+  const getRoleDashboardPath = (r?: string) => {
+    const roleUpper = (r || "").toUpperCase().trim();
+    switch (roleUpper) {
       case "FARMER": return "/dashboard/farmer";
       case "BUYER": return "/dashboard/buyer";
       case "EQUIPMENT_OWNER": return "/dashboard/equipment";
       case "VETERINARY_EXPERT": return "/dashboard/veterinary";
       case "DELIVERY_PARTNER": return "/dashboard/delivery";
-      case "ADMIN": return "/dashboard/admin";
+      case "ADMIN":
+      case "SUPER_ADMIN": return "/dashboard/admin";
       default: return "/dashboard/farmer";
     }
   };
@@ -151,11 +94,11 @@ export default function LoginPage() {
     }
 
     setIsLoading(true);
-    const res = await login(email.trim().toLowerCase(), password, selectedRole);
+    const res = await login(email.trim().toLowerCase(), password);
     setIsLoading(false);
 
-    if (res.success) {
-      const targetRole = (res as any)?.user?.role || selectedRole;
+    if (res.success && res.user) {
+      const targetRole = res.user.role;
       const targetPath = getRoleDashboardPath(targetRole);
       router.push(targetPath);
       setTimeout(() => {
@@ -164,7 +107,7 @@ export default function LoginPage() {
         }
       }, 250);
     } else {
-      setValidationError(res.error || "Invalid credentials or role selection.");
+      setValidationError(res.error || "Invalid email or password.");
     }
   };
 
@@ -414,45 +357,8 @@ export default function LoginPage() {
             </AnimatePresence>
 
             {mode === "login" ? (
-              <form className="space-y-3" onSubmit={handleLogin} noValidate>
+              <form className="space-y-3.5" onSubmit={handleLogin} noValidate>
                 
-                {/* Account Role Selector */}
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
-                      Account Role
-                    </label>
-                    <span className={`inline-flex items-center gap-1 text-[10px] font-bold border px-2 py-0.2 rounded-full ${activeRole.badgeClass}`}>
-                      <ActiveRoleIcon className="w-2.5 h-2.5" />
-                      <span>{activeRole.label}</span>
-                    </span>
-                  </div>
-
-                  {/* 5 Role Pills in 1 compact grid */}
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-1">
-                    {(["FARMER", "BUYER", "ADMIN", "EQUIPMENT_OWNER", "VETERINARY_EXPERT"] as RoleType[]).map((r) => {
-                      const meta = ROLE_META[r];
-                      const Icon = meta.icon;
-                      const isSelected = selectedRole === r;
-                      return (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => setSelectedRole(r)}
-                          className={`flex items-center justify-center space-x-1 py-1.5 px-1 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
-                            isSelected
-                              ? "bg-gray-900 text-white border-gray-900 shadow-2xs"
-                              : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
-                        >
-                          <Icon className={`w-3 h-3 shrink-0 ${isSelected ? "text-emerald-400" : "text-gray-500"}`} />
-                          <span className="truncate">{meta.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
                 {/* Email Address */}
                 <div>
                   <label className="block text-[11px] font-bold text-gray-700 uppercase tracking-wider mb-0.5">
@@ -467,21 +373,8 @@ export default function LoginPage() {
                       required
                       value={email}
                       onChange={(e) => {
-                        const val = e.target.value;
-                        setEmail(val);
+                        setEmail(e.target.value);
                         if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: "" }));
-                        const lower = val.trim().toLowerCase();
-                        if (lower === "subin@gmail.com" || lower.startsWith("subin") || lower.includes("buyer")) {
-                          setSelectedRole("BUYER");
-                        } else if (lower === "vet@agrinova.com" || lower.startsWith("vet")) {
-                          setSelectedRole("VETERINARY_EXPERT");
-                        } else if (lower === "equipment@agrinova.com" || lower.startsWith("equipment")) {
-                          setSelectedRole("EQUIPMENT_OWNER");
-                        } else if (lower === "admin@agri-nova.com" || lower.startsWith("admin")) {
-                          setSelectedRole("ADMIN");
-                        } else if (lower === "farmer@agri-nova.com" || lower.startsWith("farmer")) {
-                          setSelectedRole("FARMER");
-                        }
                       }}
                       onBlur={() => {
                         const check = validateEmailWithDetails(email.trim());
@@ -492,7 +385,7 @@ export default function LoginPage() {
                           ? "border-rose-400 focus:ring-rose-200" 
                           : "border-gray-200 focus:ring-emerald-200 focus:border-emerald-600"
                       }`}
-                      placeholder="e.g. farmer@agri-nova.com"
+                      placeholder="e.g. farmer@agri-nova.com or Subin@gmail.com"
                     />
                   </div>
                   {fieldErrors.email && (
