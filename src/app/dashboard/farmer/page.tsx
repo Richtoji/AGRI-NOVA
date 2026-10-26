@@ -16,6 +16,7 @@ import { CultivationImageUpload } from "@/components/farmer/CultivationImageUplo
 import { MyListings } from "@/components/marketplace/MyListings";
 import { getCropKnowledge } from "@/data/cropKnowledge";
 import { SafeImage } from "@/components/ui/SafeImage";
+import { FarmerEquipmentOrders } from "@/components/farmer/FarmerEquipmentOrders";
 
 import { 
   Home,
@@ -195,6 +196,54 @@ function FarmerDashboardContent() {
   const [dashboardActionError, setDashboardActionError] = useState<string | null>(null);
   const [startingCropName, setStartingCropName] = useState<string | null>(null);
   const [cultivationSuccessMessage, setCultivationSuccessMessage] = useState<string | null>(null);
+
+  // Equipment Bookings & Rental History State
+  const [equipmentBookings, setEquipmentBookings] = useState<any[]>([]);
+  const [loadingEquipmentBookings, setLoadingEquipmentBookings] = useState(false);
+
+  const fetchEquipmentBookings = async () => {
+    try {
+      setLoadingEquipmentBookings(true);
+      const res = await fetch(`/api/equipment/farmer-bookings?_t=${Date.now()}`, {
+        cache: 'no-store',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.bookings)) {
+          setEquipmentBookings(data.bookings);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not fetch farmer equipment bookings", e);
+    } finally {
+      setLoadingEquipmentBookings(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchEquipmentBookings();
+
+    const handleEquipmentBooked = () => {
+      fetchEquipmentBookings();
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'agri_nova_equipment_booked') {
+        fetchEquipmentBookings();
+      }
+    };
+
+    window.addEventListener('agri_nova_equipment_booked', handleEquipmentBooked);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('agri_nova_equipment_booked', handleEquipmentBooked);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, []);
+
+  const latestEquipmentBooking = equipmentBookings[0] || null;
+  const pendingEquipmentCount = equipmentBookings.filter(b => b.status === 'PENDING').length;
 
   const openPlantThisCropAgreement = (crop: any) => {
     const matchedRec = cropRecommendations.find(
@@ -528,6 +577,26 @@ function FarmerDashboardContent() {
                 <Store className="w-4 h-4" />
                 <span>My Products</span>
               </button>
+
+              <button
+                type="button"
+                onClick={() => handleTabChange('equipment-rentals')}
+                className={`px-4 py-2 rounded-xl text-xs font-black transition-all flex items-center space-x-2 whitespace-nowrap cursor-pointer shrink-0 ${
+                  activeTab === 'equipment-rentals'
+                    ? 'bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/20'
+                    : 'text-gray-700 hover:text-emerald-700 hover:bg-emerald-50'
+                }`}
+              >
+                <Tractor className="w-4 h-4" />
+                <span>Machinery Rentals</span>
+                {equipmentBookings.length > 0 ? (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                    activeTab === 'equipment-rentals' ? 'bg-emerald-800 text-emerald-100' : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {equipmentBookings.length} {equipmentBookings.length === 1 ? 'Order' : 'Orders'}
+                  </span>
+                ) : null}
+              </button>
             </div>
 
             <div className="flex items-center space-x-2 shrink-0">
@@ -797,6 +866,69 @@ function FarmerDashboardContent() {
                 </div>
               )}
 
+              {/* EQUIPMENT RENTAL ORDERS SNAPSHOT ON FARM OVERVIEW */}
+              {equipmentBookings.length > 0 ? (
+                <div className="bg-gradient-to-r from-gray-900 via-emerald-950 to-gray-900 text-white border border-emerald-500/30 rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm relative overflow-hidden">
+                  <div className="flex items-center space-x-3.5 relative z-10">
+                    <div className="w-14 h-14 rounded-xl overflow-hidden bg-white/10 border border-white/20 shrink-0 relative flex items-center justify-center">
+                      <SafeImage 
+                        src={latestEquipmentBooking?.equipment?.imageUrl || "/images/equipment/tractor_mahindra_575.png"} 
+                        alt={latestEquipmentBooking?.equipment?.name || "Machinery"} 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center space-x-2 mb-1 flex-wrap gap-y-1">
+                        <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-gray-900 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <Tractor className="w-3 h-3" />
+                          <span>Machinery Order</span>
+                        </span>
+                        {latestEquipmentBooking?.status === "PENDING" ? (
+                          <span className="text-[10px] font-bold bg-amber-400 text-amber-950 px-2 py-0.5 rounded-full flex items-center">
+                            <Clock className="w-3 h-3 mr-1 animate-pulse" />
+                            Request Sent (Pending Approval)
+                          </span>
+                        ) : latestEquipmentBooking?.status === "APPROVED" || latestEquipmentBooking?.status === "ACTIVE" ? (
+                          <span className="text-[10px] font-bold bg-emerald-400 text-emerald-950 px-2 py-0.5 rounded-full flex items-center">
+                            <CheckCircle2 className="w-3 h-3 mr-1" />
+                            Approved &amp; Ready for Farm
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full">
+                            {latestEquipmentBooking?.status}
+                          </span>
+                        )}
+                      </div>
+                      <h4 className="text-base font-black text-white flex items-center gap-1.5">
+                        <span>{latestEquipmentBooking?.equipment?.name || "Agricultural Machinery"}</span>
+                        <span className="text-xs font-semibold text-emerald-200">· {latestEquipmentBooking?.equipment?.category || "Equipment"}</span>
+                      </h4>
+                      <p className="text-xs text-gray-300">
+                        Schedule: {latestEquipmentBooking?.startDate ? new Date(latestEquipmentBooking.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "N/A"} → {latestEquipmentBooking?.endDate ? new Date(latestEquipmentBooking.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "N/A"} · Cost: ₹{(Number(latestEquipmentBooking?.totalCost) || 0).toLocaleString("en-IN")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-2.5 shrink-0 relative z-10">
+                    <button
+                      type="button"
+                      onClick={() => handleTabChange('equipment-rentals')}
+                      className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-gray-950 rounded-xl text-xs font-black transition-colors flex items-center space-x-1.5 shadow-sm cursor-pointer"
+                    >
+                      <span>View Machinery Orders ({equipmentBookings.length})</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                    <Link
+                      href="/equipment"
+                      className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-bold transition-colors"
+                      title="Rent additional machinery"
+                    >
+                      Rent More
+                    </Link>
+                  </div>
+                </div>
+              ) : null}
+
               {/* ===== ROW 1: Greeting | Location | Weather ===== */}
               <div className="grid grid-cols-12 gap-4">
 
@@ -954,11 +1086,15 @@ function FarmerDashboardContent() {
                         <ClipboardList className="w-3.5 h-3.5 text-gray-400" />
                       </div>
                     </div>
-                    <div>
+                    <div 
+                      onClick={() => handleTabChange('equipment-rentals')}
+                      className="cursor-pointer hover:opacity-80 transition-opacity"
+                      title="View Equipment Rental Orders"
+                    >
                       <p className="text-[10px] text-gray-400 font-semibold mb-1">Equipment</p>
                       <div className="flex items-center space-x-1">
-                        <span className="text-lg font-black text-gray-900">0</span>
-                        <Tractor className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-lg font-black text-emerald-700">{equipmentBookings.length}</span>
+                        <Tractor className="w-3.5 h-3.5 text-emerald-600" />
                       </div>
                     </div>
                   </div>
@@ -1552,6 +1688,11 @@ function FarmerDashboardContent() {
                         onClick: () => setIsPlantAnyOpen(true) 
                       },
                       { 
+                        icon: <Tractor className="w-4 h-4 text-emerald-600" strokeWidth={1.5} />, 
+                        label: `Machinery Orders (${equipmentBookings.length})`, 
+                        onClick: () => handleTabChange('equipment-rentals') 
+                      },
+                      { 
                         icon: <Tractor className="w-4 h-4 text-gray-600" strokeWidth={1.5} />, 
                         label: "Rent Equipment", 
                         href: "/equipment" 
@@ -1636,10 +1777,10 @@ function FarmerDashboardContent() {
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {[
                   { icon: <ShoppingBag className="w-4 h-4 text-gray-700" strokeWidth={1.5} />, label: "Marketplace", desc: "Buy & Sell Products", href: "/marketplace" },
-                  { icon: <Tractor className="w-4 h-4 text-gray-700" strokeWidth={1.5} />, label: "Equipment Rental", desc: "Rent Farming Equipments", href: "/equipment" },
+                  { icon: <Tractor className="w-4 h-4 text-gray-700" strokeWidth={1.5} />, label: "Equipment Rental", desc: "Rent Farming Machinery", href: "/equipment" },
+                  { icon: <ClipboardList className="w-4 h-4 text-gray-700" strokeWidth={1.5} />, label: "Machinery Orders", desc: `${equipmentBookings.length} Rental Requests`, href: "/dashboard/farmer?tab=equipment-rentals" },
                   { icon: <PawPrint className="w-4 h-4 text-gray-700" strokeWidth={1.5} />, label: "Livestock Care", desc: "Cattle, Poultry & More", href: "/veterinary" },
                   { icon: <Stethoscope className="w-4 h-4 text-gray-700" strokeWidth={1.5} />, label: "Vet Consultation", desc: "Book Appointments", href: "/veterinary" },
-                  { icon: <ClipboardList className="w-4 h-4 text-gray-700" strokeWidth={1.5} />, label: "My Orders", desc: "Track Your Orders", href: "/dashboard/farmer" },
                   { icon: <Coins className="w-4 h-4 text-gray-700" strokeWidth={1.5} />, label: "Earnings", desc: "View Your Earnings", href: "/dashboard/farmer" },
                 ].map((pill) => (
                   <Link
@@ -1897,6 +2038,15 @@ function FarmerDashboardContent() {
           {activeTab === 'products' && (
             <div className="space-y-4 animate-in fade-in duration-300">
               <MyListings />
+            </div>
+          )}
+
+          {/* ============================================================== */}
+          {/* TAB 6: MACHINERY RENTALS & EQUIPMENT ORDER HISTORY */}
+          {/* ============================================================== */}
+          {activeTab === 'equipment-rentals' && (
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <FarmerEquipmentOrders onRentNew={() => router.push('/equipment')} />
             </div>
           )}
 

@@ -1265,7 +1265,7 @@ export const inMemoryStore = {
     });
   },
 
-  updateEquipmentBookingStatus(bookingId: string, status: "APPROVED" | "REJECTED" | "ACTIVE" | "COMPLETED") {
+  updateEquipmentBookingStatus(bookingId: string, status: "APPROVED" | "REJECTED" | "ACTIVE" | "COMPLETED" | "CANCELLED") {
     const booking = globalStore.equipmentBookings.find((b: any) => b.id === bookingId);
     if (booking) {
       booking.status = status;

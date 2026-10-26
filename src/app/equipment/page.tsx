@@ -22,7 +22,8 @@ import {
   Filter, 
   DollarSign, 
   Info,
-  Ban
+  Ban,
+  ArrowRight
 } from "lucide-react";
 import { useAuthRole } from "@/lib/context/AuthRoleContext";
 
@@ -186,9 +187,13 @@ export default function EquipmentPage() {
       } else {
         setBookingSuccess(true);
         setSelectedEq(null);
+        try {
+          localStorage.setItem('agri_nova_equipment_booked', Date.now().toString());
+          window.dispatchEvent(new CustomEvent('agri_nova_equipment_booked', { detail: data.booking }));
+        } catch (_) {}
         setTimeout(() => {
           setBookingSuccess(false);
-        }, 2000);
+        }, 8000);
       }
     } catch (err) {
       setValidationError("An unexpected error occurred.");
@@ -662,13 +667,33 @@ export default function EquipmentPage() {
           </div>
         )}
 
-        {/* Success Toast */}
+        {/* Success Toast with Direct Navigation to Farmer Dashboard */}
         {!isAdmin && bookingSuccess && (
-          <div className="fixed bottom-4 right-4 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg flex items-center space-x-3 z-50 animate-in slide-in-from-bottom-4">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <div>
-              <p className="font-bold text-sm">Booking Requested!</p>
-              <p className="text-xs text-gray-200">The owner will confirm shortly.</p>
+          <div className="fixed bottom-4 right-4 bg-gray-900 text-white p-4 rounded-2xl shadow-2xl flex items-start space-x-3.5 z-50 animate-in slide-in-from-bottom-4 border border-emerald-500/40 max-w-sm sm:max-w-md">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm text-white">Booking Request Submitted!</p>
+              <p className="text-xs text-gray-300 mt-0.5 leading-relaxed">
+                Your machinery rental request is sent to Kisan Agro Rentals. An order record has been created in your Farmer Dashboard.
+              </p>
+              <div className="mt-2.5 flex items-center gap-2">
+                <Link 
+                  href="/dashboard/farmer?tab=equipment-rentals"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-lg transition-colors inline-flex items-center gap-1.5 shadow-sm"
+                >
+                  <span>View in Farmer Dashboard</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setBookingSuccess(false)}
+                  className="px-2.5 py-1.5 text-xs text-gray-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  Dismiss
+                </button>
+              </div>
             </div>
           </div>
         )}
