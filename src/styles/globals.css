@@ -108,3 +108,23 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #9CA3AF;
 }
+
+/* Mobile-Friendly Utility Classes */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.touch-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+}
+
+/* Fast tap response on mobile touchscreens */
+button, a, input, select, textarea {
+  touch-action: manipulation;
+}
+

@@ -361,7 +361,7 @@ function BuyerDashboardContent() {
           </div>
 
           {/* ================= 3. SEGMENTED NAVIGATION TABS ================= */}
-          <div className="flex border-b border-gray-200/80 gap-4 sm:gap-6 text-xs font-bold overflow-x-auto whitespace-nowrap">
+          <div className="flex border-b border-gray-200/80 gap-3 sm:gap-6 text-xs font-bold overflow-x-auto whitespace-nowrap no-scrollbar touch-scroll">
             <button
               type="button"
               onClick={() => handleTabChange("overview")}

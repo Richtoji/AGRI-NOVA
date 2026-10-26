@@ -267,20 +267,20 @@ export function FarmerEquipmentOrders({ onRentNew }: FarmerEquipmentOrdersProps)
             </p>
           </div>
 
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto shrink-0">
             <button
               onClick={fetchBookings}
               disabled={loading}
-              className="p-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5"
+              className="p-3 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center justify-center gap-1.5 w-full sm:w-auto"
               title="Refresh equipment bookings"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin text-emerald-300" : ""}`} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span>Refresh</span>
             </button>
 
             <Link
               href="/equipment"
-              className="px-5 py-3 bg-white hover:bg-emerald-50 text-emerald-950 text-xs font-black rounded-xl transition-all shadow-md flex items-center space-x-2 cursor-pointer uppercase tracking-wider"
+              className="px-5 py-3 bg-white hover:bg-emerald-50 text-emerald-950 text-xs font-black rounded-xl transition-all shadow-md flex items-center justify-center space-x-2 cursor-pointer uppercase tracking-wider w-full sm:w-auto text-center"
             >
               <PlusCircle className="w-4 h-4 text-emerald-700" />
               <span>Rent More Equipment</span>
@@ -378,7 +378,7 @@ export function FarmerEquipmentOrders({ onRentNew }: FarmerEquipmentOrdersProps)
         </div>
 
         {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 no-scrollbar touch-scroll">
           {[
             { id: "ALL", label: "All Orders", count: totalCount },
             { id: "PENDING", label: "Pending", count: pendingCount },
@@ -603,7 +603,7 @@ export function FarmerEquipmentOrders({ onRentNew }: FarmerEquipmentOrdersProps)
 
                 {/* Status Progress Step Tracker */}
                 <div className="pt-2 border-t border-gray-100">
-                  <div className="grid grid-cols-4 gap-2 text-center text-[10px] font-bold">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 text-center text-[10px] font-bold">
                     <div className={`p-1.5 rounded-lg ${
                       b.status !== "CANCELLED" && b.status !== "REJECTED" ? "bg-emerald-50 text-emerald-800" : "bg-gray-100 text-gray-400"
                     }`}>

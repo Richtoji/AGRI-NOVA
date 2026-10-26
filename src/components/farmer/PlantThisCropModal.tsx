@@ -123,31 +123,31 @@ export function PlantThisCropModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-100 max-h-[92vh] relative z-10">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2.5 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto animate-in fade-in duration-200">
+      <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden flex flex-col border border-gray-100 max-h-[92dvh] sm:max-h-[90vh] relative z-10">
         
         {/* Top Header */}
-        <div className="bg-gradient-to-r from-green-900 via-emerald-950 to-gray-900 text-white p-5 shrink-0 relative">
+        <div className="bg-gradient-to-r from-green-900 via-emerald-950 to-gray-900 text-white p-4 sm:p-5 shrink-0 relative">
           <button 
             onClick={onClose} 
             disabled={submitting}
-            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors cursor-pointer"
+            className="absolute top-3.5 sm:top-4 right-3.5 sm:right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center space-x-2 text-green-300 text-xs font-black uppercase tracking-wider mb-1">
+          <div className="flex items-center space-x-2 text-green-300 text-[11px] sm:text-xs font-black uppercase tracking-wider mb-1">
             <Sprout className="w-4 h-4 text-green-400" />
             <span>Supervised Cultivation Program</span>
           </div>
-          <h2 className="text-2xl font-black text-white">Start Cultivation: {cropName}</h2>
-          <p className="text-xs text-green-200/80 mt-0.5">
+          <h2 className="text-xl sm:text-2xl font-black text-white">Start Cultivation: {cropName}</h2>
+          <p className="text-[11px] sm:text-xs text-green-200/80 mt-0.5">
             Stage 1: Plant the Crop &amp; Upload Photograph · Administrator Verification Workflow
           </p>
         </div>
 
         {/* Content Body */}
-        <div className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1">
+        <div className="p-3.5 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto flex-1 touch-scroll">
           
           {/* 1. Crop Profile Snapshot */}
           <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex items-center gap-4">

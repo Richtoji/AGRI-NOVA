@@ -68,23 +68,23 @@ export function PlantAnyCropModal({ isOpen, onClose, onSelectCrop, onPlantCrop }
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[85vh] relative z-10 border border-gray-100">
+    <div className="fixed inset-0 z-[99999] flex items-center justify-center p-2.5 sm:p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+      <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl flex flex-col max-h-[92dvh] sm:max-h-[85vh] relative z-10 border border-gray-100">
         
-        <div className="p-5 flex items-start justify-between border-b border-gray-100">
+        <div className="p-3.5 sm:p-5 flex items-start justify-between border-b border-gray-100">
           <div>
-            <h2 className="text-xl font-black text-gray-900 flex items-center">
+            <h2 className="text-lg sm:text-xl font-black text-gray-900 flex items-center">
               <Sprout className="w-5 h-5 mr-2 text-green-600" />
               Choose a Crop to Plant
             </h2>
-            <p className="text-xs text-gray-500 mt-1">Select any crop and AGRI-NOVA will provide a cultivation guide.</p>
+            <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5 sm:mt-1">Select any crop and AGRI-NOVA will provide a cultivation guide.</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 bg-gray-50 border-b border-gray-100 flex flex-col sm:flex-row gap-3">
+        <div className="p-3 sm:p-4 bg-gray-50 border-b border-gray-100 flex flex-col sm:flex-row gap-2.5 sm:gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input 
@@ -104,7 +104,7 @@ export function PlantAnyCropModal({ isOpen, onClose, onSelectCrop, onPlantCrop }
           </select>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 touch-scroll">
           {loading ? (
              <div className="flex flex-col items-center justify-center h-48 text-gray-400">
                 <Sprout className="w-8 h-8 mb-3 animate-pulse text-green-200" />

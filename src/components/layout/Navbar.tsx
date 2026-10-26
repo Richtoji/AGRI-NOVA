@@ -51,16 +51,16 @@ export const Navbar: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         
         {/* Brand Logo */}
-        <Link href="/" className="flex items-center space-x-3 group shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-900 group-hover:bg-gray-100 transition-colors shrink-0">
-            <Sprout className="w-5 h-5" />
+        <Link href="/" className="flex items-center space-x-2.5 sm:space-x-3 group shrink-0">
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-900 group-hover:bg-gray-100 transition-colors shrink-0">
+            <Sprout className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
-          <div className="flex flex-col whitespace-nowrap">
-            <span className="font-bold text-lg text-gray-900 tracking-tight">
+          <div className="flex flex-col whitespace-nowrap min-w-0">
+            <span className="font-bold text-base sm:text-lg text-gray-900 tracking-tight leading-tight">
               AGRI-NOVA
             </span>
-            <span className="text-[10px] font-semibold text-gray-900 uppercase tracking-wider -mt-1">
-              Agriculture & Commerce
+            <span className="text-[10px] font-semibold text-gray-500 uppercase tracking-wider -mt-0.5 hidden xs:block sm:block">
+              Agriculture &amp; Commerce
             </span>
           </div>
         </Link>
@@ -92,7 +92,7 @@ export const Navbar: React.FC = () => {
         </nav>
 
         {/* Right Action Bar */}
-        <div className="flex items-center space-x-2 shrink-0">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
           
           {/* Quick Search Shortcut */}
           <button
@@ -138,19 +138,19 @@ export const Navbar: React.FC = () => {
                 <span>Dashboard ({currentRole.split('_')[0]})</span>
               </Link>
 
-              {/* Profile / Settings Button */}
+              {/* Profile / Settings Button (Hidden on mobile header; in mobile drawer) */}
               <Link
                 href="/dashboard/profile"
-                className="p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors shrink-0"
+                className="hidden sm:flex p-2 rounded-xl text-gray-500 hover:bg-gray-50 transition-colors shrink-0"
                 title="Profile & Settings"
               >
                 <Settings className="w-5 h-5 shrink-0" />
               </Link>
 
-              {/* Logout Button */}
+              {/* Logout Button (Hidden on mobile header; in mobile drawer) */}
               <button
                 onClick={handleLogout}
-                className="p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors shrink-0"
+                className="hidden sm:flex p-2 rounded-xl text-rose-500 hover:bg-rose-50 transition-colors shrink-0"
                 title="Logout"
               >
                 <LogOut className="w-5 h-5 shrink-0" />

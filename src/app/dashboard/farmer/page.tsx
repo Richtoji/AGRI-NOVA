@@ -503,7 +503,7 @@ function FarmerDashboardContent() {
 
           {/* ===== TOP NAVIGATION TABS: DEDICATED WORKSPACES ===== */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-2.5 rounded-2xl border border-gray-100 shadow-xs">
-            <div className="flex items-center space-x-1.5 overflow-x-auto max-w-full pb-1 sm:pb-0">
+            <div className="flex items-center space-x-1.5 overflow-x-auto max-w-full pb-1.5 sm:pb-0 no-scrollbar touch-scroll">
               <button
                 type="button"
                 onClick={() => handleTabChange('cultivation')}
@@ -599,7 +599,7 @@ function FarmerDashboardContent() {
               </button>
             </div>
 
-            <div className="flex items-center space-x-2 shrink-0">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0">
               <button
                 onClick={() => {
                   if (cropRecommendations && cropRecommendations.length > 0) {
@@ -615,7 +615,7 @@ function FarmerDashboardContent() {
                     });
                   }
                 }}
-                className="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-black flex items-center space-x-1.5 transition-colors cursor-pointer"
+                className="px-3.5 py-2 sm:py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-black flex items-center justify-center space-x-1.5 transition-colors cursor-pointer text-center"
                 title="Plant AI recommended crop for your farm region"
               >
                 <PlusCircle className="w-3.5 h-3.5 text-emerald-600" />
@@ -625,7 +625,7 @@ function FarmerDashboardContent() {
               <button
                 type="button"
                 onClick={() => setIsPlantAnyOpen(true)}
-                className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                className="px-3.5 py-2 sm:py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-colors cursor-pointer text-center"
                 title="Select and plant any crop from the platform database"
               >
                 Plant Any Crop
@@ -909,18 +909,18 @@ function FarmerDashboardContent() {
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-2.5 shrink-0 relative z-10">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-2.5 shrink-0 relative z-10 w-full sm:w-auto mt-2 sm:mt-0">
                     <button
                       type="button"
                       onClick={() => handleTabChange('equipment-rentals')}
-                      className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-gray-950 rounded-xl text-xs font-black transition-colors flex items-center space-x-1.5 shadow-sm cursor-pointer"
+                      className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-gray-950 rounded-xl text-xs font-black transition-colors flex items-center justify-center space-x-1.5 shadow-sm cursor-pointer w-full sm:w-auto"
                     >
                       <span>View Machinery Orders ({equipmentBookings.length})</span>
                       <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                     <Link
                       href="/equipment"
-                      className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-bold transition-colors"
+                      className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl text-xs font-bold transition-colors text-center w-full sm:w-auto"
                       title="Rent additional machinery"
                     >
                       Rent More
@@ -1064,7 +1064,7 @@ function FarmerDashboardContent() {
                     })()}
                   </div>
                   
-                  <div className="grid grid-cols-4 gap-2 pt-4 border-t border-gray-50 mt-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-2 pt-4 border-t border-gray-50 mt-4">
                     <div>
                       <p className="text-[10px] text-gray-400 font-semibold mb-1">Total Crops</p>
                       <div className="flex items-center space-x-1">
@@ -1181,7 +1181,7 @@ function FarmerDashboardContent() {
                       <span>ℹ️ {error}</span>
                     </div>
                   )}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 scrollbar-none text-[10px]">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 no-scrollbar touch-scroll text-[10px]">
                     <span className="text-gray-400 font-semibold shrink-0">Districts:</span>
                     {[
                       { name: "Kottayam", lat: 9.5916, lng: 76.5222 },

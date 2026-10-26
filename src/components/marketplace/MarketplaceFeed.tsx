@@ -203,7 +203,7 @@ export function MarketplaceFeed({ initialSubMarket = "produce" }: MarketplaceFee
         </div>
 
         {/* Sub-market toggle */}
-        <div className="flex bg-gray-100 p-1 rounded-2xl overflow-x-auto max-w-full">
+        <div className="flex bg-gray-100 p-1 rounded-2xl overflow-x-auto max-w-full no-scrollbar touch-scroll">
           {[
             { key: "produce", label: "Farm Produce" },
             { key: "feed", label: "Feed & Seeds" },
@@ -468,23 +468,23 @@ export function MarketplaceFeed({ initialSubMarket = "produce" }: MarketplaceFee
                         <button
                           type="button"
                           onClick={() => handleAddToCart(product)}
-                          className={`py-2.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1 cursor-pointer ${
+                          className={`py-2 px-1.5 sm:py-2.5 sm:px-2 rounded-xl text-[11px] sm:text-xs font-bold transition-all flex items-center justify-center space-x-1 cursor-pointer truncate ${
                             addedItem === product.id
                               ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
                               : "bg-gray-100 hover:bg-gray-200 text-gray-800 border border-gray-200"
                           }`}
                         >
                           {addedItem === product.id ? (
-                            <><Check className="w-3.5 h-3.5 mr-1" /> Added</>
+                            <><Check className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1 shrink-0" /> Added</>
                           ) : (
-                            <><ShoppingBag className="w-3.5 h-3.5 mr-1" /> Add to Cart</>
+                            <><ShoppingBag className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-0.5 sm:mr-1 shrink-0" /> <span className="truncate">Add to Cart</span></>
                           )}
                         </button>
 
                         <button
                           type="button"
                           onClick={() => handleBuyNow(product)}
-                          className="py-2.5 px-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-xs font-black shadow-xs transition-all flex items-center justify-center space-x-1 cursor-pointer"
+                          className="py-2 px-1.5 sm:py-2.5 sm:px-2 bg-gray-900 hover:bg-gray-800 text-white rounded-xl text-[11px] sm:text-xs font-black shadow-xs transition-all flex items-center justify-center space-x-1 cursor-pointer truncate"
                         >
                           <span>⚡ Buy Now</span>
                         </button>

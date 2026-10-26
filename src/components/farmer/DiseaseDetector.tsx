@@ -164,15 +164,15 @@ export const DiseaseDetector: React.FC = () => {
   return (
     <Card className="space-y-6">
       
-      <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-4">
         <div>
-          <h2 className="text-lg font-black text-white flex items-center space-x-2">
-            <Sparkles className="w-5 h-5 text-gray-600" />
+          <h2 className="text-base sm:text-lg font-black text-white flex items-center space-x-2">
+            <Sparkles className="w-5 h-5 text-gray-600 shrink-0" />
             <span>AI Computer Vision Disease & Pest Inspector</span>
           </h2>
-          <p className="text-xs text-gray-400">YOLOv8 Deep Learning Neural Network Diagnosis</p>
+          <p className="text-[11px] sm:text-xs text-gray-400">YOLOv8 Deep Learning Neural Network Diagnosis</p>
         </div>
-        <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-gray-700/10 text-gray-600 border border-gray-700/20">
+        <span className="self-start sm:self-auto text-[10px] font-semibold px-2.5 py-1 rounded-full bg-gray-700/10 text-gray-400 border border-gray-700/20">
           Neural Net Active
         </span>
       </div>
@@ -220,7 +220,7 @@ export const DiseaseDetector: React.FC = () => {
         </div>
 
         {/* Right Column: AI Neural Network Diagnosis */}
-        <div className="lg:col-span-7 bg-dark-bg/90 rounded-2xl p-6 border border-gray-800 flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-dark-bg/90 rounded-2xl p-4 sm:p-6 border border-gray-800 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-gray-800 pb-3 mb-4">
               <span className="text-xs uppercase font-bold text-gray-400">Pathology Diagnostics</span>
@@ -239,7 +239,7 @@ export const DiseaseDetector: React.FC = () => {
                 
                 <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/40">
                   <div className="text-[10px] text-rose-400 uppercase font-bold">Identified Pathology</div>
-                  <div className="text-xl font-black text-white mt-1">{diagnosis.disease}</div>
+                  <div className="text-lg sm:text-xl font-black text-white mt-1 break-words">{diagnosis.disease}</div>
                   <div className="text-[11px] text-rose-300 mt-1">{diagnosis.preventiveMeasure}</div>
                 </div>
 

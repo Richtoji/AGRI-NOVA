@@ -101,22 +101,22 @@ export const AIChatbot: React.FC = () => {
     <Card className="space-y-4 flex flex-col h-[500px]">
       
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-gray-800 pb-3 shrink-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3 shrink-0">
         <div className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-gray-900 to-teal-400 flex items-center justify-center text-white shadow-md">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-gray-900 to-teal-400 flex items-center justify-center text-white shadow-md shrink-0">
             <Bot className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-white flex items-center space-x-1.5">
               <span>AGRI-NOVA Multilingual AI Assistant</span>
-              <Sparkles className="w-3.5 h-3.5 text-gray-600 animate-pulse" />
+              <Sparkles className="w-3.5 h-3.5 text-gray-600 animate-pulse shrink-0" />
             </h3>
             <p className="text-[10px] text-gray-400">LLM Engine (Gemini / OpenAI Architecture)</p>
           </div>
         </div>
 
         {/* Language selector */}
-        <div className="flex items-center space-x-2 text-xs">
+        <div className="flex items-center space-x-2 text-xs self-end sm:self-auto">
           <Globe className="w-4 h-4 text-gray-600" />
           <select
             value={language}
@@ -133,7 +133,7 @@ export const AIChatbot: React.FC = () => {
       </div>
 
       {/* Messages Scroll Area */}
-      <div className="flex-1 overflow-y-auto space-y-3 pr-2 text-xs">
+      <div className="flex-1 overflow-y-auto space-y-3 pr-2 text-xs touch-scroll">
         {messages.map((m, idx) => (
           <div
             key={idx}
@@ -172,7 +172,7 @@ export const AIChatbot: React.FC = () => {
       </div>
 
       {/* Quick Prompts */}
-      <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar shrink-0 text-[10px]">
+      <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar touch-scroll shrink-0 text-[10px]">
         <button
           onClick={() => handleQuickPrompt("What is today's tomato mandi price?")}
           className="px-2.5 py-1 rounded-full bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 whitespace-nowrap"

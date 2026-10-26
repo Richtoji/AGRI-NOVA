@@ -225,14 +225,14 @@ export default function LoginPage() {
       </header>
 
       {/* ================= MAIN CONTENT AREA (FITTED SINGLE PAGE) ================= */}
-      <main className="flex-1 flex items-center justify-center p-2.5 sm:p-4 lg:p-6 overflow-hidden relative">
+      <main className="flex-1 flex items-center justify-center p-2.5 sm:p-4 lg:p-6 overflow-y-auto relative">
         
         {/* Subtle Themed Ambient Orbs */}
         <div className="absolute -top-24 -left-24 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
         {/* Single Page Card Container */}
-        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-gray-100/90 grid grid-cols-1 lg:grid-cols-12 overflow-hidden my-auto max-h-[calc(100vh-4.5rem)]">
+        <div className="w-full max-w-5xl bg-white rounded-3xl shadow-xl border border-gray-100/90 grid grid-cols-1 lg:grid-cols-12 overflow-hidden my-auto max-h-none sm:max-h-[calc(100vh-4.5rem)]">
 
           {/* ================= LEFT COLUMN: AGRICULTURAL SHOWCASE (Desktop) ================= */}
           <div className="hidden lg:flex lg:col-span-5 xl:col-span-5 bg-gradient-to-br from-emerald-950 via-emerald-900 to-teal-950 text-white p-6 xl:p-8 flex-col justify-between relative overflow-hidden">

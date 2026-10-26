@@ -256,7 +256,7 @@ export function CropCultivationProgressModule({
         {/* Multi-Crop Switcher & External Workspace Link */}
         <div className="flex flex-wrap items-center gap-2.5">
           {cultivations.length > 1 && (
-            <div className="flex items-center gap-1 bg-gray-50 p-1.5 rounded-2xl border border-gray-200 overflow-x-auto max-w-full">
+            <div className="flex items-center gap-1 bg-gray-50 p-1.5 rounded-2xl border border-gray-200 overflow-x-auto max-w-full no-scrollbar touch-scroll">
               {cultivations.map((c: any) => (
                 <button
                   key={c.id}
@@ -417,10 +417,10 @@ export function CropCultivationProgressModule({
       </div>
 
       {/* 3. TAB CONTROLS: Stages Progression | Weekly Growth Journey | Care & Maintenance */}
-      <div className="flex items-center space-x-2 border-b border-gray-200">
+      <div className="flex items-center space-x-2 border-b border-gray-200 overflow-x-auto no-scrollbar touch-scroll pb-0.5">
         <button
           onClick={() => setActiveTab("stages")}
-          className={`pb-3 px-3 text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-2 border-b-2 cursor-pointer ${
+          className={`pb-3 px-3 text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-2 border-b-2 cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === "stages"
               ? "border-green-600 text-green-700"
               : "border-transparent text-gray-500 hover:text-gray-900"
@@ -432,7 +432,7 @@ export function CropCultivationProgressModule({
 
         <button
           onClick={() => setActiveTab("weekly")}
-          className={`pb-3 px-3 text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-2 border-b-2 cursor-pointer ${
+          className={`pb-3 px-3 text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-2 border-b-2 cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === "weekly"
               ? "border-green-600 text-green-700"
               : "border-transparent text-gray-500 hover:text-gray-900"
@@ -447,7 +447,7 @@ export function CropCultivationProgressModule({
 
         <button
           onClick={() => setActiveTab("care")}
-          className={`pb-3 px-3 text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-2 border-b-2 cursor-pointer ${
+          className={`pb-3 px-3 text-xs font-black uppercase tracking-wider transition-all flex items-center space-x-2 border-b-2 cursor-pointer shrink-0 whitespace-nowrap ${
             activeTab === "care"
               ? "border-green-600 text-green-700"
               : "border-transparent text-gray-500 hover:text-gray-900"

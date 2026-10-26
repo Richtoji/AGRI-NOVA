@@ -42,11 +42,11 @@ export function CropCultivationGuideModal({ isOpen, onClose, cropName, isRecomme
   const guide = data?.guide;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
-      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col max-h-[90vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-gray-900/60 backdrop-blur-sm overflow-y-auto">
+      <div className="bg-white w-full max-w-4xl rounded-2xl shadow-xl flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
         
         {/* Header */}
-        <div className="relative h-48 bg-gray-100 rounded-t-2xl overflow-hidden shrink-0">
+        <div className="relative h-36 sm:h-48 bg-gray-100 rounded-t-2xl overflow-hidden shrink-0">
           {profile?.imageUrl ? (
              <SafeImage src={profile.imageUrl} alt={cropName} className="w-full h-full object-cover" />
           ) : (
@@ -56,12 +56,12 @@ export function CropCultivationGuideModal({ isOpen, onClose, cropName, isRecomme
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
           
-          <button onClick={onClose} className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-colors">
+          <button onClick={onClose} className="absolute top-3 sm:top-4 right-3 sm:right-4 p-2 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
 
-          <div className="absolute bottom-4 left-6 right-6">
-            <h2 className="text-3xl font-black text-white drop-shadow-md">{cropName}</h2>
+          <div className="absolute bottom-3 sm:bottom-4 left-4 sm:left-6 right-4 sm:right-6">
+            <h2 className="text-2xl sm:text-3xl font-black text-white drop-shadow-md">{cropName}</h2>
             <div className="flex flex-wrap items-center gap-2 mt-2">
               {isRecommended ? (
                 <span className="flex items-center space-x-1 px-2.5 py-1 bg-green-500/20 backdrop-blur-md border border-green-400/30 text-green-50 text-xs font-bold rounded-full">
@@ -106,12 +106,12 @@ export function CropCultivationGuideModal({ isOpen, onClose, cropName, isRecomme
           </div>
 
           {/* Mobile Tabs (Scrollable horizontal) */}
-          <div className="w-full bg-gray-50 border-b border-gray-100 flex-shrink-0 overflow-x-auto md:hidden p-2 flex space-x-2">
+          <div className="w-full bg-gray-50 border-b border-gray-100 flex-shrink-0 overflow-x-auto no-scrollbar touch-scroll md:hidden p-2 flex space-x-2">
              {['OVERVIEW', 'LAND PREPARATION', 'PLANTING', 'MANURE', 'WATER', 'PESTS', 'STAGES', 'HARVEST'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab.includes('MANURE') ? 'MANURE & FERTILIZER' : tab.includes('PEST') ? 'PEST & DISEASE' : tab.includes('WATER') ? 'WATER MANAGEMENT' : tab)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-[10px] font-bold transition-all ${
+                  className={`flex-shrink-0 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full text-[10px] font-bold transition-all ${
                     activeTab.includes(tab) || (tab === 'MANURE' && activeTab === 'MANURE & FERTILIZER') || (tab === 'PESTS' && activeTab === 'PEST & DISEASE') || (tab === 'WATER' && activeTab === 'WATER MANAGEMENT')
                       ? 'bg-gray-900 text-white' 
                       : 'bg-white text-gray-600 border border-gray-200'
@@ -123,7 +123,7 @@ export function CropCultivationGuideModal({ isOpen, onClose, cropName, isRecomme
           </div>
 
           {/* Main Panel */}
-          <div className="flex-1 p-6 overflow-y-auto bg-white">
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto bg-white touch-scroll">
             {loading ? (
               <div className="flex flex-col items-center justify-center h-64 text-gray-400">
                 <Sprout className="w-10 h-10 mb-3 animate-pulse text-green-200" />
@@ -392,10 +392,10 @@ export function CropCultivationGuideModal({ isOpen, onClose, cropName, isRecomme
         </div>
 
         {/* Footer Area */}
-        <div className="p-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-between items-center shrink-0">
+        <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-between items-center shrink-0">
           <p className="text-xs text-gray-500 hidden sm:block">Cultivation information managed by AGRI-NOVA Agricultural Experts.</p>
-          <div className="flex w-full sm:w-auto space-x-3">
-             <button onClick={onClose} className="px-5 py-2.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors">
+          <div className="flex w-full sm:w-auto space-x-2.5 sm:space-x-3">
+             <button onClick={onClose} className="flex-1 sm:flex-initial px-4 py-2 sm:px-5 sm:py-2.5 text-xs font-bold text-gray-600 bg-white border border-gray-200 rounded-xl hover:bg-gray-100 transition-colors">
                Close Guide
              </button>
              <button 
@@ -403,7 +403,7 @@ export function CropCultivationGuideModal({ isOpen, onClose, cropName, isRecomme
                  onStartCultivation(profile?.id || cropName, cropName, profile);
                  onClose();
                }} 
-               className="flex-1 sm:flex-none px-6 py-2.5 text-xs font-black text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors shadow-sm cursor-pointer"
+               className="flex-1 sm:flex-initial px-4 py-2 sm:px-6 sm:py-2.5 text-xs font-black text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors shadow-sm cursor-pointer whitespace-nowrap"
              >
                START CULTIVATION
              </button>

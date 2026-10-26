@@ -7,7 +7,7 @@ interface TableProps extends React.TableHTMLAttributes<HTMLTableElement> {
 
 export const Table: React.FC<TableProps> = ({ children, className, wrapperClassName, ...props }) => {
   return (
-    <div className={cn("w-full overflow-x-auto rounded-xl border border-white/10 bg-dark-card/50", wrapperClassName)}>
+    <div className={cn("w-full overflow-x-auto touch-scroll rounded-xl border border-white/10 bg-dark-card/50", wrapperClassName)}>
       <table className={cn("w-full min-w-[600px] text-left text-xs text-gray-200 border-collapse", className)} {...props}>
         {children}
       </table>

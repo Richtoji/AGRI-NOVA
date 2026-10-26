@@ -84,6 +84,7 @@ export const Sidebar: React.FC = () => {
           { label: "My Cultivation", href: "/dashboard/farmer?tab=cultivation", icon: <Sprout className="w-4 h-4" /> },
           { label: "Crop Recommendation", href: "/dashboard/farmer?tab=recommendations", icon: <Sprout className="w-4 h-4" /> },
           { label: "Weather", href: "/dashboard/farmer?tab=weather", icon: <CloudSun className="w-4 h-4" /> },
+          { label: "Machinery Orders", href: "/dashboard/farmer?tab=equipment-rentals", icon: <ClipboardList className="w-4 h-4" /> },
           { label: "Equipment Rental", href: "/equipment", icon: <Tractor className="w-4 h-4" /> },
           { label: "Marketplace", href: "/marketplace", icon: <ShoppingBag className="w-4 h-4" /> },
           { label: "My Products", href: "/dashboard/farmer?tab=products", icon: <Store className="w-4 h-4" /> },

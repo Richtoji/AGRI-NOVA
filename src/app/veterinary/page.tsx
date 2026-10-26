@@ -604,7 +604,7 @@ export default function VeterinaryPage() {
                           setLocationError(null);
                         }
                       }}
-                      className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-800/10 flex-1 max-w-xs cursor-pointer"
+                      className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 font-semibold text-sm focus:outline-none focus:ring-2 focus:ring-emerald-800/10 w-full sm:max-w-xs cursor-pointer"
                     >
                       {KERALA_DISTRICTS.map(district => (
                         <option key={district} value={district}>{district} District</option>
@@ -615,7 +615,7 @@ export default function VeterinaryPage() {
                       type="button"
                       onClick={detectLocationAndRecommend}
                       disabled={isLocating}
-                      className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center disabled:opacity-70 cursor-pointer text-sm"
+                      className="px-5 py-2.5 bg-gray-900 hover:bg-gray-800 text-white font-bold rounded-xl transition-colors shadow-xs flex items-center justify-center disabled:opacity-70 cursor-pointer text-sm w-full sm:w-auto text-center"
                     >
                       {isLocating ? (
                         <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Locating...</>

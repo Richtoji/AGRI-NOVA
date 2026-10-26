@@ -259,11 +259,11 @@ export default function EquipmentPage() {
 
         {/* Admin Tabs */}
         {isAdmin && (
-          <div className="flex border-b border-gray-200 gap-4">
+          <div className="flex border-b border-gray-200 gap-2 sm:gap-4 overflow-x-auto no-scrollbar touch-scroll">
             <button
               type="button"
               onClick={() => setAdminTab("bookings")}
-              className={`pb-3 px-2 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer border-b-2 ${
+              className={`pb-3 px-2 font-bold text-xs sm:text-sm whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer border-b-2 shrink-0 ${
                 adminTab === "bookings"
                   ? "border-emerald-800 text-emerald-900"
                   : "border-transparent text-gray-500 hover:text-gray-900"
@@ -275,7 +275,7 @@ export default function EquipmentPage() {
             <button
               type="button"
               onClick={() => setAdminTab("fleet")}
-              className={`pb-3 px-2 font-bold text-sm transition-all flex items-center gap-2 cursor-pointer border-b-2 ${
+              className={`pb-3 px-2 font-bold text-xs sm:text-sm whitespace-nowrap transition-all flex items-center gap-2 cursor-pointer border-b-2 shrink-0 ${
                 adminTab === "fleet"
                   ? "border-emerald-800 text-emerald-900"
                   : "border-transparent text-gray-500 hover:text-gray-900"
@@ -520,7 +520,7 @@ export default function EquipmentPage() {
               </div>
             ) : null}
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {equipmentList.map((eq: any) => (
                 <div key={eq.id} className="bg-white border border-gray-100 rounded-2xl overflow-hidden flex flex-col group relative shadow-xs p-4">
                   <div className="space-y-3 flex-1 flex flex-col">
@@ -585,10 +585,10 @@ export default function EquipmentPage() {
 
         {/* Booking Modal (Strictly disabled for Admins and Buyers) */}
         {!isAdmin && !isBuyer && selectedEq && (
-          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
-            <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-hidden shadow-xl border border-gray-200 flex flex-col">
-              <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50 shrink-0">
-                <h3 className="font-bold text-gray-900">Book {selectedEq.name}</h3>
+          <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-2.5 sm:p-4">
+            <div className="bg-white rounded-2xl w-full max-w-md max-h-[92dvh] sm:max-h-[90vh] overflow-hidden shadow-xl border border-gray-200 flex flex-col">
+              <div className="flex justify-between items-center p-3.5 sm:p-4 border-b border-gray-100 bg-gray-50 shrink-0">
+                <h3 className="font-bold text-gray-900 text-sm sm:text-base">Book {selectedEq.name}</h3>
                 <button 
                   type="button"
                   onClick={() => setSelectedEq(null)} 
@@ -598,7 +598,7 @@ export default function EquipmentPage() {
                 </button>
               </div>
 
-              <div className="p-6 space-y-5 flex-1 overflow-y-auto">
+              <div className="p-4 sm:p-6 space-y-4 sm:space-y-5 flex-1 overflow-y-auto touch-scroll">
                 <div className="flex gap-4 items-center bg-gray-50 p-3 rounded-xl border border-gray-100">
                    <SafeImage src={selectedEq.imageUrl} alt={selectedEq.name} className="w-20 h-20 rounded-lg object-cover" />
                    <div>
@@ -608,7 +608,7 @@ export default function EquipmentPage() {
                    </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-gray-700">Start Date</label>
                     <input 
